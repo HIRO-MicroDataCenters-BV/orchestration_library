@@ -12,6 +12,7 @@ BEGIN
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     END IF;
+    RAISE NOTICE 'Table workload_request created or already exists.';
 END $$;
 
 DO $$
@@ -28,6 +29,7 @@ BEGIN
             FOREIGN KEY (workload_request_id) REFERENCES workload_request(id)
         );
     END IF;
+    RAISE NOTICE 'Table workload_request_decision created or already exists.';
 END $$;
 
 DO $$
@@ -47,6 +49,7 @@ BEGIN
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     END IF;
+    RAISE NOTICE 'Table node created or already exists.';
 END $$;
 
 DO $$
@@ -69,6 +72,7 @@ BEGIN
             FOREIGN KEY (assigned_node_id) REFERENCES node(id)
         );
     END IF;
+    RAISE NOTICE 'Table pod created or already exists.';
 END $$;
 
 DO $$
@@ -84,6 +88,7 @@ BEGIN
             FOREIGN KEY (pod_id) REFERENCES pod(id)
         );
     END IF;
+    RAISE NOTICE 'Table workload_request_pod created or already exists.';
 END $$;
 
 DO $$
@@ -99,4 +104,5 @@ BEGIN
             FOREIGN KEY (pod_id) REFERENCES pod(id)
         );
     END IF;
+    RAISE NOTICE 'Table node_pod created or already exists.';
 END $$;
