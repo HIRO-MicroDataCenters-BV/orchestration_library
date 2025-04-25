@@ -19,7 +19,8 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/orchestration_db
+      # DATABASE_URL: postgresql://postgres:postgres@db:5432/orchestration_db
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/orchestration_db
     ports:
       - "8000:8000"
     volumes:
