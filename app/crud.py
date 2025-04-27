@@ -82,10 +82,15 @@ async def delete_workload_request_decision(db: AsyncSession, workload_request_id
     """
     Delete a workload request decision by its workload_request_id.
     """
-    decision = get_workload_request_decision(db, workload_request_id=workload_request_id)
+    decision = await get_workload_request_decision(db, workload_request_id=workload_request_id)
+    print(f"Decision: {decision}")
     if not decision:
         return {"error": "Decision not found"}
     
-    await db.delete(decision)
+    if isinstance(decision, list):
+        for dec in decision:
+            await db.delete(dec)
+    else:
+        await db.delete(decision)
     await db.commit()
     return {"message": f"Decision with ID {workload_request_id} has been deleted"}
