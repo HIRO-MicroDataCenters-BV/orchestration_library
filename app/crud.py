@@ -55,7 +55,8 @@ async def update_workload_request_decision(db: AsyncSession, workload_request_id
 #     decision = result.scalar_one_or_none()
 #     return decision
 
-async def get_workload_request_decision(db: AsyncSession, workload_request_id: int = None, node_name: str = None, queue_name: str = None, status: str = None):
+async def get_workload_request_decision(db: AsyncSession, workload_request_id: int = None, 
+                                        node_name: str = None, queue_name: str = None, status: str = None):
     """
     Get workload request decisions based on various filters.
     """
@@ -74,7 +75,7 @@ async def get_workload_request_decision(db: AsyncSession, workload_request_id: i
         query = select(WorkloadRequestDecision)
     
     result = await db.execute(query)
-    decision = result.scalar_one_or_none()
+    decision = result.scalars().all()
     return decision
 
 async def delete_workload_request_decision(db: AsyncSession, workload_request_id: int):
