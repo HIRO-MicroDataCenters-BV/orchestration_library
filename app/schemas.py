@@ -13,3 +13,8 @@ class WorkloadRequestDecisionCreate(BaseModel):
     node_name: str
     queue_name: str
     status: Optional[str] = "pending"
+
+class WorkloadRequestDecisionUpdate(BaseModel):
+    status: str
+    node_name: Optional[str] = None
+    queue_name: Optional[str] = None    
