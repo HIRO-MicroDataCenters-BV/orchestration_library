@@ -35,7 +35,9 @@ docker-compose down
 
 ## Example Requests
 
-### Create a Workload Request
+<details>
+<summary>Create a Workload Request</summary>
+
 ```bash
 curl -X POST http://localhost:8000/workload-requests/ \
   -H "Content-Type: application/json" \
@@ -47,8 +49,11 @@ curl -X POST http://localhost:8000/workload-requests/ \
     "current_scale": 3
 }'
 ```
+</details>
 
-### Create a Workload Request Decision
+<details>
+<summary>Create a Workload Request Decision</summary>
+
 ```bash
 curl -X POST http://localhost:8000/workload-request-decisions/ \
   -H "Content-Type: application/json" \
@@ -59,20 +64,29 @@ curl -X POST http://localhost:8000/workload-request-decisions/ \
     "status": "pending"
 }'
 ```
+</details>
 
-### Retrieve Workload Request Decisions with Filters
+<details>
+<summary>Retrieve Workload Request Decisions with Filters</summary>
+
 ```bash
 curl -X GET "http://localhost:8000/workload-request-decisions/?node_name=node-1&status=pending" \
   -H "accept: application/json"
 ```
+</details>
 
-### Retrieve a Specific Workload Request Decision
+<details>
+<summary>Retrieve a Specific Workload Request Decision</summary>
+
 ```bash
 curl -X GET "http://localhost:8000/workload-request-decisions/1" \
   -H "accept: application/json"
 ```
+</details>
 
-### Update a Workload Request Decision
+<details>
+<summary>Update a Workload Request Decision</summary>
+
 ```bash
 curl -X PUT "http://localhost:8000/workload-request-decisions/1" \
   -H "Content-Type: application/json" \
@@ -80,9 +94,13 @@ curl -X PUT "http://localhost:8000/workload-request-decisions/1" \
     "status": "used"
 }'
 ```
+</details>
 
-### Delete a Workload Request Decision
+<details>
+<summary>Delete a Workload Request Decision</summary>
+
 ```bash
 curl -X DELETE "http://localhost:8000/workload-request-decisions/1" \
   -H "accept: application/json"
 ```
+</details>
