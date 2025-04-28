@@ -57,7 +57,6 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'pod') THEN
         CREATE TABLE pod (
             id SERIAL PRIMARY KEY,
-            unique_id VARCHAR(255) NOT NULL,
             name VARCHAR(255),
             namespace VARCHAR(255),
             demand_cpu FLOAT NOT NULL,

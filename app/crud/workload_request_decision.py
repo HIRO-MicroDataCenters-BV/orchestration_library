@@ -1,15 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from .models import WorkloadRequest, WorkloadRequestDecision
-from .schemas import WorkloadRequestCreate, WorkloadRequestDecisionCreate
+from app.models import WorkloadRequestDecision
+from app.schemas import WorkloadRequestDecisionCreate
 
-# def create_workload_request(db: Session, req: WorkloadRequestCreate):
-#     obj = WorkloadRequest(**req.model_dump())
-#     db.add(obj)
-#     db.commit()
-#     db.refresh(obj)
-#     return obj
 
 # def create_workload_request_decision(db: Session, decision: WorkloadRequestDecisionCreate):
 #     obj = WorkloadRequestDecision(**decision.model_dump())
@@ -17,13 +11,6 @@ from .schemas import WorkloadRequestCreate, WorkloadRequestDecisionCreate
 #     db.commit()
 #     db.refresh(obj)
 #     return obj
-
-async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
-    obj = WorkloadRequest(**req.model_dump())
-    db.add(obj)
-    await db.commit()
-    await db.refresh(obj)
-    return obj
 
 async def create_workload_request_decision(db: AsyncSession, decision: WorkloadRequestDecisionCreate):
     obj = WorkloadRequestDecision(**decision.model_dump())
@@ -41,7 +28,8 @@ async def update_workload_request_decision(db: AsyncSession, workload_request_id
         return None
 
     for key, value in updates.items():
-        setattr(decision, key, value)
+        if hasattr(decision, key):
+            setattr(decision, key, value)
 
     db.add(decision)
     await db.commit()
