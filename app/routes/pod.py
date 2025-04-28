@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.database import get_async_db
-from app.models import Pod
 from app import schemas, crud
 from app.schemas import PodCreate, PodUpdate
 
