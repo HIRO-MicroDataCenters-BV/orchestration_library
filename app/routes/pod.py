@@ -6,7 +6,7 @@ from app.models import Pod
 from app import schemas, crud
 from app.schemas import PodCreate, PodUpdate
 
-router = APIRouter(prefix="/pods", tags=["Pods"])
+router = APIRouter(prefix="/pod")
 
 @router.post("/", response_model=dict)
 async def create(data: PodCreate, db: AsyncSession = Depends(get_async_db)):
