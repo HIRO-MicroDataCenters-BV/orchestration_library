@@ -4,20 +4,6 @@ from sqlalchemy import select
 from .models import WorkloadRequest, WorkloadRequestDecision
 from .schemas import WorkloadRequestCreate, WorkloadRequestDecisionCreate
 
-# def create_workload_request(db: Session, req: WorkloadRequestCreate):
-#     obj = WorkloadRequest(**req.model_dump())
-#     db.add(obj)
-#     db.commit()
-#     db.refresh(obj)
-#     return obj
-
-# def create_workload_request_decision(db: Session, decision: WorkloadRequestDecisionCreate):
-#     obj = WorkloadRequestDecision(**decision.model_dump())
-#     db.add(obj)
-#     db.commit()
-#     db.refresh(obj)
-#     return obj
-
 
 async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     obj = WorkloadRequest(**req.model_dump())
@@ -56,14 +42,6 @@ async def update_workload_request_decision(
     await db.commit()
     await db.refresh(decision)
     return decision
-
-
-# async def get_workload_request_decision(db: AsyncSession, workload_request_id: int):
-#     result = await db.execute(
-#         select(WorkloadRequestDecision).where(WorkloadRequestDecision.workload_request_id == workload_request_id)
-#     )
-#     decision = result.scalar_one_or_none()
-#     return decision
 
 
 async def get_workload_request_decision(
@@ -119,6 +97,7 @@ async def delete_workload_request_decision(db: AsyncSession, workload_request_id
 
 async def get_workload_requests(
     db: AsyncSession,
+    workload_request_id: int = None,
     name: str = None,
     namespace: str = None,
     api_version: str = None,
@@ -129,7 +108,8 @@ async def get_workload_requests(
     Get workload requests based on various optional filters.
     """
     filters = []
-
+    if workload_request_id:
+        filters.append(WorkloadRequest.id == workload_request_id)
     if name:
         filters.append(WorkloadRequest.name == name)
     if namespace:
@@ -138,15 +118,20 @@ async def get_workload_requests(
         filters.append(WorkloadRequest.api_version == api_version)
     if kind:
         filters.append(WorkloadRequest.kind == kind)
-    if current_scale is not None:  # Important because 0 is valid scale
+    if current_scale is not None:
         filters.append(WorkloadRequest.current_scale == current_scale)
 
-    if filters:
-        query = select(WorkloadRequest).where(*filters)
-    else:
-        query = select(WorkloadRequest)
+    # Log the filters being applied
+    print(f"Filters applied: {filters}")
 
+    query = (
+        select(WorkloadRequest).where(*filters) if filters else select(WorkloadRequest)
+    )
     result = await db.execute(query)
+
+    # Check the SQL query in the logs
+    print(f"Executed query: {str(query)}")
+
     workload_requests = result.scalars().all()
     return workload_requests
 

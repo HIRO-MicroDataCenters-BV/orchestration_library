@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 
 class WorkloadRequestCreate(BaseModel):
@@ -28,3 +29,18 @@ class WorkloadRequestUpdate(BaseModel):
     namespace: Optional[str] = None
     api_version: Optional[str] = None
     kind: Optional[str] = None
+    current_scale: Optional[int] = None
+
+
+class WorkloadRequestResponse(BaseModel):
+    id: int
+    name: str
+    namespace: str
+    api_version: str
+    kind: str
+    current_scale: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True

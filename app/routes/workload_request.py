@@ -1,14 +1,10 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db, get_async_db
+from app.database import get_async_db
 from app import schemas, crud
 
-router = APIRouter(prefix="/workload_request")
 
-# @router.post("/")
-# def create(data: schemas.WorkloadRequestCreate, db: Session = Depends(get_db)):
-#     return crud.create_workload_request(db, data)
+router = APIRouter(prefix="/workload_request")
 
 
 @router.post("/")
@@ -57,3 +53,15 @@ async def delete_workload_request(
     db: AsyncSession = Depends(get_async_db),
 ):
     return await crud.delete_workload_request(db, workload_request_id)
+
+
+@router.get("/{workload_request_id}")
+async def read_workload_request_by_id(
+    workload_request_id: int, db: AsyncSession = Depends(get_async_db)
+):
+    requested_id = await crud.get_workload_requests(
+        db, workload_request_id=workload_request_id
+    )
+    if not requested_id:
+        return {"error": "ID not found"}
+    return requested_id
