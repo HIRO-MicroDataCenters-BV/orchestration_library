@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from .database import Base
 
+
 class WorkloadRequest(Base):
     __tablename__ = "workload_request"
 
@@ -16,15 +17,16 @@ class WorkloadRequest(Base):
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
+
 class WorkloadRequestDecision(Base):
     __tablename__ = "workload_request_decision"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workload_request_id = Column(Integer, ForeignKey("workload_request.id"), nullable=False)
+    workload_request_id = Column(
+        Integer, ForeignKey("workload_request.id"), nullable=False
+    )
     node_name = Column(String(255), nullable=False)
     queue_name = Column(String(255), nullable=False)
     status = Column(String(50), default="pending")
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
-
-
