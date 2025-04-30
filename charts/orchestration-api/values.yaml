@@ -1,0 +1,30 @@
+# PostgreSQL Database
+postgres:
+  name: postgres
+  image:
+    repository: postgres
+    tag: "14"
+    pullPolicy: IfNotPresent
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    size: 1Gi
+  credentials:
+    username: postgres
+    password: postgres
+    database: orchestration_db
+
+# FastAPI Application
+app:
+  name: orchestration-library
+  image:
+    repository: your-dockerhub-username/orchestration-library
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 8000
+  env:
+    DATABASE_URL: postgresql+asyncpg://{{ .Values.postgres.credentials.username }}:{{ .Values.postgres.credentials.password }}@{{ .Values.postgres.name }}:{{ .Values.postgres.service.port }}/{{ .Values.postgres.credentials.database }}
