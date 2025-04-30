@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.models import WorkloadRequest
-from app.schemas import WorkloadRequestCreate
+from orchestrationAPI.models import WorkloadRequest
+from orchestrationAPI.schemas import WorkloadRequestCreate
 
 
 # def create_workload_request(db: Session, req: WorkloadRequestCreate):

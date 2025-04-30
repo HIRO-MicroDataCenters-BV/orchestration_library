@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.models import WorkloadRequestDecision
-from app.schemas import WorkloadRequestDecisionCreate
-import pytest
+from orchestrationAPI.models import WorkloadRequestDecision
+from orchestrationAPI.schemas import WorkloadRequestDecisionCreate
+
 
 
 # def create_workload_request_decision(db: Session, decision: WorkloadRequestDecisionCreate):

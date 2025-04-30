@@ -1,14 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 import uuid
-from app.models import WorkloadRequestDecision
-from app.schemas import WorkloadRequestDecisionCreate
-from app.crud.workload_request_decision import (
-    create_workload_request_decision,
-    update_workload_request_decision,
-    get_workload_request_decision,
-    delete_workload_request_decision,
-)
+from orchestrationAPI.models import WorkloadRequestDecision
+from orchestrationAPI.schemas import WorkloadRequestDecisionCreate
+from orchestrationAPI import crud
 
 
 @pytest.mark.asyncio
@@ -23,7 +18,7 @@ async def test_create_workload_request_decision():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
-    result = await create_workload_request_decision(db, decision_data)
+    result = await crud.create_workload_request_decision(db, decision_data)
 
     db.add.assert_called_once()
     db.commit.assert_called_once()
@@ -40,7 +35,7 @@ async def test_update_workload_request_decision():
     db.refresh = AsyncMock()
 
     updates = {"status": "approved"}
-    result = await update_workload_request_decision(db, workload_request_id=1, updates=updates)
+    result = await crud.update_workload_request_decision(db, workload_request_id=1, updates=updates)
 
     db.execute.assert_called_once()
     db.commit.assert_called_once()
@@ -75,7 +70,7 @@ async def test_get_workload_request_decision():
     # db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=lambda: [mock_decision, mock_decision])))
     # db.execute = AsyncMock(return_value=[decision_data])
 
-    result = await get_workload_request_decision(db, workload_request_id=1, node_name="node-1", queue_name="queue-1", status="pending")
+    result = await gcrud.et_workload_request_decision(db, workload_request_id=1, node_name="node-1", queue_name="queue-1", status="pending")
     print(result)
     print(list(result))
     print(type(result))
@@ -99,7 +94,7 @@ async def test_delete_workload_request_decision():
     db.delete = AsyncMock()
     db.commit = AsyncMock()
 
-    result = await delete_workload_request_decision(db, workload_request_id=1)
+    result = await crud.delete_workload_request_decision(db, workload_request_id=1)
 
     db.execute.assert_called_once()
     db.delete.assert_called()

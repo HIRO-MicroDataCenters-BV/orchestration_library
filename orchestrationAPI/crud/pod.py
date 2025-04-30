@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models import Pod
-from app.schemas import PodCreate, PodUpdate
+from orchestrationAPI.models import Pod
+from orchestrationAPI.schemas import PodCreate, PodUpdate
 
 
 async def create_pod(db: AsyncSession, pod_data: PodCreate):

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.database import get_async_db
-from app import schemas, crud
-from app.schemas import PodCreate, PodUpdate
+from orchestrationAPI.database import get_async_db
+from orchestrationAPI import schemas, crud
+from orchestrationAPI.schemas import PodCreate, PodUpdate
 
 router = APIRouter(prefix="/pod")
 
