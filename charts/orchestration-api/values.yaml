@@ -6,7 +6,9 @@ postgres:
     tag: "14"
     pullPolicy: IfNotPresent
   service:
+    type: ClusterIP
     port: 5432
+    nodePort: 
   persistence:
     enabled: true
     size: 1Gi
@@ -17,14 +19,16 @@ postgres:
 
 # FastAPI Application
 app:
-  name: orchestration-library
+  name: orchestration-api
   image:
-    repository: your-dockerhub-username/orchestration-library
-    tag: latest
+    repository: orchestration-api
+    tag: alpha1
     pullPolicy: IfNotPresent
   replicaCount: 2
   service:
     type: ClusterIP
     port: 8000
-  env:
-    DATABASE_URL: postgresql+asyncpg://{{ .Values.postgres.credentials.username }}:{{ .Values.postgres.credentials.password }}@{{ .Values.postgres.name }}:{{ .Values.postgres.service.port }}/{{ .Values.postgres.credentials.database }}
+    nodePort: 
+
+configmap:
+  name: orchestration-api-config

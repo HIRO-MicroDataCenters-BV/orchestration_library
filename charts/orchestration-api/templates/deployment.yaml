@@ -21,5 +21,8 @@ spec:
           ports:
             - containerPort: {{ .Values.app.service.port }}
           env:
-            - name: DATABASE_URL
-              value: {{ .Values.app.env.DATABASE_URL }}
+          - name: DATABASE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Values.configmap.name }}
+                key: databaseURL

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Values.postgres.name }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.postgres.service.type }}
   ports:
     - port: {{ .Values.postgres.service.port }}
       targetPort: {{ .Values.postgres.service.port }}
