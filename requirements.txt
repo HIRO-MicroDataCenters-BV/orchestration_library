@@ -1,8 +1,9 @@
-fastapi
+fastapi~=0.115.12
 uvicorn[standard]
-sqlalchemy
+sqlalchemy~=2.0.40
 sqlalchemy[asyncio]
 alembic
 asyncpg
 psycopg2-binary
-pydantic
+pydantic~=2.11.4
+kubernetes
