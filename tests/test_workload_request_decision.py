@@ -63,46 +63,41 @@ async def test_delete_workload_request_decision():
     db.commit.assert_called_once()
     assert result["message"] == "Decision with ID 1 has been deleted"
 
+
 @pytest.mark.asyncio
 async def test_get_workload_request_decision():
+    # Mock data
+    mock_decision = MagicMock(spec=WorkloadRequestDecision)
+    mock_decision.workload_request_id = 1
+    mock_decision.node_name = "node-1"
+    mock_decision.queue_name = "queue-1"
+    mock_decision.status = "pending"
+
+    # Mock the return value of result.scalars().all()
+    mock_scalars = MagicMock()
+    mock_scalars.all.return_value = [mock_decision]
+
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = mock_scalars
+
     db = AsyncMock()
-    # mock_decision = WorkloadRequestDecision()
-    mock_decision = MagicMock(spec=WorkloadRequestDecision, workload_request_id=1, status="pending", node_name="node-1", queue_name="queue-1")
-    # mock_decision_list = [mock_decision, mock_decision]
-    # mock_decision.workload_request_id = 1
-    # mock_decision.node_name = "node-1"
-    # mock_decision.queue_name = "queue-1"
-    # mock_decision.status = "pending"
+    db.execute.return_value = mock_result
 
-    # Create a mock WorkloadRequestDecision object
-    # mock_decision = WorkloadRequestDecision(
-    #     workload_request_id=1,
-    #     node_name="node-1",
-    #     queue_name="queue-1",
-    #     status="pending",
-    # )
-    # db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=MagicMock(return_value=[mock_decision]))))
-    # db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=lambda: [mock_decision])))
-    db.execute = AsyncMock(return_value=AsyncMock(scalars=MagicMock(all=AsyncMock(return_value=[mock_decision]))))
+    # Call the function
+    result = await crud.get_workload_request_decision(
+        db,
+        workload_request_id=1,
+        node_name="node-1",
+        queue_name="queue-1",
+        status="pending"
+    )
 
-
-    # db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=lambda: [mock_decision, mock_decision])))
-    # db.execute = AsyncMock(return_value=[decision_data])
-
-    result = await crud.get_workload_request_decision(db, workload_request_id=1, node_name="node-1", queue_name="queue-1", status="pending")
-    print(result)
-    print(list(result))
-    print(type(result))
-    print(isinstance(result, MagicMock))
-    print(isinstance(result, list))
-    print(result[0], isinstance(result[0], WorkloadRequestDecision))
-    print(result[1], isinstance(result[1], WorkloadRequestDecision))
-
+    # Assertions
     db.execute.assert_called_once()
-    assert result is not None
-    # assert result.workload_request_id == 1
-    # assert len(result) == 2
-    # assert isinstance(result[0], WorkloadRequestDecision)
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert result[0].workload_request_id == 1
+    assert result[0].status == "pending"
 
 
 
