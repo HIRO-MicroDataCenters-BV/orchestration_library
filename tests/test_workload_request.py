@@ -9,6 +9,10 @@ from app.main import app
 @pytest.mark.asyncio
 @patch("app.crud.create_workload_request", new_callable=AsyncMock)
 async def test_create_workload_request(mock_create):
+    """
+    Test the creation of a new workload request using mocked CRUD logic.
+    Asserts that the POST request returns a 200 status and correct JSON response.
+    """
     mock_create.return_value = {"id": 1, "name": "demo"}
 
     data = {
@@ -31,6 +35,10 @@ async def test_create_workload_request(mock_create):
 @pytest.mark.asyncio
 @patch("app.routes.workload_request.crud.get_workload_requests", new_callable=AsyncMock)
 async def test_read_workload_requests(mock_get):
+    """
+    Test fetching all workload requests.
+    Verifies that the GET request returns expected mocked data.
+    """
     mock_get.return_value = [{"id": 1, "name": "demo"}]
     transport = ASGITransport(app=app)
 
@@ -47,6 +55,10 @@ async def test_read_workload_requests(mock_get):
     "app.routes.workload_request.crud.update_workload_request", new_callable=AsyncMock
 )
 async def test_update_workload_request(mock_update):
+    """
+    Test updating an existing workload request.
+    Checks that the PUT request returns updated data from the mock.
+    """
     mock_update.return_value = {"id": 1, "name": "updated"}
 
     update_data = {"name": "updated"}
@@ -65,6 +77,10 @@ async def test_update_workload_request(mock_update):
     "app.routes.workload_request.crud.delete_workload_request", new_callable=AsyncMock
 )
 async def test_delete_workload_request(mock_delete):
+    """
+    Test deleting a workload request.
+    Ensures the DELETE request returns a confirmation of deletion.
+    """
     mock_delete.return_value = {"status": "deleted"}
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -78,6 +94,10 @@ async def test_delete_workload_request(mock_delete):
 @pytest.mark.asyncio
 @patch("app.routes.workload_request.crud.get_workload_requests", new_callable=AsyncMock)
 async def test_read_workload_request_by_id(mock_get):
+    """
+    Test fetching a specific workload request by ID.
+    Verifies that the response includes the correct item.
+    """
     mock_get.return_value = {"id": 1, "name": "demo"}
     transport = ASGITransport(app=app)
 
