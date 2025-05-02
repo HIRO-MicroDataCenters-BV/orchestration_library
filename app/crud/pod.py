@@ -14,8 +14,16 @@ async def create_pod(db: AsyncSession, pod_data: PodCreate):
     await db.refresh(pod)
     return pod
 
-async def get_pod(db: AsyncSession, pod_id: int = None, name: str = None, namespace: str = None, 
-                  is_elastic: bool = None, assigned_node_id: int = None, status: str = None):
+
+async def get_pod(
+    db: AsyncSession,
+    pod_id: int = None,
+    name: str = None,
+    namespace: str = None,
+    is_elastic: bool = None,
+    assigned_node_id: int = None,
+    status: str = None,
+):
     """
     Retrieve pods based on various filters. If no filters are provided, return all pods.
     """
@@ -42,6 +50,7 @@ async def get_pod(db: AsyncSession, pod_id: int = None, name: str = None, namesp
     pods = result.scalars().all()
     return pods
 
+
 async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
     """
     Update an existing pod.
@@ -60,6 +69,7 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
     await db.refresh(pod)
     return pod
 
+
 async def delete_pod(db: AsyncSession, pod_id: int):
     """
     Delete a pod by its ID.
@@ -67,7 +77,7 @@ async def delete_pod(db: AsyncSession, pod_id: int):
     pod = await get_pod(db, pod_id)
     if not pod:
         return {"error": "Pod not found"}
-    
+
     await db.delete(pod)
     await db.commit()
     return {"message": f"Pod with ID {pod_id} has been deleted"}
