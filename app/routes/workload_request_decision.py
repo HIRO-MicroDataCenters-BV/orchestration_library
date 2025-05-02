@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from orchestrationAPI.database import get_db, get_async_db
+from app.database import get_db, get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from orchestrationAPI import schemas, crud
+from app import schemas, crud
 
 router = APIRouter(prefix="/workload_request_decision")
 

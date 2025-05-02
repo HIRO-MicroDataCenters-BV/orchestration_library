@@ -1,11 +1,16 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+from fastapi import status
+from httpx import ASGITransport, AsyncClient
 import uuid
-from orchestrationAPI.models import WorkloadRequestDecision
-from orchestrationAPI.schemas import WorkloadRequestDecisionCreate
-from orchestrationAPI import crud
+from app.models import WorkloadRequestDecision
+from app.schemas import WorkloadRequestDecisionCreate
+from app import crud
+from app.main import app  
 
-
+# ===========================================================================
+# ========================= Tests for workload_request_decision CRUD functions =========================
+# ===========================================================================
 @pytest.mark.asyncio
 async def test_create_workload_request_decision():
     db = AsyncMock()
@@ -43,6 +48,20 @@ async def test_update_workload_request_decision():
     assert result is not None
     assert result.status == "approved"
 
+@pytest.mark.asyncio
+async def test_delete_workload_request_decision():
+    db = AsyncMock()
+    mock_decision = WorkloadRequestDecision()
+    db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=MagicMock(return_value=[mock_decision]))))
+    db.delete = AsyncMock()
+    db.commit = AsyncMock()
+
+    result = await crud.delete_workload_request_decision(db, workload_request_id=1)
+
+    db.execute.assert_called_once()
+    db.delete.assert_called()
+    db.commit.assert_called_once()
+    assert result["message"] == "Decision with ID 1 has been deleted"
 
 @pytest.mark.asyncio
 async def test_get_workload_request_decision():
@@ -70,7 +89,7 @@ async def test_get_workload_request_decision():
     # db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=lambda: [mock_decision, mock_decision])))
     # db.execute = AsyncMock(return_value=[decision_data])
 
-    result = await gcrud.et_workload_request_decision(db, workload_request_id=1, node_name="node-1", queue_name="queue-1", status="pending")
+    result = await crud.get_workload_request_decision(db, workload_request_id=1, node_name="node-1", queue_name="queue-1", status="pending")
     print(result)
     print(list(result))
     print(type(result))
@@ -86,90 +105,150 @@ async def test_get_workload_request_decision():
     # assert isinstance(result[0], WorkloadRequestDecision)
 
 
+
+# =====================================================================================
+# ========================= Below tests are for the workload_request_decision routes =========================
+# =====================================================================================
+
 @pytest.mark.asyncio
-async def test_delete_workload_request_decision():
-    db = AsyncMock()
-    mock_decision = WorkloadRequestDecision()
-    db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=MagicMock(return_value=[mock_decision]))))
-    db.delete = AsyncMock()
-    db.commit = AsyncMock()
+@patch("app.crud.create_workload_request_decision", new_callable=AsyncMock)
+async def test_create_workload_request_decision_route(mock_create):
+    """
+    Test the creation of a new workload request decision using mocked CRUD logic.
+    Asserts that the POST request returns a 200 status and correct JSON response.
+    """
 
-    result = await crud.delete_workload_request_decision(db, workload_request_id=1)
+    request_data = {
+        "workload_request_id": 1,
+        "node_name": "node-1",
+        "queue_name": "queue-1",
+        "status": "pending",
+    }
+    response_data = {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "workload_request_id": 1,
+        "node_name": "node-1",
+        "queue_name": "queue-1",
+        "status": "pending",
+        "created_at": "2023-01-01T12:00:00Z",
+        "updated_at": "2023-01-01T12:00:00Z"
+    }
 
-    db.execute.assert_called_once()
-    db.delete.assert_called()
-    db.commit.assert_called_once()
-    assert result["message"] == "Decision with ID 1 has been deleted"
+    mock_create.return_value = response_data
 
+    transport = ASGITransport(app=app)
 
-###### Need to fix below test ######
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/workload_request_decision/", json=request_data)
 
-# DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-# # Set up the test database
-# engine_test = create_async_engine(DATABASE_URL, echo=False)
-# TestSessionLocal = sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)
-
-# @pytest.mark.asyncio
-# async def test_delete_workload_request_decision():
-#     db = AsyncMock()
-#     mock_decision = WorkloadRequestDecision()
-#     db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=MagicMock(return_value=[mock_decision]))))
-#     db.delete = AsyncMock()
-#     db.commit = AsyncMock()
-
-#     result = await delete_workload_request_decision(db, workload_request_id=1)
-
-#     db.execute.assert_called_once()
-#     db.delete.assert_called()
-#     db.commit.assert_called_once()
-#     assert result["message"] == "Decision with ID 1 has been deleted"
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
 
 
+@pytest.mark.asyncio
+@patch("app.crud.update_workload_request_decision", new_callable=AsyncMock)
+async def test_update_workload_request_decision_route(mock_update):
+    """
+    Test updating a workload request decision using mocked CRUD logic.
+    Asserts that the PUT request returns a 200 status and correct JSON response.
+    """
+    request_data = {
+        "status": "approved"
+    }
+    response_data = {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "workload_request_id": 1,
+        "node_name": "node-1",
+        "queue_name": "queue-1",
+        "status": "approved",
+        "created_at": "2023-01-01T12:00:00Z",
+        "updated_at": "2023-01-01T12:30:00Z"
+    }
 
-# @pytest.fixture(scope="function")
-# async def db_session():
-#     async with engine_test.begin() as conn:
-#         await conn.run_sync(Base.metadata.create_all)
-#     async with TestSessionLocal() as session:
-#         try:
-#             yield session
-#         finally:
-#             async with engine_test.begin() as conn:
-#                 await conn.run_sync(Base.metadata.drop_all)
+    mock_update.return_value = response_data
 
-# @pytest.mark.asyncio
-# async def test_get_workload_request_decision(db_session):
-#     # Insert sample data
-#     test_data = WorkloadRequestDecision(
-#         workload_request_id=1,
-#         node_name="node-1",
-#         queue_name="queue-1",
-#         status="queued",
-#     )
-#     db_session.add(test_data)
-#     await db_session.commit()
+    transport = ASGITransport(app=app)
 
-#     # Test with one filter
-#     result = await get_workload_request_decision(db_session, node_name="node-1")
-#     assert len(result) == 1
-#     assert result[0].node_name == "node-1"
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.put("/workload_request_decision/1", json=request_data)
 
-#     # Test with all filters
-#     result = await get_workload_request_decision(
-#         db_session,
-#         workload_request_id=1,
-#         node_name="node-1",
-#         queue_name="queue-1",
-#         status="queued"
-#     )
-#     assert len(result) == 1
-#     assert result[0].queue_name == "queue-1"
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
 
-#     # Test with no filters
-#     result = await get_workload_request_decision(db_session)
-#     assert len(result) == 1
 
-#     # Test with non-matching filter
-#     result = await get_workload_request_decision(db_session, node_name="not-found")
-#     assert result == []
+@pytest.mark.asyncio
+@patch("app.crud.delete_workload_request_decision", new_callable=AsyncMock)
+async def test_delete_workload_request_decision_route(mock_delete):
+    """
+    Test deleting a workload request decision using mocked CRUD logic.
+    Asserts that the DELETE request returns a 200 status and correct JSON response.
+    """
+    response_data = {"message": "Decision with ID 1 has been deleted"}
+
+    mock_delete.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.delete("/workload_request_decision/1")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
+
+
+@pytest.mark.asyncio
+@patch("app.crud.get_workload_request_decision", new_callable=AsyncMock)
+async def test_get_workload_request_decision_route(mock_get):
+    """
+    Test retrieving workload request decisions using mocked CRUD logic.
+    Asserts that the GET request returns a 200 status and correct JSON response.
+    """
+    response_data = [
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "workload_request_id": 1,
+            "node_name": "node-1",
+            "queue_name": "queue-1",
+            "status": "pending",
+            "created_at": "2023-01-01T12:00:00Z",
+            "updated_at": "2023-01-01T12:00:00Z"
+        }
+    ]
+
+    mock_get.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/workload_request_decision/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data    
+
+
+@pytest.mark.asyncio
+@patch("app.crud.get_workload_request_decision", new_callable=AsyncMock)
+async def test_get_workload_request_decision_by_id_route(mock_get):
+    """
+    Test retrieving a specific workload request decision by ID using mocked CRUD logic.
+    Asserts that the GET request returns a 200 status and correct JSON response.
+    """
+    response_data = {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "workload_request_id": 1,
+        "node_name": "node-1",
+        "queue_name": "queue-1",
+        "status": "pending",
+        "created_at": "2023-01-01T12:00:00Z",
+        "updated_at": "2023-01-01T12:00:00Z"
+    }
+
+    mock_get.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/workload_request_decision/1")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
