@@ -1,11 +1,64 @@
+from re import S
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 from app.schemas import PodCreate, PodUpdate
 from app.models import Pod
 from app import crud
 from app.main import app
+
+# ========================= Constants for sample pod data =========================
+
+SAMPLE_POD_OBJECT = Pod(
+    id=1,
+    name="test-pod",
+    namespace="default",
+    is_elastic=False,
+    assigned_node_id=1,
+    status="running",
+    demand_cpu=0.5,
+    demand_memory=256,
+    demand_slack_cpu=0.1,
+    demand_slack_memory=64
+)
+
+SAMPLE_POD_REQUEST_DATA = {
+    "name": "test-pod",
+    "namespace": "default",
+    "is_elastic": False,
+    "assigned_node_id": 1,
+    "status": "running",
+    "demand_cpu": 0.5,
+    "demand_memory": 256,
+    "demand_slack_cpu": 0.1,
+    "demand_slack_memory": 64
+}
+
+SAMPLE_POD_RESPONSE_DATA = {
+    "id": 1,
+    "name": "test-pod",
+    "namespace": "default",
+    "is_elastic": False,
+    "assigned_node_id": 1,
+    "status": "running",
+    "demand_cpu": 0.5,
+    "demand_memory": 256,
+    "demand_slack_cpu": 0.1,
+    "demand_slack_memory": 64
+}
+
+SAMPLE_POD_LIST_RESPONSE_DATA = [
+    SAMPLE_POD_RESPONSE_DATA
+]
+
+SAMPLE_POD_UPDATE_REQUEST_DATA = {
+    "status": "completed"
+}
+
+SAMPLE_POD_DELETE_RESPONSE_DATA = {
+    "message": "Pod with ID 1 has been deleted"
+}
 
 
 # ========================= Tests for pod CRUD functions =========================
@@ -18,7 +71,11 @@ async def test_create_pod():
         namespace="default",
         is_elastic=False,
         assigned_node_id=1,
-        status="running"
+        status="running",
+        demand_cpu=0.5,
+        demand_memory=256,
+        demand_slack_cpu=0.1,
+        demand_slack_memory=64
     )
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
@@ -33,16 +90,15 @@ async def test_create_pod():
 
 @pytest.mark.asyncio
 async def test_get_pod():
+    mock_pod = SAMPLE_POD_OBJECT
+    mock_scalars = MagicMock()
+    mock_scalars.all.return_value = [mock_pod]
+
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = mock_scalars
+
     db = AsyncMock()
-    mock_pod = Pod(
-        id=1,
-        name="test-pod",
-        namespace="default",
-        is_elastic=False,
-        assigned_node_id=1,
-        status="running"
-    )
-    db.execute = AsyncMock(return_value=AsyncMock(scalars=AsyncMock(all=AsyncMock(return_value=[mock_pod]))))
+    db.execute.return_value = mock_result
 
     result = await crud.get_pod(db)
 
@@ -56,15 +112,8 @@ async def test_get_pod():
 @pytest.mark.asyncio
 async def test_update_pod():
     db = AsyncMock()
-    mock_pod = Pod(
-        id=1,
-        name="test-pod",
-        namespace="default",
-        is_elastic=False,
-        assigned_node_id=1,
-        status="running"
-    )
-    db.execute = AsyncMock(return_value=AsyncMock(scalar_one_or_none=mock_pod))
+    mock_pod = MagicMock(spec=Pod, status="pending")
+    db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=mock_pod))
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
@@ -81,15 +130,8 @@ async def test_update_pod():
 @pytest.mark.asyncio
 async def test_delete_pod():
     db = AsyncMock()
-    mock_pod = Pod(
-        id=1,
-        name="test-pod",
-        namespace="default",
-        is_elastic=False,
-        assigned_node_id=1,
-        status="running"
-    )
-    db.execute = AsyncMock(return_value=AsyncMock(scalar_one_or_none=mock_pod))
+    mock_pod = SAMPLE_POD_OBJECT
+    db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=mock_pod))
     db.delete = AsyncMock()
     db.commit = AsyncMock()
 
@@ -106,21 +148,8 @@ async def test_delete_pod():
 @pytest.mark.asyncio
 @patch("app.crud.create_pod", new_callable=AsyncMock)
 async def test_create_pod_route(mock_create):
-    request_data = {
-        "name": "test-pod",
-        "namespace": "default",
-        "is_elastic": False,
-        "assigned_node_id": 1,
-        "status": "running"
-    }
-    response_data = {
-        "id": 1,
-        "name": "test-pod",
-        "namespace": "default",
-        "is_elastic": False,
-        "assigned_node_id": 1,
-        "status": "running"
-    }
+    request_data = SAMPLE_POD_REQUEST_DATA
+    response_data = SAMPLE_POD_RESPONSE_DATA
 
     mock_create.return_value = response_data
 
@@ -136,16 +165,7 @@ async def test_create_pod_route(mock_create):
 @pytest.mark.asyncio
 @patch("app.crud.get_pod", new_callable=AsyncMock)
 async def test_get_pod_route(mock_get):
-    response_data = [
-        {
-            "id": 1,
-            "name": "test-pod",
-            "namespace": "default",
-            "is_elastic": False,
-            "assigned_node_id": 1,
-            "status": "running"
-        }
-    ]
+    response_data = SAMPLE_POD_LIST_RESPONSE_DATA
 
     mock_get.return_value = response_data
 
@@ -161,14 +181,7 @@ async def test_get_pod_route(mock_get):
 @pytest.mark.asyncio
 @patch("app.crud.get_pod", new_callable=AsyncMock)
 async def test_get_pod_by_id_route(mock_get):
-    response_data = {
-        "id": 1,
-        "name": "test-pod",
-        "namespace": "default",
-        "is_elastic": False,
-        "assigned_node_id": 1,
-        "status": "running"
-    }
+    response_data = SAMPLE_POD_RESPONSE_DATA
 
     mock_get.return_value = response_data
 
@@ -184,17 +197,8 @@ async def test_get_pod_by_id_route(mock_get):
 @pytest.mark.asyncio
 @patch("app.crud.update_pod", new_callable=AsyncMock)
 async def test_update_pod_route(mock_update):
-    request_data = {
-        "status": "completed"
-    }
-    response_data = {
-        "id": 1,
-        "name": "test-pod",
-        "namespace": "default",
-        "is_elastic": False,
-        "assigned_node_id": 1,
-        "status": "completed"
-    }
+    request_data = SAMPLE_POD_UPDATE_REQUEST_DATA
+    response_data = SAMPLE_POD_RESPONSE_DATA
 
     mock_update.return_value = response_data
 
@@ -210,7 +214,7 @@ async def test_update_pod_route(mock_update):
 @pytest.mark.asyncio
 @patch("app.crud.delete_pod", new_callable=AsyncMock)
 async def test_delete_pod_route(mock_delete):
-    response_data = {"message": "Pod with ID 1 has been deleted"}
+    response_data = SAMPLE_POD_DELETE_RESPONSE_DATA
 
     mock_delete.return_value = response_data
 
