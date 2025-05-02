@@ -15,7 +15,9 @@ services:
       - "5432:5432"
 
   api:
-    build: .
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
     depends_on:
       - db
     environment:
@@ -24,7 +26,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
+      - ../app:/code/app
 
 volumes:
   postgres_data:
