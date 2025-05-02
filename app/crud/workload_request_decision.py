@@ -5,14 +5,6 @@ from app.models import WorkloadRequestDecision
 from app.schemas import WorkloadRequestDecisionCreate
 
 
-
-# def create_workload_request_decision(db: Session, decision: WorkloadRequestDecisionCreate):
-#     obj = WorkloadRequestDecision(**decision.model_dump())
-#     db.add(obj)
-#     db.commit()
-#     db.refresh(obj)
-#     return obj
-
 async def create_workload_request_decision(db: AsyncSession, decision: WorkloadRequestDecisionCreate):
     """
     Create a new workload request decision.
@@ -97,3 +89,7 @@ async def delete_workload_request_decision(db: AsyncSession, workload_request_id
     await db.commit()
     return {"message": f"Decision with ID {workload_request_id} has been deleted"}
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
