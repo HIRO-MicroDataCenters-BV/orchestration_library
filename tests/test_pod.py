@@ -100,7 +100,15 @@ async def test_get_pod():
     db = AsyncMock()
     db.execute.return_value = mock_result
 
-    result = await crud.get_pod(db)
+    result = await crud.get_pod(
+        db, 
+        pod_id=1, 
+        name="test-pod", 
+        namespace="default", 
+        is_elastic=False, 
+        assigned_node_id=1, 
+        status="running"
+    )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
