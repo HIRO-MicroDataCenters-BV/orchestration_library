@@ -12,7 +12,10 @@ from app.schemas import WorkloadRequestDecisionCreate
 #     db.refresh(obj)
 #     return obj
 
-async def create_workload_request_decision(db: AsyncSession, decision: WorkloadRequestDecisionCreate):
+
+async def create_workload_request_decision(
+    db: AsyncSession, decision: WorkloadRequestDecisionCreate
+):
     """
     Create a new workload request decision.
     """
@@ -23,7 +26,9 @@ async def create_workload_request_decision(db: AsyncSession, decision: WorkloadR
     return obj
 
 
-async def update_workload_request_decision(db: AsyncSession, workload_request_id: int, updates: dict):
+async def update_workload_request_decision(
+    db: AsyncSession, workload_request_id: int, updates: dict
+):
     """
     Update a workload request decision by its workload_request_id.
     """
@@ -95,5 +100,3 @@ async def delete_workload_request_decision(db: AsyncSession, workload_request_id
         await db.delete(decision)
     await db.commit()
     return {"message": f"Decision with ID {workload_request_id} has been deleted"}
-
-

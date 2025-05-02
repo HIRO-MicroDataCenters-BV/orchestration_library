@@ -21,7 +21,8 @@ class WorkloadRequestDecisionCreate(BaseModel):
 class WorkloadRequestDecisionUpdate(BaseModel):
     status: str
     node_name: Optional[str] = None
-    queue_name: Optional[str] = None    
+    queue_name: Optional[str] = None
+
 
 class PodCreate(BaseModel):
     name: str
@@ -33,6 +34,7 @@ class PodCreate(BaseModel):
     is_elastic: bool
     assigned_node_id: Optional[int] = None
     status: Optional[str] = "pending"
+
 
 class PodUpdate(BaseModel):
     name: Optional[str] = None
@@ -55,15 +57,15 @@ class WorkloadRequestUpdate(BaseModel):
     current_scale: Optional[int] = None
 
 
-class WorkloadRequestResponse(BaseModel):
-    id: int
-    name: str
-    namespace: str
-    api_version: str
-    kind: str
-    current_scale: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
+# class WorkloadRequestResponse(BaseModel):
+#     id: int
+#     name: str
+#     namespace: str
+#     api_version: str
+#     kind: str
+#     current_scale: int
+#     created_at: datetime
+#     updated_at: datetime
+#
+#     class Config:
+#         orm_mode = True
