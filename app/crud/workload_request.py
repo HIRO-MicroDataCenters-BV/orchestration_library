@@ -12,6 +12,7 @@ from app.schemas import WorkloadRequestCreate
 #     db.refresh(obj)
 #     return obj
 
+
 async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     """
     Create a new workload request.
@@ -21,6 +22,7 @@ async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     await db.commit()
     await db.refresh(obj)
     return obj
+
 
 async def get_workload_requests(
     db: AsyncSession,
@@ -106,4 +108,3 @@ async def delete_workload_request(db: AsyncSession, workload_request_id: int):
     return {
         "message": f"WorkloadRequest with ID {workload_request_id} has been deleted"
     }
-
