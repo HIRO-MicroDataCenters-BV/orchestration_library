@@ -89,7 +89,3 @@ async def delete_workload_request_decision(db: AsyncSession, workload_request_id
     await db.commit()
     return {"message": f"Decision with ID {workload_request_id} has been deleted"}
 
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
