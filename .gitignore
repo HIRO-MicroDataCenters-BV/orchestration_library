@@ -176,3 +176,8 @@ cython_debug/
 # .vscode
 .vscode/*
 !.vscode/settings.json
+
+# intellij
+.idea/*
+!.idea/misc.xml
+!.idea/modules.xml
