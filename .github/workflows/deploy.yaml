@@ -25,8 +25,8 @@ jobs:
       # Step 3: Build and push the Docker image
       - name: Build and push Docker image
         run: |
-          IMAGE_NAME=your-dockerhub-username/orchestration-api
-          TAG=$(date +%Y%m%d%H%M%S)
+          IMAGE_NAME=docker.io/orchestration-api
+          TAG=latest
           docker build -t $IMAGE_NAME:$TAG .
           docker push $IMAGE_NAME:$TAG
           echo "IMAGE_NAME=$IMAGE_NAME:$TAG" >> $GITHUB_ENV
