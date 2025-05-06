@@ -57,15 +57,11 @@ class WorkloadRequestUpdate(BaseModel):
     current_scale: Optional[int] = None
 
 
-# class WorkloadRequestResponse(BaseModel):
-#     id: int
-#     name: str
-#     namespace: str
-#     api_version: str
-#     kind: str
-#     current_scale: int
-#     created_at: datetime
-#     updated_at: datetime
-#
-#     class Config:
-#         orm_mode = True
+class WorkloadRequestPodCreate(BaseModel):
+    workload_request_id: Optional[int] = None
+    pod_id: Optional[int] = None
+
+
+class WorkloadRequestPodUpdate(BaseModel):
+    workload_request_id: Optional[int] = None
+    pod_id: Optional[int] = None
