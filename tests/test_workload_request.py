@@ -14,6 +14,11 @@ from app.models import WorkloadRequest
 from app.schemas import WorkloadRequestCreate
 
 
+# ===========================================================================
+# ========================= Tests for workload_request CRUD functions =========================
+# ===========================================================================
+
+
 @pytest.mark.asyncio
 @patch("app.crud.workload_request.WorkloadRequest")
 async def test_create_workload_request(mock_work):
@@ -197,3 +202,161 @@ async def test_delete_workload_request_not_found():
 
     db.execute.assert_awaited_once()
     assert result == {"error": "WorkloadRequest not found"}
+
+
+# =====================================================================================
+# ========================= Below tests are for the workload_request routes =========================
+# =====================================================================================
+
+
+@pytest.mark.asyncio
+@patch("app.crud.create_workload_request", new_callable=AsyncMock)
+async def test_create_workload_request_route(mock_create):
+    """
+    Test the creation of a new workload request using mocked CRUD logic.
+    Asserts that the POST request returns a 200 status and correct JSON response.
+    """
+
+    request_data = {
+        "name": "test-workload",
+        "namespace": "default",
+        "api_version": "v1",
+        "kind": "Deployment",
+        "current_scale": 3,
+    }
+
+    response_data = {
+        "id": 1,
+        "name": "test-workload",
+        "namespace": "default",
+        "api_version": "v1",
+        "kind": "Deployment",
+        "current_scale": 3,
+        "created_at": "2023-01-01T12:00:00Z",
+        "updated_at": "2023-01-01T12:00:00Z",
+    }
+
+    mock_create.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/workload_request/", json=request_data)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
+
+
+@pytest.mark.asyncio
+@patch("app.crud.update_workload_request", new_callable=AsyncMock)
+async def test_update_workload_request_route(mock_update):
+    """
+    Test updating a workload request using mocked CRUD logic.
+    Asserts that the PUT request returns a 200 status and correct JSON response.
+    """
+
+    request_data = {"current_scale": 5}
+
+    response_data = {
+        "id": 1,
+        "name": "test-workload",
+        "namespace": "default",
+        "api_version": "v1",
+        "kind": "Deployment",
+        "current_scale": 5,
+        "created_at": "2023-01-01T12:00:00Z",
+        "updated_at": "2023-01-01T12:30:00Z",
+    }
+
+    mock_update.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.put("/workload_request/1", json=request_data)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
+
+
+@pytest.mark.asyncio
+@patch("app.crud.delete_workload_request", new_callable=AsyncMock)
+async def test_delete_workload_request_route(mock_delete):
+    """
+    Test deleting a workload request using mocked CRUD logic.
+    Asserts that the DELETE request returns a 200 status and correct JSON response.
+    """
+
+    response_data = {"message": "Workload request with ID 1 has been deleted"}
+
+    mock_delete.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.delete("/workload_request/1")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
+
+
+@pytest.mark.asyncio
+@patch("app.crud.get_workload_requests", new_callable=AsyncMock)
+async def test_read_workload_requests_route(mock_get):
+    """
+    Test retrieving workload requests using mocked CRUD logic.
+    Asserts that the GET request returns a 200 status and correct JSON response.
+    """
+
+    response_data = [
+        {
+            "id": 1,
+            "name": "test-workload",
+            "namespace": "default",
+            "api_version": "v1",
+            "kind": "Deployment",
+            "current_scale": 3,
+            "created_at": "2023-01-01T12:00:00Z",
+            "updated_at": "2023-01-01T12:00:00Z",
+        }
+    ]
+
+    mock_get.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/workload_request/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
+
+
+@pytest.mark.asyncio
+@patch("app.crud.get_workload_requests", new_callable=AsyncMock)
+async def test_read_workload_request_by_id_route(mock_get):
+    """
+    Test retrieving a specific workload request by ID using mocked CRUD logic.
+    Asserts that the GET request returns a 200 status and correct JSON response.
+    """
+
+    response_data = {
+        "id": 1,
+        "name": "test-workload",
+        "namespace": "default",
+        "api_version": "v1",
+        "kind": "Deployment",
+        "current_scale": 3,
+        "created_at": "2023-01-01T12:00:00Z",
+        "updated_at": "2023-01-01T12:00:00Z",
+    }
+
+    mock_get.return_value = response_data
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/workload_request/1")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
