@@ -14,7 +14,9 @@ from app.models import WorkloadRequest
 from app.schemas import WorkloadRequestCreate
 
 
-
+# ===========================================================================
+# ========================= Tests for workload_request CRUD functions =========================
+# ===========================================================================
 
 
 @pytest.mark.asyncio
@@ -206,6 +208,7 @@ async def test_delete_workload_request_not_found():
 # ========================= Below tests are for the workload_request routes =========================
 # =====================================================================================
 
+
 @pytest.mark.asyncio
 @patch("app.crud.create_workload_request", new_callable=AsyncMock)
 async def test_create_workload_request_route(mock_create):
@@ -219,7 +222,7 @@ async def test_create_workload_request_route(mock_create):
         "namespace": "default",
         "api_version": "v1",
         "kind": "Deployment",
-        "current_scale": 3
+        "current_scale": 3,
     }
 
     response_data = {
@@ -230,7 +233,7 @@ async def test_create_workload_request_route(mock_create):
         "kind": "Deployment",
         "current_scale": 3,
         "created_at": "2023-01-01T12:00:00Z",
-        "updated_at": "2023-01-01T12:00:00Z"
+        "updated_at": "2023-01-01T12:00:00Z",
     }
 
     mock_create.return_value = response_data
@@ -252,9 +255,7 @@ async def test_update_workload_request_route(mock_update):
     Asserts that the PUT request returns a 200 status and correct JSON response.
     """
 
-    request_data = {
-        "current_scale": 5
-    }
+    request_data = {"current_scale": 5}
 
     response_data = {
         "id": 1,
@@ -264,7 +265,7 @@ async def test_update_workload_request_route(mock_update):
         "kind": "Deployment",
         "current_scale": 5,
         "created_at": "2023-01-01T12:00:00Z",
-        "updated_at": "2023-01-01T12:30:00Z"
+        "updated_at": "2023-01-01T12:30:00Z",
     }
 
     mock_update.return_value = response_data
@@ -316,7 +317,7 @@ async def test_read_workload_requests_route(mock_get):
             "kind": "Deployment",
             "current_scale": 3,
             "created_at": "2023-01-01T12:00:00Z",
-            "updated_at": "2023-01-01T12:00:00Z"
+            "updated_at": "2023-01-01T12:00:00Z",
         }
     ]
 
@@ -347,7 +348,7 @@ async def test_read_workload_request_by_id_route(mock_get):
         "kind": "Deployment",
         "current_scale": 3,
         "created_at": "2023-01-01T12:00:00Z",
-        "updated_at": "2023-01-01T12:00:00Z"
+        "updated_at": "2023-01-01T12:00:00Z",
     }
 
     mock_get.return_value = response_data
