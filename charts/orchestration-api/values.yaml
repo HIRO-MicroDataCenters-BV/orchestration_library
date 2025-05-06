@@ -20,6 +20,8 @@ postgres:
 # FastAPI Application
 app:
   name: orchestration-api
+  secret:
+    name: orchestration-api-secret
   image:
     repository: orchestration-api
     tag: alpha1
