@@ -33,4 +33,5 @@ app:
     nodePort: 
 
 configmap:
-  name: orchestration-api-config
+  databaseURLConfig: orchestration-api-config
+  databaseInitConfig: db-init-script
