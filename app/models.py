@@ -84,3 +84,19 @@ class Pod(Base):
 
     # # Relationship to Node
     # node = relationship("Node", back_populates="pods")
+
+
+class WorkloadRequestPod(Base):
+    __tablename__ = "workload_request_pod"
+
+    id = Column(Integer, primary_key=True, index=True)
+    workload_request_id = Column(
+        Integer, ForeignKey("workload_request.id"), nullable=False
+    )
+    pod_id = Column(Integer, ForeignKey("pod.id"), nullable=False)
+    created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+    updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+
+    # Relationships
+    # workload_request = relationship("WorkloadRequest", backref="workload_pods")
+    # pod = relationship("Pod", backref="workload_requests")  # Assuming a Pod model exists
