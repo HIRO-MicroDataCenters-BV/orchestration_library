@@ -25,11 +25,9 @@ jobs:
       # Step 3: Build and push the Docker image
       - name: Build and push Docker image
         run: |
-          IMAGE_NAME=hiroregistry/orchestration-api
-          TAG=alpha1
-          docker build -t $IMAGE_NAME:$TAG .
-          docker push $IMAGE_NAME:$TAG
-          echo "IMAGE_NAME=$IMAGE_NAME:$TAG" >> $GITHUB_ENV
+          docker build -t $ORCHESTRATION_API_IMAGE_NAME:$ORCHESTRATION_API_IMAGE_TAG .
+          docker push $ORCHESTRATION_API_IMAGE_NAME:$ORCHESTRATION_API_IMAGE_TAG
+          echo "IMAGE_NAME=$ORCHESTRATION_API_IMAGE_NAME:$ORCHESTRATION_API_IMAGE_TAG" >> $GITHUB_ENV
 
   # Enable this below job, in integration phase to deploy the application to Kubernetes
   # deploy:
