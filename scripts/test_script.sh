@@ -15,8 +15,8 @@ echo "Deploy the orchestration-api to the Kind cluster"
 helm upgrade --install orchestration-api ./charts/orchestration-api \
   --namespace orchestration-api \
   --create-namespace \
-  --set orchestration-api.image.repository=orchestration-api \
-  --set orchestration-api.image.tag=alpha1
+  --set app.image.repository=orchestration-api \
+  --set app.image.tag=alpha1
 echo "Wait for the orchestration-api to be ready"
 kubectl wait --for=condition=available --timeout=60s deployment/orchestration-api -n orchestration-api
 echo "Get the orchestration-api service"
