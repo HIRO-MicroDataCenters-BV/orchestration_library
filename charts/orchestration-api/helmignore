@@ -1,0 +1,29 @@
+# Exclude version control directories
+.git/
+.gitignore
+
+# Exclude temporary files
+*.swp
+*.bak
+*.tmp
+*.orig
+
+# Exclude OS-specific files
+.DS_Store
+Thumbs.db
+
+# Exclude IDE-specific files
+.idea/
+.vscode/
+
+# Exclude test and cache files
+tests/
+*.log
+*.out
+*.pytest_cache/
+.coverage
+coverage.xml
+
+# Exclude build artifacts
+*.tgz
+*.tar.gz

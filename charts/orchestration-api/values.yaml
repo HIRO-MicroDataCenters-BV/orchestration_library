@@ -1,0 +1,34 @@
+# PostgreSQL Database
+postgres:
+  name: postgres
+  image:
+    repository: postgres
+    tag: "14"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5432
+    nodePort: 
+  persistence:
+    enabled: true
+    size: 1Gi
+  credentials:
+    username: postgres
+    password: postgres
+    database: orchestration_db
+
+# FastAPI Application
+app:
+  name: orchestration-api
+  image:
+    repository: orchestration-api
+    tag: alpha1
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 8000
+    nodePort: 
+
+configmap:
+  name: orchestration-api-config

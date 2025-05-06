@@ -1,16 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.models import WorkloadRequest
 from app.schemas import WorkloadRequestCreate
 
-
-# def create_workload_request(db: Session, req: WorkloadRequestCreate):
-#     obj = WorkloadRequest(**req.model_dump())
-#     db.add(obj)
-#     db.commit()
-#     db.refresh(obj)
-#     return obj
 
 async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     """
@@ -21,6 +13,7 @@ async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     await db.commit()
     await db.refresh(obj)
     return obj
+
 
 async def get_workload_requests(
     db: AsyncSession,
@@ -55,9 +48,6 @@ async def get_workload_requests(
         select(WorkloadRequest).where(*filters) if filters else select(WorkloadRequest)
     )
     result = await db.execute(query)
-
-    # Check the SQL query in the logs
-    print(f"Executed query: {str(query)}")
 
     workload_requests = result.scalars().all()
     return workload_requests
@@ -106,4 +96,3 @@ async def delete_workload_request(db: AsyncSession, workload_request_id: int):
     return {
         "message": f"WorkloadRequest with ID {workload_request_id} has been deleted"
     }
-
