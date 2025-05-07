@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Values.postgres.name }}
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.postgres.name }}
 spec:
