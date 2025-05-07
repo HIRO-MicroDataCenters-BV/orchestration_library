@@ -23,6 +23,9 @@ def list_k8s_pods(namespace=None):
 
     for pod in pods.items:
         simplified_pods.append({
+            "id": pod.metadata.uid,
+            "namespace": pod.metadata.namespace,
+            "api_version": pod.api_version,
             "name": pod.metadata.name,
             "status": pod.status.phase,
             "node_name": pod.spec.node_name,
