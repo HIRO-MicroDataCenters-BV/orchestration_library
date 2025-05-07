@@ -74,34 +74,3 @@ BEGIN
     RAISE NOTICE 'Table pod created or already exists.';
 END $$;
 
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'workload_request_pod') THEN
-        CREATE TABLE workload_request_pod (
-            id SERIAL PRIMARY KEY,
-            workload_request_id INT NOT NULL,
-            pod_id INT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (workload_request_id) REFERENCES workload_request(id),
-            FOREIGN KEY (pod_id) REFERENCES pod(id)
-        );
-    END IF;
-    RAISE NOTICE 'Table workload_request_pod created or already exists.';
-END $$;
-
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'node_pod') THEN
-        CREATE TABLE node_pod (
-            id SERIAL PRIMARY KEY,
-            node_id INT NOT NULL,
-            pod_id INT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (node_id) REFERENCES node(id),
-            FOREIGN KEY (pod_id) REFERENCES pod(id)
-        );
-    END IF;
-    RAISE NOTICE 'Table node_pod created or already exists.';
-END $$;
