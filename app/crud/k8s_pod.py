@@ -35,7 +35,7 @@ def list_k8s_pods(namespace=None):
             "reason": pod.status.reason,
             "host_ip": pod.status.host_ip,
             "pod_ip": pod.status.pod_ip,
-            "start_time": str(pod.status.start_time)
+            "start_time": str(pod.status.start_time),
             "node_name": pod.spec.node_name,
             "schedule_name": pod.spec.scheduler_name,
         })
