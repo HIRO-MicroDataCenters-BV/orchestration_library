@@ -1,3 +1,4 @@
+import sched
 from fastapi.responses import JSONResponse
 import kubernetes.client
 from kubernetes import client, config
@@ -23,13 +24,20 @@ def list_k8s_pods(namespace=None):
 
     for pod in pods.items:
         simplified_pods.append({
+            "api_version": pod.api_version,
             "id": pod.metadata.uid,
             "namespace": pod.metadata.namespace,
-            "api_version": pod.api_version,
             "name": pod.metadata.name,
+            "labels": pod.metadata.labels,
+            "annotations": pod.metadata.annotations,
             "status": pod.status.phase,
-            "node_name": pod.spec.node_name,
+            "message": pod.status.message,
+            "reason": pod.status.reason,
+            "host_ip": pod.status.host_ip,
+            "pod_ip": pod.status.pod_ip,
             "start_time": str(pod.status.start_time)
+            "node_name": pod.spec.node_name,
+            "schedule_name": pod.spec.scheduler_name,
         })
     return JSONResponse(content=simplified_pods)
     
