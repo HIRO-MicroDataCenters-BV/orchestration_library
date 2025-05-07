@@ -13,7 +13,7 @@ def list_all_pods(namespace: str = None):
     if namespace:
         return k8s_pod.list_k8s_pods(namespace)
     else:  
-        return k8s_pod.list_all_pods()
+        return k8s_pod.list_k8s_pods()
 
 @router.get("/{namespace}")
 def list_all_pods_in_namespace(namespace: str):
