@@ -15,10 +15,10 @@ def list_all_pods(namespace: str = None):
     else:  
         return k8s_pod.list_k8s_pods()
 
-@router.get("/{namespace}")
-def list_all_pods_in_namespace(namespace: str):
-    """
-    List all pods in the specified namespace.
-    """
-    return k8s_pod.list_k8s_pods(namespace)
+# @router.get("/{namespace}")
+# def list_all_pods_in_namespace(namespace: str):
+#     """
+#     List all pods in the specified namespace.
+#     """
+#     return k8s_pod.list_k8s_pods(namespace)
     
