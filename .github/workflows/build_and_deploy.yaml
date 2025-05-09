@@ -51,12 +51,19 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: 'latest'
+      
+      # Step 4: Set up kubeconfig
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.HIRO_KUBE_CONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
 
-      # Step 4: Deploy the Helm chart
+      # Step 4: Deploy the Helm chart with kubeconfig
       - name: Deploy Helm chart
         run: |
           helm upgrade --install orchestration-api ./charts/orchestration-api \
-            --namespace orchestration-api \
+            --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
             --set orchestration-api.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set orchestration-api.image.tag=${{ vars.ORCHESTRATION_API_IMAGE_TAG }}
