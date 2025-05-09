@@ -11,6 +11,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
+
+from app.crud import workload_request
 from .database import Base
 
 
@@ -78,9 +80,16 @@ class Pod(Base):
     demand_slack_memory = Column(Float)
     is_elastic = Column(Boolean, nullable=False)
     assigned_node_id = Column(Integer, ForeignKey("node.id"))
+    workload_request_id = Column(
+        Integer, ForeignKey("workload_request.id"), nullable=False
+    )
     status = Column(String(50), nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
     # # Relationship to Node
     # node = relationship("Node", back_populates="pods")
+    # # Relationship to WorkloadRequest
+    # workload_request = relationship(
+    #     "WorkloadRequest", back_populates="workload_request"
+    # )

@@ -65,6 +65,7 @@ BEGIN
             demand_slack_memory FLOAT,
             is_elastic BOOLEAN NOT NULL,
             assigned_node_id INT,
+            workload_request_id INT NOT NULL,
             status VARCHAR(50) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

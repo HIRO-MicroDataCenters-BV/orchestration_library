@@ -11,7 +11,7 @@ from .workload_request_decision import (
     update_workload_request_decision,
     delete_workload_request_decision,
 )
-from .pod import (
+from .db_pod import (
     create_pod,
     get_pod,
     update_pod,

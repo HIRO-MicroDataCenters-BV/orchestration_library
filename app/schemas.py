@@ -33,6 +33,7 @@ class PodCreate(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_elastic: bool
     assigned_node_id: Optional[int] = None
+    workload_request_id: int
     status: Optional[str] = "pending"
 
 
@@ -45,6 +46,7 @@ class PodUpdate(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_elastic: Optional[bool] = None
     assigned_node_id: Optional[int] = None
+    workload_request_id: Optional[int] = None
     status: Optional[str] = None
     queue_name: Optional[str] = None
 

@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+from app.crud import workload_request
 from app.schemas import PodCreate, PodUpdate
 from app.models import Pod
 from app import crud
@@ -17,6 +18,7 @@ SAMPLE_POD_OBJECT = Pod(
     namespace="default",
     is_elastic=False,
     assigned_node_id=1,
+    workload_request_id=100,
     status="running",
     demand_cpu=0.5,
     demand_memory=256,
@@ -29,6 +31,7 @@ SAMPLE_POD_REQUEST_DATA = {
     "namespace": "default",
     "is_elastic": False,
     "assigned_node_id": 1,
+    "workload_request_id": 100,
     "status": "running",
     "demand_cpu": 0.5,
     "demand_memory": 256,
@@ -42,6 +45,7 @@ SAMPLE_POD_RESPONSE_DATA = {
     "namespace": "default",
     "is_elastic": False,
     "assigned_node_id": 1,
+    "workload_request_id": 100,
     "status": "running",
     "demand_cpu": 0.5,
     "demand_memory": 256,
@@ -71,6 +75,7 @@ async def test_create_pod():
         namespace="default",
         is_elastic=False,
         assigned_node_id=1,
+        workload_request_id=100,
         status="running",
         demand_cpu=0.5,
         demand_memory=256,
@@ -107,6 +112,7 @@ async def test_get_pod():
         namespace="default", 
         is_elastic=False, 
         assigned_node_id=1, 
+        workload_request_id=100,
         status="running"
     )
 
@@ -164,7 +170,7 @@ async def test_create_pod_route(mock_create):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/pod/", json=request_data)
+        response = await ac.post("/db_pod/", json=request_data)
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -179,7 +185,7 @@ async def test_get_pod_route(mock_get):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/pod/")
+        response = await ac.get("/db_pod/")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -195,7 +201,7 @@ async def test_get_pod_by_id_route(mock_get):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/pod/1")
+        response = await ac.get("/db_pod/1")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -212,7 +218,7 @@ async def test_update_pod_route(mock_update):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.put("/pod/1", json=request_data)
+        response = await ac.put("/db_pod/1", json=request_data)
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -227,7 +233,7 @@ async def test_delete_pod_route(mock_delete):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.delete("/pod/1")
+        response = await ac.delete("/db_pod/1")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
