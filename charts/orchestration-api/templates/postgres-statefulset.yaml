@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Values.postgres.name }}
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.postgres.name }}
 spec:
@@ -28,9 +29,17 @@ spec:
               value: {{ .Values.postgres.credentials.password }}
             - name: POSTGRES_DB
               value: {{ .Values.postgres.credentials.database }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata   # <== Use a subdirectory for data
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+            - name: db-init-script
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: db-init-script
+        configMap:
+          name: {{ .Values.configmap.databaseInitConfig }}
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
@@ -39,3 +48,4 @@ spec:
         resources:
           requests:
             storage: {{ .Values.postgres.persistence.size }}
+  

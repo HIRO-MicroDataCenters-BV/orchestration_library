@@ -4,7 +4,7 @@ postgres:
   image:
     repository: postgres
     tag: "14"
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   service:
     type: ClusterIP
     port: 5432
@@ -20,10 +20,12 @@ postgres:
 # FastAPI Application
 app:
   name: orchestration-api
+  secret:
+    name: orchestration-api-secret
   image:
     repository: orchestration-api
     tag: alpha1
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   replicaCount: 2
   service:
     type: ClusterIP
@@ -31,4 +33,7 @@ app:
     nodePort: 
 
 configmap:
-  name: orchestration-api-config
+  databaseURLConfig: orchestration-api-config
+  databaseInitConfig: db-init-script
+
+namespace: orchestration-api

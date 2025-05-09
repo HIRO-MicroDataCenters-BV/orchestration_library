@@ -41,9 +41,6 @@ async def get_workload_requests(
     if current_scale is not None:
         filters.append(WorkloadRequest.current_scale == current_scale)
 
-    # Log the filters being applied
-    print(f"Filters applied: {filters}")
-
     query = (
         select(WorkloadRequest).where(*filters) if filters else select(WorkloadRequest)
     )

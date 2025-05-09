@@ -1,7 +1,41 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orchestration-api-sa
+  namespace: {{ .Values.namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: orchestration-api-role
+  namespace: {{ .Values.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["pods", "nodes"]
+  verbs: ["list", "get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: orchestration-api-role-binding
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: orchestration-api-role
+subjects:
+  - kind: ServiceAccount
+    name: orchestration-api-sa  
+    namespace: {{ .Values.namespace }}
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.app.name }}
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.app.name }}
 spec:
@@ -14,6 +48,7 @@ spec:
       labels:
         app: {{ .Values.app.name }}
     spec:
+      serviceAccountName: orchestration-api-sa
       containers:
         - name: {{ .Values.app.name }}
           image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
@@ -24,5 +59,5 @@ spec:
           - name: DATABASE_URL
             valueFrom:
               configMapKeyRef:
-                name: {{ .Values.configmap.name }}
+                name: {{ .Values.configmap.databaseURLConfig }}
                 key: databaseURL
