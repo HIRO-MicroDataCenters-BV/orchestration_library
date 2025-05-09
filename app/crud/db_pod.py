@@ -22,6 +22,7 @@ async def get_pod(
     namespace: str = None,
     is_elastic: bool = None,
     assigned_node_id: int = None,
+    workload_request_id: int = None,
     status: str = None,
 ):
     """
@@ -38,6 +39,8 @@ async def get_pod(
         filters.append(Pod.is_elastic == is_elastic)
     if assigned_node_id is not None:
         filters.append(Pod.assigned_node_id == assigned_node_id)
+    if workload_request_id is not None:
+        filters.append(Pod.workload_request_id == workload_request_id)
     if status is not None:
         filters.append(Pod.status == status)
 

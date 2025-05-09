@@ -5,7 +5,7 @@ from app.database import get_async_db
 from app import schemas, crud
 from app.schemas import PodCreate, PodUpdate
 
-router = APIRouter(prefix="/pod")
+router = APIRouter(prefix="/db_pod")
 
 
 @router.post("/")

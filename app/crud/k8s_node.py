@@ -58,7 +58,7 @@ def list_k8s_nodes(name=None, id=None, status=None):
                 }
                 for address in node.status.addresses
             ],
-            "pod_cidrs": node.spec.pod_cidrs,
+            "pod_cidrs": node.spec.pod_cidr,
             "taints": [
                 {
                     "key": taint.key,
