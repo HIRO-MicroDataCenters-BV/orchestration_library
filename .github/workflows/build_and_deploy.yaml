@@ -65,6 +65,7 @@ jobs:
           helm upgrade --install orchestration-api ./charts/orchestration-api \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
+            --set namespace=${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --set orchestration-api.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set orchestration-api.image.tag=${{ vars.ORCHESTRATION_API_IMAGE_TAG }}
             
