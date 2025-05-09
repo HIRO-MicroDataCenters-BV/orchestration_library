@@ -8,22 +8,23 @@ if [ -z "$CLUSTER_NAME" ]; then
 fi
 
 echo "Build Docker image"
-docker build -t hiroregistry/orchestration-api:alpha1 -f Dockerfile .
+docker build -t orchestration-api:alpha1 -f Dockerfile .
 
 echo "Set the kubectl context to $CLUSTER_NAME cluster"
 kubectl cluster-info --context kind-$CLUSTER_NAME
 kubectl config use-context kind-$CLUSTER_NAME
 
 echo "Load Image to Kind cluster named '$CLUSTER_NAME'"
-kind load docker-image --name $CLUSTER_NAME hiroregistry/orchestration-api:alpha1
+kind load docker-image --name $CLUSTER_NAME orchestration-api:alpha1
 
 echo "Deploy the orchestration-api to the Kind cluster"
 helm upgrade --install orchestration-api ./charts/orchestration-api \
   --namespace orchestration-api \
   --create-namespace \
-  --set app.image.repository=hiroregistry/orchestration-api \
+  --set app.image.repository=orchestration-api \
   --set app.image.tag=alpha1 \
   --set namespace=orchestration-api \
+  --set app.image.pullPolicy=IfNotPresent \
   --set dummyRedeployTimestamp=$(date +%s)  
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
