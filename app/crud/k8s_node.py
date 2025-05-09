@@ -51,6 +51,23 @@ def list_k8s_nodes(name=None, id=None, status=None):
             },
             "capacity": node.status.capacity,
             "allocatable": node.status.allocatable,
+            "addresses": [
+                {
+                    "type": address.type,
+                    "address": address.address,
+                }
+                for address in node.status.addresses
+            ],
+            "pod_cidrs": node.spec.pod_cidrs,
+            "taints": [
+                {
+                    "key": taint.key,
+                    "value": taint.value,
+                    "effect": taint.effect,
+                }
+                for taint in node.spec.taints
+            ] if node.spec.taints else None,
+            "unschedulable": node.spec.unschedulable,
         })
 
     return JSONResponse(content=simplified_nodes)
