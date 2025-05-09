@@ -4,7 +4,7 @@ import kubernetes.client
 from kubernetes import client, config
 
 
-def list_k8s_pods(namespace=None):
+def list_k8s_pods(namespace=None, name=None, id=None, status=None):
     try:
         config.load_incluster_config()
     except config.ConfigException:
@@ -23,6 +23,15 @@ def list_k8s_pods(namespace=None):
     simplified_pods = []
 
     for pod in pods.items:
+        # Apply filters if any are specified
+        if name and pod.metadata.name != name:
+            continue
+        if id and pod.metadata.uid != id:
+            continue
+        if status and pod.status.phase != status:
+            continue
+        if namespace and pod.metadata.namespace != namespace:
+            continue
         simplified_pods.append({
             "api_version": pod.api_version,
             "id": pod.metadata.uid,
@@ -38,6 +47,17 @@ def list_k8s_pods(namespace=None):
             "start_time": str(pod.status.start_time),
             "node_name": pod.spec.node_name,
             "schedule_name": pod.spec.scheduler_name,
+            "containers": [
+                {
+                    "name": container.name,
+                    "image": container.image,
+                    "cpu_request": container.resources.requests.get("cpu") if container.resources.requests else None,
+                    "memory_request": container.resources.requests.get("memory") if container.resources.requests else None,
+                    "cpu_limit": container.resources.limits.get("cpu") if container.resources.limits else None,
+                    "memory_limit": container.resources.limits.get("memory") if container.resources.limits else None,
+                }
+                for container in pod.spec.containers
+            ],
         })
     return JSONResponse(content=simplified_pods)
     
