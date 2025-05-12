@@ -11,11 +11,11 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
     """
     List all nodes in the cluster.
     If no filters are specified, list all nodes.
-    """    
-    coreV1 = get_k8s_core_v1_client()
+    """
+    core_v1 = get_k8s_core_v1_client()
     print("Listing nodes with their details:")
 
-    nodes = coreV1.list_node(watch=False)
+    nodes = core_v1.list_node(watch=False)
 
     simplified_nodes = []
 

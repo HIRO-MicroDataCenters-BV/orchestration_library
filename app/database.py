@@ -1,8 +1,11 @@
+"""
+Dtabase connection and session management.
+"""
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/orchestration_db"
@@ -18,6 +21,9 @@ Base = declarative_base()
 
 
 def get_db():
+    """
+    Dependency that provides a database session.
+    """
     db = SessionLocal()
     try:
         yield db
@@ -26,6 +32,9 @@ def get_db():
 
 
 async def get_async_db():
+    """
+    Dependency that provides an asynchronous database session.
+    """
     async with AsyncSessionLocal() as db:
         try:
             yield db
