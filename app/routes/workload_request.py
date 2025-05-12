@@ -1,7 +1,11 @@
+"""
+Routes for managing workload request
+"""
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_async_db
-from app import schemas, crud
+from app import schemas
+from app.crud import workload_request as wr
 
 
 router = APIRouter(prefix="/workload_request")
@@ -11,7 +15,10 @@ router = APIRouter(prefix="/workload_request")
 async def create(
     data: schemas.WorkloadRequestCreate, db: AsyncSession = Depends(get_async_db)
 ):
-    return await crud.create_workload_request(db, data)
+    """
+    Create a new workload request.
+    """
+    return await wr.create_workload_request(db, data)
 
 
 @router.get("/")
@@ -23,7 +30,11 @@ async def read_workload_requests(
     current_scale: int = None,
     db: AsyncSession = Depends(get_async_db),
 ):
-    workloads = await crud.get_workload_requests(
+    """
+    Retrieve workload requests based on various filters.
+    If no filters are provided, return all workload requests.
+    """
+    workloads = await wr.get_workload_requests(
         db,
         name=name,
         namespace=namespace,
@@ -42,7 +53,10 @@ async def update_workload_request(
     data: schemas.WorkloadRequestUpdate,
     db: AsyncSession = Depends(get_async_db),
 ):
-    return await crud.update_workload_request(
+    """
+    Update a workload request by its ID.
+    """
+    return await wr.update_workload_request(
         db, workload_request_id, updates=data.model_dump(exclude_unset=True)
     )
 
@@ -52,14 +66,20 @@ async def delete_workload_request(
     workload_request_id: int,
     db: AsyncSession = Depends(get_async_db),
 ):
-    return await crud.delete_workload_request(db, workload_request_id)
+    """
+    Delete a workload request by its ID.
+    """
+    return await wr.delete_workload_request(db, workload_request_id)
 
 
 @router.get("/{workload_request_id}")
 async def read_workload_request_by_id(
     workload_request_id: int, db: AsyncSession = Depends(get_async_db)
 ):
-    requested_id = await crud.get_workload_requests(
+    """
+    Retrieve a workload request by its ID.
+    """
+    requested_id = await wr.get_workload_requests(
         db, workload_request_id=workload_request_id
     )
     if not requested_id:

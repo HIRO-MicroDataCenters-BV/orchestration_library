@@ -1,3 +1,6 @@
+"""
+CRUD operations for managing workload requests in the database.
+"""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models import WorkloadRequest

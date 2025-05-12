@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends
-
+"""
+FastAPI application entry point.
+"""
+import logging
+from fastapi import FastAPI
 from app.routes import k8s_pod, k8s_node
 from .routes import db_pod, workload_request, workload_request_decision
-import logging
 
 app = FastAPI()
 

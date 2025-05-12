@@ -1,8 +1,12 @@
+"""
+Routes for managing workload request decisions.
+"""
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.database import get_db, get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from app import schemas, crud
+
+from app.crud import workload_request_decision as wrd
+from app.database import get_async_db
+from app import schemas
 
 router = APIRouter(prefix="/workload_request_decision")
 
@@ -16,7 +20,10 @@ async def create(
     data: schemas.WorkloadRequestDecisionCreate,
     db: AsyncSession = Depends(get_async_db),
 ):
-    return await crud.create_workload_request_decision(db, data)
+    """
+    Create a new workload request decision.
+    """
+    return await wrd.create_workload_request_decision(db, data)
 
 
 @router.get("/")
@@ -27,7 +34,11 @@ async def read(
     status: str = None,
     db: AsyncSession = Depends(get_async_db),
 ):
-    decisions = await crud.get_workload_request_decision(
+    """
+    Retrieve workload request decisions based on various filters.
+    If no filters are provided, return all decisions.
+    """
+    decisions = await wrd.get_workload_request_decision(
         db,
         workload_request_id=workload_request_id,
         node_name=node_name,
@@ -40,8 +51,11 @@ async def read(
 
 
 @router.get("/{workload_request_id}")
-async def read(workload_request_id: int, db: AsyncSession = Depends(get_async_db)):
-    decision = await crud.get_workload_request_decision(
+async def read_by_id(workload_request_id: int, db: AsyncSession = Depends(get_async_db)):
+    """
+    Retrieve a workload request decision by its ID.
+    """
+    decision = await wrd.get_workload_request_decision(
         db, workload_request_id=workload_request_id
     )
     if not decision:
@@ -55,11 +69,17 @@ async def update(
     data: schemas.WorkloadRequestDecisionUpdate,
     db: AsyncSession = Depends(get_async_db),
 ):
-    return await crud.update_workload_request_decision(db, workload_request_id, data)
+    """
+    Update a workload request decision by its ID.
+    """
+    return await wrd.update_workload_request_decision(db, workload_request_id, data)
 
 
 @router.delete("/{workload_request_id}")
 async def delete(workload_request_id: int, db: AsyncSession = Depends(get_async_db)):
-    return await crud.delete_workload_request_decision(
+    """
+    Delete a workload request decision by its ID.
+    """
+    return await wrd.delete_workload_request_decision(
         db, workload_request_id=workload_request_id
     )
