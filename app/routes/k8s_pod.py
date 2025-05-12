@@ -12,9 +12,10 @@ def list_all_pods(namespace: str = None, name: str = None, id: str = None, statu
     """
     return k8s_pod.list_k8s_pods(namespace=namespace, name=name, id=id, status=status)
     
-# @router.get("/{namespace}")
-# def list_all_pods_in_namespace(namespace: str):
-#     """
-#     List all pods in the specified namespace.
-#     """
-#     return k8s_pod.list_k8s_pods(namespace)
+@router.get("/k8s_user_pod")
+def list_all_user_pods():
+    """
+    List all pods excluding system pods in the specified namespace.
+    If no namespace is specified, list all pods in all namespaces.
+    """
+    return k8s_pod.list_k8s_user_pods()

@@ -4,7 +4,7 @@ import kubernetes.client
 from kubernetes import client, config
 
 
-def list_k8s_pods(namespace=None, name=None, id=None, status=None):
+def list_k8s_pods(namespace=None, name=None, id=None, status=None, exclude_namespaces=[]):
     try:
         config.load_incluster_config()
     except config.ConfigException:
@@ -31,6 +31,8 @@ def list_k8s_pods(namespace=None, name=None, id=None, status=None):
         if status and pod.status.phase != status:
             continue
         if namespace and pod.metadata.namespace != namespace:
+            continue
+        if pod.metadata.namespace in exclude_namespaces:
             continue
         simplified_pods.append({
             "api_version": pod.api_version,
@@ -61,4 +63,10 @@ def list_k8s_pods(namespace=None, name=None, id=None, status=None):
         })
     return JSONResponse(content=simplified_pods)
     
-   
+def list_k8s_user_pods():
+    """
+    List all pods excluding system pods in the specified namespace.
+    If no namespace is specified, list all pods in all namespaces.
+    """
+    exclude_namespaces = ["kube-system", "kube-public", "kube-node-lease"]
+    return list_k8s_pods(exclude_namespaces=exclude_namespaces)
