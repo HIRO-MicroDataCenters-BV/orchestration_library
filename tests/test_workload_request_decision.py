@@ -1,18 +1,27 @@
-import pytest
+"""
+Tests for workload_request_decision CRUD functions and routes.
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
-import uuid
+
+from app.main import app
+from app.crud import workload_request_decision as wrd
 from app.models import WorkloadRequestDecision
 from app.schemas import WorkloadRequestDecisionCreate
-from app import crud
-from app.main import app  
+
 
 # ===========================================================================
-# ========================= Tests for workload_request_decision CRUD functions =========================
+# ======= Tests for workload_request_decision CRUD functions ================
 # ===========================================================================
 @pytest.mark.asyncio
 async def test_create_workload_request_decision():
+    """
+    Test the creation of a new workload request decision.
+    """
     db = AsyncMock()
     decision_data = WorkloadRequestDecisionCreate(
         workload_request_id=1,
@@ -23,7 +32,7 @@ async def test_create_workload_request_decision():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
-    result = await crud.create_workload_request_decision(db, decision_data)
+    result = await wrd.create_workload_request_decision(db, decision_data)
 
     db.add.assert_called_once()
     db.commit.assert_called_once()
@@ -33,14 +42,20 @@ async def test_create_workload_request_decision():
 
 @pytest.mark.asyncio
 async def test_update_workload_request_decision():
+    """
+    Test the update_workload_request_decision function
+    """
     db = AsyncMock()
     mock_decision = MagicMock(spec=WorkloadRequestDecision, status="pending")
-    db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=mock_decision))  # Directly return the mock_decision
+    # Directly return the mock_decision
+    db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=mock_decision))
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
     updates = {"status": "approved"}
-    result = await crud.update_workload_request_decision(db, workload_request_id=1, updates=updates)
+    result = await wrd.update_workload_request_decision(
+        db, workload_request_id=1, updates=updates
+    )
 
     db.execute.assert_called_once()
     db.commit.assert_called_once()
@@ -48,15 +63,23 @@ async def test_update_workload_request_decision():
     assert result is not None
     assert result.status == "approved"
 
+
 @pytest.mark.asyncio
 async def test_delete_workload_request_decision():
+    """
+    Test the delete_workload_request_decision function
+    """
     db = AsyncMock()
     mock_decision = WorkloadRequestDecision()
-    db.execute = AsyncMock(return_value=MagicMock(scalars=MagicMock(all=MagicMock(return_value=[mock_decision]))))
+    db.execute = AsyncMock(
+        return_value=MagicMock(
+            scalars=MagicMock(all=MagicMock(return_value=[mock_decision]))
+        )
+    )
     db.delete = AsyncMock()
     db.commit = AsyncMock()
 
-    result = await crud.delete_workload_request_decision(db, workload_request_id=1)
+    result = await wrd.delete_workload_request_decision(db, workload_request_id=1)
 
     db.execute.assert_called_once()
     db.delete.assert_called()
@@ -66,6 +89,9 @@ async def test_delete_workload_request_decision():
 
 @pytest.mark.asyncio
 async def test_get_workload_request_decision():
+    """
+    Test the get_workload_request_decision function
+    """
     # Mock data
     mock_decision = MagicMock(spec=WorkloadRequestDecision)
     mock_decision.workload_request_id = 1
@@ -84,12 +110,12 @@ async def test_get_workload_request_decision():
     db.execute.return_value = mock_result
 
     # Call the function
-    result = await crud.get_workload_request_decision(
+    result = await wrd.get_workload_request_decision(
         db,
         workload_request_id=1,
         node_name="node-1",
         queue_name="queue-1",
-        status="pending"
+        status="pending",
     )
 
     # Assertions
@@ -100,10 +126,10 @@ async def test_get_workload_request_decision():
     assert result[0].status == "pending"
 
 
+# =====================================================================================
+# ====== Below tests are for the workload_request_decision routes =====================
+# =====================================================================================
 
-# =====================================================================================
-# ========================= Below tests are for the workload_request_decision routes =========================
-# =====================================================================================
 
 @pytest.mark.asyncio
 @patch("app.crud.create_workload_request_decision", new_callable=AsyncMock)
@@ -125,8 +151,8 @@ async def test_create_workload_request_decision_route(mock_create):
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "pending",
-        "created_at": "2023-01-01T12:00:00Z",
-        "updated_at": "2023-01-01T12:00:00Z"
+        "created_at": "2023-02-01T12:00:00Z",
+        "updated_at": "2023-02-01T12:00:00Z",
     }
 
     mock_create.return_value = response_data
@@ -147,17 +173,15 @@ async def test_update_workload_request_decision_route(mock_update):
     Test updating a workload request decision using mocked CRUD logic.
     Asserts that the PUT request returns a 200 status and correct JSON response.
     """
-    request_data = {
-        "status": "approved"
-    }
+    request_data = {"status": "approved"}
     response_data = {
         "id": "550e8400-e29b-41d4-a716-446655440000",
         "workload_request_id": 1,
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "approved",
-        "created_at": "2023-01-01T12:00:00Z",
-        "updated_at": "2023-01-01T12:30:00Z"
+        "created_at": "2023-02-01T12:00:00Z",
+        "updated_at": "2023-02-01T12:30:00Z",
     }
 
     mock_update.return_value = response_data
@@ -205,8 +229,8 @@ async def test_get_workload_request_decision_route(mock_get):
             "node_name": "node-1",
             "queue_name": "queue-1",
             "status": "pending",
-            "created_at": "2023-01-01T12:00:00Z",
-            "updated_at": "2023-01-01T12:00:00Z"
+            "created_at": "2023-02-01T12:00:00Z",
+            "updated_at": "2023-02-01T12:00:00Z",
         }
     ]
 
@@ -218,7 +242,7 @@ async def test_get_workload_request_decision_route(mock_get):
         response = await ac.get("/workload_request_decision/")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == response_data    
+    assert response.json() == response_data
 
 
 @pytest.mark.asyncio
@@ -234,8 +258,8 @@ async def test_get_workload_request_decision_by_id_route(mock_get):
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "pending",
-        "created_at": "2023-01-01T12:00:00Z",
-        "updated_at": "2023-01-01T12:00:00Z"
+        "created_at": "2023-02-01T12:00:00Z",
+        "updated_at": "2023-02-01T12:00:00Z",
     }
 
     mock_get.return_value = response_data

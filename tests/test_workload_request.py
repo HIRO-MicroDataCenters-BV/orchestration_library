@@ -1,21 +1,23 @@
+"""
+Tests for workload_request CRUD functions and routes.
+"""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+from fastapi import status
 from httpx import AsyncClient
 from httpx._transports.asgi import ASGITransport
-from fastapi import status
-from unittest.mock import AsyncMock, patch, MagicMock
+
+from app.crud.workload_request import (create_workload_request,
+                                       delete_workload_request,
+                                       get_workload_requests,
+                                       update_workload_request)
 from app.main import app
-from app.crud.workload_request import (
-    create_workload_request,
-    get_workload_requests,
-    update_workload_request,
-    delete_workload_request,
-)
 from app.models import WorkloadRequest
 from app.schemas import WorkloadRequestCreate
 
-
 # ===========================================================================
-# ========================= Tests for workload_request CRUD functions =========================
+# ================ Tests for workload_request CRUD functions ================
 # ===========================================================================
 
 
@@ -45,6 +47,10 @@ async def test_create_workload_request(mock_work):
 
 
 async def test_get_workload_requests_no_filters():
+    """
+    Test the retrieval of workload requests without any filters.
+    Asserts that the GET request returns all workload requests.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = ["obj1", "obj2"]
@@ -68,7 +74,11 @@ async def test_get_workload_requests_no_filters():
         ({"current_scale": 3}, [WorkloadRequest.current_scale == 3]),
     ],
 )
-async def test_get_workload_requests_with_individual_filters(kargs, expected_filters):
+async def test_get_workload_requests_with_individual_filters(kargs):
+    """
+    Test the retrieval of workload requests with individual filters.
+    Asserts that the GET request returns the expected workload requests.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = ["filtered"]
@@ -82,6 +92,10 @@ async def test_get_workload_requests_with_individual_filters(kargs, expected_fil
 
 @pytest.mark.asyncio
 async def test_get_workload_requests_with_multiple_filters():
+    """
+    Test the retrieval of workload requests with multiple filters.
+    Asserts that the GET request returns the expected workload requests.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = ["combo"]
@@ -149,6 +163,10 @@ async def test_delete_workload_request():
 
 @pytest.mark.asyncio
 async def test_update_workload_request_not_found():
+    """
+    Test updating a workload request that does not exist.
+    Ensures the PUT request returns None.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
@@ -165,6 +183,10 @@ async def test_update_workload_request_not_found():
 
 @pytest.mark.asyncio
 async def test_update_workload_request_ignores_invalid_fields():
+    """
+    Test updating a workload request with invalid fields.
+    Ensures that only valid fields are updated.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -205,7 +227,7 @@ async def test_delete_workload_request_not_found():
 
 
 # =====================================================================================
-# ========================= Below tests are for the workload_request routes =========================
+# ================= Below tests are for the workload_request routes =================
 # =====================================================================================
 
 

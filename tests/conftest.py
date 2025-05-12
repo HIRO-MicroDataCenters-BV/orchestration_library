@@ -1,3 +1,6 @@
+"""
+Test file for DB connection and API routes.
+"""
 import pytest
 from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI
@@ -7,6 +10,9 @@ from app.database import get_async_db
 
 @pytest.fixture()
 async def client(db_session):
+    """
+    Test client for databse connection.
+    """
     app = FastAPI()
     app.include_router(workload_request.router)
 

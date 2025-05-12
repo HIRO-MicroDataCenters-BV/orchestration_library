@@ -1,9 +1,15 @@
-from pydantic import BaseModel
+"""
+Schemas for the API requests and responses.
+"""
 from typing import Optional
-from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class WorkloadRequestCreate(BaseModel):
+    """
+    Schema for creating a workload request.
+    """
     name: str
     namespace: str
     api_version: str
@@ -12,6 +18,9 @@ class WorkloadRequestCreate(BaseModel):
 
 
 class WorkloadRequestDecisionCreate(BaseModel):
+    """
+    Schema for creating a workload request decision.
+    """
     workload_request_id: int
     node_name: str
     queue_name: str
@@ -19,12 +28,18 @@ class WorkloadRequestDecisionCreate(BaseModel):
 
 
 class WorkloadRequestDecisionUpdate(BaseModel):
+    """
+    Schema for updating a workload request decision.
+    """
     status: str
     node_name: Optional[str] = None
     queue_name: Optional[str] = None
 
 
 class PodCreate(BaseModel):
+    """
+    Schema for creating a pod.
+    """
     name: str
     namespace: str
     demand_cpu: float
@@ -38,6 +53,9 @@ class PodCreate(BaseModel):
 
 
 class PodUpdate(BaseModel):
+    """
+    Schema for updating a pod.
+    """
     name: Optional[str] = None
     namespace: Optional[str] = None
     demand_cpu: Optional[float] = None
@@ -52,14 +70,18 @@ class PodUpdate(BaseModel):
 
 
 class WorkloadRequestUpdate(BaseModel):
-    name: Optional[str] = None
+    """
+    Schema for updating a workload request.
+    """
     namespace: Optional[str] = None
     api_version: Optional[str] = None
     kind: Optional[str] = None
     current_scale: Optional[int] = None
-    
 
 
 class WorkloadRequestPodUpdate(BaseModel):
+    """
+    Schema for updating a workload request with pod information.
+    """
     workload_request_id: Optional[int] = None
     pod_id: Optional[int] = None

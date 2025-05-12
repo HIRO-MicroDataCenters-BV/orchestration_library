@@ -1,3 +1,8 @@
+"""
+CRUD operations for managing pods in the database.
+This module provides functions to create, read, update, and delete pod records.
+It uses SQLAlchemy ORM for database interactions.
+"""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models import Pod

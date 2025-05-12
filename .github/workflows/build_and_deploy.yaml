@@ -39,8 +39,9 @@ jobs:
       - name: Install pylint
         run: pip install pylint
 
-      # - name: Lint Python files
-      #   run: pylint app/ tests/
+      - name: Lint Python files
+        run: |
+          pylint app/ tests/ --fail-under=9.5  
 
       - name: Set up Helm
         uses: azure/setup-helm@v3
