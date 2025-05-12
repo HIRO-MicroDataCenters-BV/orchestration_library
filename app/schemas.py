@@ -63,3 +63,25 @@ class WorkloadRequestUpdate(BaseModel):
 class WorkloadRequestPodUpdate(BaseModel):
     workload_request_id: Optional[int] = None
     pod_id: Optional[int] = None
+
+
+class NodeCreate(BaseModel):
+    name: str
+    status: Optional[str] = "active"
+    cpu_capacity: float
+    memory_capacity: float
+    current_cpu_assignment: Optional[float] = None
+    current_memory_assignment: Optional[float] = None
+    current_cpu_utilization: Optional[float] = None
+    current_memory_utilization: Optional[float] = None
+
+
+class NodeUpdate(BaseModel):
+    name: Optional[str] = None
+    status: Optional[str] = None
+    cpu_capacity: Optional[float] = None
+    memory_capacity: Optional[float] = None
+    current_cpu_assignment: Optional[float] = None
+    current_memory_assignment: Optional[float] = None
+    current_cpu_utilization: Optional[float] = None
+    current_memory_utilization: Optional[float] = None
