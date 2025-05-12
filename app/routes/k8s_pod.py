@@ -18,4 +18,3 @@ def list_all_pods(namespace: str = None, name: str = None, id: str = None, statu
 #     List all pods in the specified namespace.
 #     """
 #     return k8s_pod.list_k8s_pods(namespace)
-    

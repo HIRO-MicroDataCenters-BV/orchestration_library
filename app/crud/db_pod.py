@@ -26,7 +26,8 @@ async def get_pod(
     status: str = None,
 ):
     """
-    Retrieve pods based on various filters. If no filters are provided, return all pods.
+    Retrieve pods based on various filters. If no filters are provided, 
+    return all pods.
     """
     filters = []
     if pod_id is not None:
