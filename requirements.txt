@@ -2,8 +2,10 @@ fastapi~=0.115.12
 uvicorn[standard]
 sqlalchemy~=2.0.40
 sqlalchemy[asyncio]
-alembic
-asyncpg
+alembic~=1.15.2
+asyncpg~=0.30.0
 psycopg2-binary
 pydantic~=2.11.4
-kubernetes
+kubernetes~=32.0.1
+httpx~=0.28.1
+pytest~=8.3.5
