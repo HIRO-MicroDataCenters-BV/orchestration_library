@@ -6,6 +6,7 @@ This project contains a FastAPI-based backend and a PostgreSQL database containe
 
 ## Run the project
 
+### Running on a local with docker
 ```bash
 docker compose up --build -d
 ```
@@ -21,86 +22,43 @@ docker-compose down
 
 **Note:** Using the `docker-compose down -v` option will delete the persistent volume of the database, causing all database changes to be lost. When you run `docker-compose up` again, it will create a new database with new tables. If you want to preserve the database, use `docker-compose down` without the `-v` option.
 
-## Endpoints
+### Running on a local kind cluster
 
-### Workload Requests
-- `POST /workload-requests/`
+To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster and deploy the application:
 
-### Workload Request Decisions
-- `POST /workload-request-decisions/`
-- `GET /workload-request-decisions/` - Retrieve workload request decisions based on filters.
-- `GET /workload-request-decisions/{workload_request_id}` - Retrieve a specific workload request decision by ID.
-- `PUT /workload-request-decisions/{workload_request_id}` - Update a workload request decision by ID.
-- `DELETE /workload-request-decisions/{workload_request_id}` - Delete a workload request decision by ID.
+1. **Initialize the kind cluster**
 
-## Example Requests
+   Run the following script to create a kind cluster with a single node.  
+   By default, the cluster will be named `kind-sample`.  
+   If you provide a parameter, that will be used as the cluster name.
 
-<details>
-<summary>Create a Workload Request</summary>
+   ```bash
+   scripts/kind_cluster_init.sh             # Uses default cluster name 'kind-sample'
+   scripts/kind_cluster_init.sh my-cluster  # Uses 'my-cluster' as the cluster name
+   ```
 
-```bash
-curl -X POST http://localhost:8000/workload-requests/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "nginx-deployment",
-    "namespace": "default",
-    "api_version": "apps/v1",
-    "kind": "Deployment",
-    "current_scale": 3
-}'
-```
-</details>
+2. **Build and deploy the application**
 
-<details>
-<summary>Create a Workload Request Decision</summary>
+   Use the following script to build and deploy the application inside the kind cluster.  
+   If you specified a custom cluster name above, pass the same parameter here.
 
-```bash
-curl -X POST http://localhost:8000/workload-request-decisions/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workload_request_id": 1,
-    "node_name": "node-1",
-    "queue_name": "main-queue",
-    "status": "pending"
-}'
-```
-</details>
+   ```bash
+   scripts/deploy_app.py                    # Deploys to 'kind-sample' by default
+   scripts/deploy_app.py my-cluster         # Deploys to 'my-cluster'
+   ```
 
-<details>
-<summary>Retrieve Workload Request Decisions with Filters</summary>
+   If you do not provide any parameter, the application will be deployed to the `kind-sample` cluster.
 
-```bash
-curl -X GET "http://localhost:8000/workload-request-decisions/?node_name=node-1&status=pending" \
-  -H "accept: application/json"
-```
-</details>
+3. **Port forward the application**
 
-<details>
-<summary>Retrieve a Specific Workload Request Decision</summary>
+   The application runs on port `8000` inside the kind cluster.  
+   To access it from your local machine, use the following port-forward command:
 
-```bash
-curl -X GET "http://localhost:8000/workload-request-decisions/1" \
-  -H "accept: application/json"
-```
-</details>
+   ```bash
+   kubectl port-forward svc/orchestration-api 8000:8010 -n orchestration-api
+   ```
 
-<details>
-<summary>Update a Workload Request Decision</summary>
+   Now you can access the application locally at:  
+   [http://localhost:8010](http://localhost:8010)
 
-```bash
-curl -X PUT "http://localhost:8000/workload-request-decisions/1" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "used"
-}'
-```
-</details>
-
-<details>
-<summary>Delete a Workload Request Decision</summary>
-
-```bash
-curl -X DELETE "http://localhost:8000/workload-request-decisions/1" \
-  -H "accept: application/json"
-```
-</details>
+---
