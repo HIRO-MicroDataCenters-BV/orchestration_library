@@ -70,17 +70,10 @@ jobs:
       - name: Build and push Docker image
         id: set-image
         run: |
-          IMAGE_NAME=${{ vars.ORCHESTRATION_API_IMAGE_NAME }}
           IMAGE_TAG=${{ vars.ORCHESTRATION_API_IMAGE_TAG }}-$(date +%Y%m%d%H%M%S)
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
-          docker push $IMAGE_NAME:$IMAGE_TAG
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          docker build -t ${{ vars.ORCHESTRATION_API_IMAGE_NAME }}:$IMAGE_TAG .
+          docker push ${{ vars.ORCHESTRATION_API_IMAGE_NAME }}:$IMAGE_TAG
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Debug outputs
-        run: |
-          echo "DEBUG: image_name is '${{ steps.set-image.outputs.image_name }}'"
-          echo "DEBUG: image_tag is '${{ steps.set-image.outputs.image_tag }}'"
 
   deploy:
     name: Deploy to Kubernetes
@@ -112,5 +105,5 @@ jobs:
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
             --set namespace=${{ vars.ORCHESTRATION_API_NAMESPACE }} \
-            --set app.image.repository=${{ needs.build-and-push.outputs.image_name }} \
+            --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }}
