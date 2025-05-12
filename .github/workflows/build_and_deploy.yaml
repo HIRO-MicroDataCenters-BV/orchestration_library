@@ -33,13 +33,13 @@ jobs:
             echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
             echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
         
-      - name: Delete old images from Docker Hub (keep only latest)
-        run: |
-          docker run --rm \
-            -e HUB_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-            -e HUB_PASSWORD=${{ secrets.DOCKER_PASSWORD }} \
-            ghcr.io/docker/hub-tool:latest \
-            rmi ${{ vars.ORCHESTRATION_API_IMAGE_NAME }} --keep 1 --force
+      # - name: Delete old images from Docker Hub (keep only latest)
+      #   run: |
+      #     docker run --rm \
+      #       -e HUB_USERNAME=${{ secrets.DOCKER_USERNAME }} \
+      #       -e HUB_PASSWORD=${{ secrets.DOCKER_PASSWORD }} \
+      #       ghcr.io/docker/hub-tool:latest \
+      #       rmi ${{ vars.ORCHESTRATION_API_IMAGE_NAME }} --keep 1 --force
 
   
   # Enable this below job, in integration phase to deploy the application to Kubernetes
