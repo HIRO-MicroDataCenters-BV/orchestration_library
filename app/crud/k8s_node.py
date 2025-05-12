@@ -1,14 +1,13 @@
 from fastapi.responses import JSONResponse
 import kubernetes.client
-from kubernetes import client, config
+from kubernetes import config
 
 
 def list_k8s_nodes(name=None, id=None, status=None):
     """
     List all nodes in the cluster.
     If no filters are specified, list all nodes.
-    """
-    
+    """    
     try:
         # Load in-cluster configuration
         config.load_incluster_config()

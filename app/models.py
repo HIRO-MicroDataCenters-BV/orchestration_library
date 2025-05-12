@@ -1,3 +1,10 @@
+"""
+SQLAlchemy models for the orchestration library.
+"""
+
+# pylint: disable=too-few-public-methods
+
+import uuid
 from sqlalchemy import (
     Column,
     Integer,
@@ -9,14 +16,14 @@ from sqlalchemy import (
     Boolean,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-import uuid
 
-from app.crud import workload_request
 from .database import Base
 
 
 class WorkloadRequest(Base):
+    """
+    Model representing a workload request.
+    """
     __tablename__ = "workload_request"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -28,11 +35,10 @@ class WorkloadRequest(Base):
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
-    # # Relationship to WorkloadRequestDecision
-    # workload_request_decision = relationship("WorkloadRequestDecision", back_populates="workload_request")
-
-
 class WorkloadRequestDecision(Base):
+    """
+    Model representing a decision made for a workload request.
+    """
     __tablename__ = "workload_request_decision"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -45,11 +51,10 @@ class WorkloadRequestDecision(Base):
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
-    # # Relationship to WorkloadRequest
-    # workload_request = relationship("WorkloadRequest", back_populates="workload_request_decision")
-
-
 class Node(Base):
+    """
+    Model representing a node in the cluster.
+    """
     __tablename__ = "node"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -64,11 +69,10 @@ class Node(Base):
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
-    # # Relationship to Pod
-    # pods = relationship("Pod", back_populates="node")
-
-
 class Pod(Base):
+    """
+    Model representing a pod in the cluster.
+    """
     __tablename__ = "pod"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -86,10 +90,3 @@ class Pod(Base):
     status = Column(String(50), nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
-
-    # # Relationship to Node
-    # node = relationship("Node", back_populates="pods")
-    # # Relationship to WorkloadRequest
-    # workload_request = relationship(
-    #     "WorkloadRequest", back_populates="workload_request"
-    # )
