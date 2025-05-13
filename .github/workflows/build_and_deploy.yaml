@@ -46,10 +46,10 @@ jobs:
 
       - name: Lint Python files
         run: |
-          pylint app/ tests/ --fail-under={{ var.PYLINT_EXPECTED_SCORE }}
+          pylint app/ tests/ --fail-under=${{ var.PYLINT_EXPECTED_SCORE }}
         
       - name: Run tests with coverage
-        run: pytest --cov=app --cov-fail-under={{ var.PYTEST_EXPECTED_PERCENTAGE }} tests/
+        run: pytest --cov=app --cov-fail-under=${{ var.PYTEST_EXPECTED_PERCENTAGE }} tests/
 
       - name: Set up Helm
         uses: azure/setup-helm@v3
