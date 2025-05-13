@@ -74,7 +74,7 @@ async def test_get_workload_requests_no_filters():
         ({"current_scale": 3}, [WorkloadRequest.current_scale == 3]),
     ],
 )
-async def test_get_workload_requests_with_individual_filters(kargs):
+async def test_get_workload_requests_with_individual_filters(kargs, expected_filters):
     """
     Test the retrieval of workload requests with individual filters.
     Asserts that the GET request returns the expected workload requests.
@@ -232,7 +232,7 @@ async def test_delete_workload_request_not_found():
 
 
 @pytest.mark.asyncio
-@patch("app.crud.create_workload_request", new_callable=AsyncMock)
+@patch("app.crud.workload_request.create_workload_request", new_callable=AsyncMock)
 async def test_create_workload_request_route(mock_create):
     """
     Test the creation of a new workload request using mocked CRUD logic.
@@ -270,7 +270,7 @@ async def test_create_workload_request_route(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.update_workload_request", new_callable=AsyncMock)
+@patch("app.crud.workload_request.update_workload_request", new_callable=AsyncMock)
 async def test_update_workload_request_route(mock_update):
     """
     Test updating a workload request using mocked CRUD logic.
@@ -302,7 +302,7 @@ async def test_update_workload_request_route(mock_update):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.delete_workload_request", new_callable=AsyncMock)
+@patch("app.crud.workload_request.delete_workload_request", new_callable=AsyncMock)
 async def test_delete_workload_request_route(mock_delete):
     """
     Test deleting a workload request using mocked CRUD logic.
@@ -323,7 +323,7 @@ async def test_delete_workload_request_route(mock_delete):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.get_workload_requests", new_callable=AsyncMock)
+@patch("app.crud.workload_request.get_workload_requests", new_callable=AsyncMock)
 async def test_read_workload_requests_route(mock_get):
     """
     Test retrieving workload requests using mocked CRUD logic.
@@ -355,7 +355,7 @@ async def test_read_workload_requests_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.get_workload_requests", new_callable=AsyncMock)
+@patch("app.crud.workload_request.get_workload_requests", new_callable=AsyncMock)
 async def test_read_workload_request_by_id_route(mock_get):
     """
     Test retrieving a specific workload request by ID using mocked CRUD logic.

@@ -174,7 +174,7 @@ async def test_delete_pod():
 # ========================= Tests for pod routes =========================
 
 @pytest.mark.asyncio
-@patch("app.crud.create_pod", new_callable=AsyncMock)
+@patch("app.crud.db_pod.create_pod", new_callable=AsyncMock)
 async def test_create_pod_route(mock_create):
     """
     Test the create_pod route
@@ -194,7 +194,7 @@ async def test_create_pod_route(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.get_pod", new_callable=AsyncMock)
+@patch("app.crud.db_pod.get_pod", new_callable=AsyncMock)
 async def test_get_pod_route(mock_get):
     """
     Test the get_pod route
@@ -212,7 +212,7 @@ async def test_get_pod_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.get_pod", new_callable=AsyncMock)
+@patch("app.crud.db_pod.get_pod", new_callable=AsyncMock)
 async def test_get_pod_by_id_route(mock_get):
     """
     Test the get_pod_by_id route
@@ -231,7 +231,7 @@ async def test_get_pod_by_id_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.update_pod", new_callable=AsyncMock)
+@patch("app.crud.db_pod.update_pod", new_callable=AsyncMock)
 async def test_update_pod_route(mock_update):
     """
     Test the update_pod route
@@ -251,7 +251,7 @@ async def test_update_pod_route(mock_update):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.delete_pod", new_callable=AsyncMock)
+@patch("app.crud.db_pod.delete_pod", new_callable=AsyncMock)
 async def test_delete_pod_route(mock_delete):
     """
     Test the delete_pod route
