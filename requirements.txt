@@ -10,5 +10,5 @@ kubernetes~=32.0.1
 httpx~=0.28.1
 pytest~=8.3.5
 pytest-cov~=6.1.1
-pytest-asyncio~=0.22.0
+pytest-asyncio~=0.26.0
 pylint~=3.3.7
