@@ -21,7 +21,7 @@ SAMPLE_POD_OBJECT = Pod(
     demand_cpu=0.5,
     demand_memory=256,
     demand_slack_cpu=0.1,
-    demand_slack_memory=64
+    demand_slack_memory=64,
 )
 
 SAMPLE_POD_REQUEST_DATA = {
@@ -33,7 +33,7 @@ SAMPLE_POD_REQUEST_DATA = {
     "demand_cpu": 0.5,
     "demand_memory": 256,
     "demand_slack_cpu": 0.1,
-    "demand_slack_memory": 64
+    "demand_slack_memory": 64,
 }
 
 SAMPLE_POD_RESPONSE_DATA = {
@@ -46,22 +46,17 @@ SAMPLE_POD_RESPONSE_DATA = {
     "demand_cpu": 0.5,
     "demand_memory": 256,
     "demand_slack_cpu": 0.1,
-    "demand_slack_memory": 64
+    "demand_slack_memory": 64,
 }
 
-SAMPLE_POD_LIST_RESPONSE_DATA = [
-    SAMPLE_POD_RESPONSE_DATA
-]
+SAMPLE_POD_LIST_RESPONSE_DATA = [SAMPLE_POD_RESPONSE_DATA]
 
-SAMPLE_POD_UPDATE_REQUEST_DATA = {
-    "status": "completed"
-}
+SAMPLE_POD_UPDATE_REQUEST_DATA = {"status": "completed"}
 
-SAMPLE_POD_DELETE_RESPONSE_DATA = {
-    "message": "Pod with ID 1 has been deleted"
-}
+SAMPLE_POD_DELETE_RESPONSE_DATA = {"message": "Pod with ID 1 has been deleted"}
 
 # ========================= Tests for pod CRUD functions =========================
+
 
 @pytest.mark.asyncio
 async def test_create_pod():
@@ -75,7 +70,7 @@ async def test_create_pod():
         demand_cpu=0.5,
         demand_memory=256,
         demand_slack_cpu=0.1,
-        demand_slack_memory=64
+        demand_slack_memory=64,
     )
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
@@ -101,13 +96,13 @@ async def test_get_pod():
     db.execute.return_value = mock_result
 
     result = await crud.get_pod(
-        db, 
-        pod_id=1, 
-        name="test-pod", 
-        namespace="default", 
-        is_elastic=False, 
-        assigned_node_id=1, 
-        status="running"
+        db,
+        pod_id=1,
+        name="test-pod",
+        namespace="default",
+        is_elastic=False,
+        assigned_node_id=1,
+        status="running",
     )
 
     db.execute.assert_called_once()
@@ -152,6 +147,7 @@ async def test_delete_pod():
 
 
 # ========================= Tests for pod routes =========================
+
 
 @pytest.mark.asyncio
 @patch("app.crud.create_pod", new_callable=AsyncMock)

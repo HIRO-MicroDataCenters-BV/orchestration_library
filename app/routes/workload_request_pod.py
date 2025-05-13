@@ -11,15 +11,15 @@ async def create_workload_request_pod(
     data: schemas.WorkloadRequestPodCreate, db: AsyncSession = Depends(get_async_db)
 ):
     """
-        Create a new WorkloadRequestPod entry.
+    Create a new WorkloadRequestPod entry.
 
-        Args:
-            data (WorkloadRequestPodCreate): The data required to create the WorkloadRequestPod.
-            db (AsyncSession): The database session dependency.
+    Args:
+        data (WorkloadRequestPodCreate): The data required to create the WorkloadRequestPod.
+        db (AsyncSession): The database session dependency.
 
-        Returns:
-            The newly created WorkloadRequestPod object.
-        """
+    Returns:
+        The newly created WorkloadRequestPod object.
+    """
     return await crud.create_workload_request_pod(db, data)
 
 
@@ -31,16 +31,16 @@ async def read_workload_request_pods(
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-        Retrieve a list of WorkloadRequestPod entries filtered by optional parameters.
+    Retrieve a list of WorkloadRequestPod entries filtered by optional parameters.
 
-        Args:
-            workload_request_pod_id (int, optional): Filter by the WorkloadRequestPod ID.
-            workload_request_id (int, optional): Filter by the associated WorkloadRequest ID.
-            pod_id (int, optional): Filter by the associated Pod ID.
-            db (AsyncSession): The database session dependency.
+    Args:
+        workload_request_pod_id (int, optional): Filter by the WorkloadRequestPod ID.
+        workload_request_id (int, optional): Filter by the associated WorkloadRequest ID.
+        pod_id (int, optional): Filter by the associated Pod ID.
+        db (AsyncSession): The database session dependency.
 
-        Returns:
-            A list of matching WorkloadRequestPod entries or an error message if none found.
+    Returns:
+        A list of matching WorkloadRequestPod entries or an error message if none found.
     """
     pods = await crud.get_workload_request_pods(
         db,
@@ -60,15 +60,15 @@ async def update_workload_request_pod(
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-        Update an existing WorkloadRequestPod entry.
+    Update an existing WorkloadRequestPod entry.
 
-        Args:
-            workload_request_pod_id (int): The ID of the WorkloadRequestPod to update.
-            data (WorkloadRequestPodUpdate): The updated field values.
-            db (AsyncSession): The database session dependency.
+    Args:
+        workload_request_pod_id (int): The ID of the WorkloadRequestPod to update.
+        data (WorkloadRequestPodUpdate): The updated field values.
+        db (AsyncSession): The database session dependency.
 
-        Returns:
-            The updated WorkloadRequestPod object.
+    Returns:
+        The updated WorkloadRequestPod object.
     """
     return await crud.update_workload_request_pod(
         db, workload_request_pod_id, updates=data.model_dump(exclude_unset=True)
@@ -81,14 +81,14 @@ async def delete_workload_request_pod(
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-        Delete a WorkloadRequestPod entry by its ID.
+    Delete a WorkloadRequestPod entry by its ID.
 
-        Args:
-            workload_request_pod_id (int): The ID of the WorkloadRequestPod to delete.
-            db (AsyncSession): The database session dependency.
+    Args:
+        workload_request_pod_id (int): The ID of the WorkloadRequestPod to delete.
+        db (AsyncSession): The database session dependency.
 
-        Returns:
-            A message indicating successful deletion or error if not found.
+    Returns:
+        A message indicating successful deletion or error if not found.
     """
     return await crud.delete_workload_request_pod(db, workload_request_pod_id)
 
@@ -98,14 +98,14 @@ async def read_workload_request_pod_by_id(
     workload_request_pod_id: int, db: AsyncSession = Depends(get_async_db)
 ):
     """
-        Retrieve a single WorkloadRequestPod entry by its ID.
+    Retrieve a single WorkloadRequestPod entry by its ID.
 
-        Args:
-            workload_request_pod_id (int): The ID of the WorkloadRequestPod.
-            db (AsyncSession): The database session dependency.
+    Args:
+        workload_request_pod_id (int): The ID of the WorkloadRequestPod.
+        db (AsyncSession): The database session dependency.
 
-        Returns:
-            The matched WorkloadRequestPod object or an error if not found.
+    Returns:
+        The matched WorkloadRequestPod object or an error if not found.
     """
     pod_entry = await crud.get_workload_request_pods(
         db, workload_request_pod_id=workload_request_pod_id

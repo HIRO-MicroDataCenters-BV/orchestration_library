@@ -76,6 +76,9 @@ class NodeCreate(BaseModel):
     current_memory_assignment: Optional[float] = None
     current_cpu_utilization: Optional[float] = None
     current_memory_utilization: Optional[float] = None
+    ip_address: str
+    location: Optional[str] = None
+    status: Optional[str] = "active"
 
 
 class NodeUpdate(BaseModel):
@@ -87,3 +90,23 @@ class NodeUpdate(BaseModel):
     current_memory_assignment: Optional[float] = None
     current_cpu_utilization: Optional[float] = None
     current_memory_utilization: Optional[float] = None
+    ip_address: Optional[str] = None
+    location: Optional[str] = None
+    status: Optional[str] = None
+
+
+class NodeResponse(BaseModel):
+    id: int
+    name: str
+    status: Optional[str]
+    cpu_capacity: float
+    memory_capacity: float
+    current_cpu_assignment: Optional[float]
+    current_memory_assignment: Optional[float]
+    current_cpu_utilization: Optional[float]
+    current_memory_utilization: Optional[float]
+    ip_address: str
+    location: Optional[str]
+
+    class Config:
+        orm_mode = True
