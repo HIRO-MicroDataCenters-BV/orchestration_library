@@ -5,6 +5,16 @@ from app.schemas import NodeCreate
 
 
 async def create_node(db: AsyncSession, data: NodeCreate):
+    """
+        Create a new node entry in the database.
+
+        Args:
+            db (AsyncSession): The database session.
+            data (NodeCreate): The data for creating the node.
+
+        Returns:
+            Node: The created node object after committing to the database.
+    """
     node = Node(**data.dict())
     db.add(node)
     await db.commit()
@@ -13,6 +23,17 @@ async def create_node(db: AsyncSession, data: NodeCreate):
 
 
 async def get_nodes(db: AsyncSession, node_id: int = None):
+    """
+        Retrieve one or all nodes from the database.
+
+        Args:
+            db (AsyncSession): The database session.
+            node_id (int, optional): If provided, fetches the node with this ID.
+                                     If not, returns all nodes.
+
+        Returns:
+            list[Node]: A list of node objects, or a single-node list if node_id is given.
+    """
     if node_id:
         query = select(Node).where(Node.id == node_id)
     else:
@@ -22,6 +43,17 @@ async def get_nodes(db: AsyncSession, node_id: int = None):
 
 
 async def update_node(db: AsyncSession, node_id: int, updates: dict):
+    """
+        Update an existing node with new values.
+
+        Args:
+            db (AsyncSession): The database session.
+            node_id (int): ID of the node to be updated.
+            updates (dict): Dictionary of fields to update.
+
+        Returns:
+            Node | None: The updated node object, or None if not found.
+    """
     await db.execute(update(Node).where(Node.id == node_id).values(**updates))
     await db.commit()
     query = select(Node).where(Node.id == node_id)
@@ -30,6 +62,17 @@ async def update_node(db: AsyncSession, node_id: int, updates: dict):
 
 
 async def delete_node(db: AsyncSession, node_id: int):
+    """
+        Delete a node from the database.
+
+        Args:
+            db (AsyncSession): The database session.
+            node_id (int): ID of the node to be deleted.
+
+        Returns:
+            dict: A dictionary confirming the deletion by ID.
+                  Example: {"deleted_id": 5}
+    """
     await db.execute(delete(Node).where(Node.id == node_id))
     await db.commit()
     return {"deleted_id": node_id}
