@@ -132,7 +132,7 @@ async def test_get_workload_request_decision():
 
 
 @pytest.mark.asyncio
-@patch("app.crud.create_workload_request_decision", new_callable=AsyncMock)
+@patch("app.crud.workload_request_decision.create_workload_request_decision", new_callable=AsyncMock)
 async def test_create_workload_request_decision_route(mock_create):
     """
     Test the creation of a new workload request decision using mocked CRUD logic.
@@ -167,7 +167,7 @@ async def test_create_workload_request_decision_route(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.update_workload_request_decision", new_callable=AsyncMock)
+@patch("app.crud.workload_request_decision.update_workload_request_decision", new_callable=AsyncMock)
 async def test_update_workload_request_decision_route(mock_update):
     """
     Test updating a workload request decision using mocked CRUD logic.
@@ -196,7 +196,7 @@ async def test_update_workload_request_decision_route(mock_update):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.delete_workload_request_decision", new_callable=AsyncMock)
+@patch("app.crud.workload_request_decision.delete_workload_request_decision", new_callable=AsyncMock)
 async def test_delete_workload_request_decision_route(mock_delete):
     """
     Test deleting a workload request decision using mocked CRUD logic.
@@ -216,7 +216,7 @@ async def test_delete_workload_request_decision_route(mock_delete):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.get_workload_request_decision", new_callable=AsyncMock)
+@patch("app.crud.workload_request_decision.get_workload_request_decision", new_callable=AsyncMock)
 async def test_get_workload_request_decision_route(mock_get):
     """
     Test retrieving workload request decisions using mocked CRUD logic.
@@ -246,7 +246,7 @@ async def test_get_workload_request_decision_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.crud.get_workload_request_decision", new_callable=AsyncMock)
+@patch("app.crud.workload_request_decision.get_workload_request_decision", new_callable=AsyncMock)
 async def test_get_workload_request_decision_by_id_route(mock_get):
     """
     Test retrieving a specific workload request decision by ID using mocked CRUD logic.
