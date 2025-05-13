@@ -71,7 +71,6 @@ async def delete_node(db: AsyncSession, node_id: int):
 
         Returns:
             dict: A dictionary confirming the deletion by ID.
-                  Example: {"deleted_id": 5}
     """
     await db.execute(delete(Node).where(Node.id == node_id))
     await db.commit()
