@@ -12,6 +12,16 @@ router = APIRouter(prefix="/node")
 async def create_node(
     data: schemas.NodeCreate, db: AsyncSession = Depends(get_async_db)
 ):
+    """
+        Create a new node.
+
+        Args:
+            data (schemas.NodeCreate): Payload containing node creation details.
+            db (AsyncSession): Database session dependency.
+
+        Returns:
+            schemas.NodeResponse: The created node data.
+    """
     return await node.create_node(db, data)
 
 
