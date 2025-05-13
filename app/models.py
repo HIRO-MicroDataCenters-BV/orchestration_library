@@ -61,6 +61,8 @@ class Node(Base):
     current_memory_utilization = Column(Float)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+    ip_address = Column(String)
+    location = Column(String)
 
     # # Relationship to Pod
     # pods = relationship("Pod", back_populates="node")
