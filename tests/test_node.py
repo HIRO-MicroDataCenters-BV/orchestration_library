@@ -1,21 +1,12 @@
 import pytest
 from unittest.mock import MagicMock
 from app.crud.node import create_node, get_nodes, update_node, delete_node
-from app.schemas import NodeCreate
-from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
 from httpx._transports.asgi import ASGITransport
-
-
-import pytest
+from unittest.mock import AsyncMock, patch
+from fastapi import status
 from httpx import AsyncClient
-from unittest.mock import AsyncMock
 from app.main import app
-from app.schemas import NodeCreate
-
-
-from sqlalchemy.orm import Session
-from app.models import Node
+from app.schemas import NodeCreate, NodeResponse
 
 # ===========================================================================
 # ========================= Tests for node CRUD functions =========================
@@ -97,14 +88,6 @@ async def test_delete_node_crud():
 # =====================================================================================
 # ========================= Below tests are for the node routes =========================
 # =====================================================================================
-
-
-import pytest
-from unittest.mock import AsyncMock, patch
-from fastapi import status
-from httpx import AsyncClient
-from app.main import app
-from app.schemas import NodeCreate, NodeResponse
 
 
 @pytest.mark.asyncio
