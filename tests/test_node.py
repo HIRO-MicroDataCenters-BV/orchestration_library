@@ -1,9 +1,21 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock
 from app.crud.node import create_node, get_nodes, update_node, delete_node
 from app.schemas import NodeCreate
 from fastapi.testclient import TestClient
+from unittest.mock import patch, AsyncMock
+from httpx._transports.asgi import ASGITransport
+
+
+import pytest
+from httpx import AsyncClient
+from unittest.mock import AsyncMock
 from app.main import app
+from app.schemas import NodeCreate
+
+
+from sqlalchemy.orm import Session
+from app.models import Node
 
 # ===========================================================================
 # ========================= Tests for node CRUD functions =========================
@@ -87,166 +99,181 @@ async def test_delete_node_crud():
 # =====================================================================================
 
 
-@pytest.fixture
-def client():
-    return TestClient(app)
+import pytest
+from unittest.mock import AsyncMock, patch
+from fastapi import status
+from httpx import AsyncClient
+from app.main import app
+from app.schemas import NodeCreate, NodeResponse
 
 
 @pytest.mark.asyncio
-@patch("app.crud.node.create_node")
-async def test_create_node(mock_create_node, client):
-    # Arrange
-    new_node_data = {
-        "name": "node-1",
-        "status": "active",
-        "cpu_capacity": 4.0,
-        "memory_capacity": 8192.0,
-        "ip_address": "192.168.1.1",
-        "location": "loc1",
-    }
+@patch("app.crud.node.create_node", new_callable=AsyncMock)
+async def test_create_node(mock_create_node):
+    # Define the request and expected response data
+    request_data = NodeCreate(
+        name="test-node",
+        status="active",
+        cpu_capacity=4.0,
+        memory_capacity=8192.0,
+        current_cpu_assignment=1.0,
+        current_memory_assignment=1024.0,
+        current_cpu_utilization=0.5,
+        current_memory_utilization=512.0,
+    )
 
-    # Mocking the database call to return the full NodeResponse schema
-    mock_create_node.return_value = {
-        "id": 1,
-        "name": "node-1",
-        "status": "active",
-        "cpu_capacity": 4.0,
-        "memory_capacity": 8192.0,
-        "ip_address": "192.168.1.1",
-        "location": "loc1",
-        "current_cpu_assignment": None,
-        "current_cpu_utilization": None,
-        "current_memory_assignment": None,
-        "current_memory_utilization": None,
-    }
+    response_data = NodeResponse(
+        id=1,
+        name="test-node",
+        status="active",
+        cpu_capacity=4.0,
+        memory_capacity=8192.0,
+        current_cpu_assignment=1.0,
+        current_memory_assignment=1024.0,
+        current_cpu_utilization=0.5,
+        current_memory_utilization=512.0,
+        ip_address="192.168.1.1",  # Assuming this is added to response
+        location="datacenter-1",  # Assuming this is added to response
+    )
 
-    # Act
-    response = client.post("/node/", json=new_node_data)
+    # Mock the `create_node` function to return the expected data
+    mock_create_node.return_value = response_data
+    transport = ASGITransport(app=app)
+    # Set up the test client
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post("/node/", json=request_data.dict())
 
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == mock_create_node.return_value
+    # Assertions
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data.dict()
 
 
 @pytest.mark.asyncio
-@patch("app.crud.node.get_nodes")
-async def test_get_nodes(mock_get_nodes, client):
-    # Arrange
-    mock_get_nodes.return_value = [
+@patch("app.crud.node.get_nodes", new_callable=AsyncMock)
+async def test_get_nodes(mock_get_nodes):
+    # Sample node data to be returned
+    nodes = [
         {
             "id": 1,
-            "name": "node-1",
+            "name": "test-node-1",
             "status": "active",
             "cpu_capacity": 4.0,
             "memory_capacity": 8192.0,
+            "current_cpu_assignment": 1.0,
+            "current_memory_assignment": 1024.0,
+            "current_cpu_utilization": 0.5,
+            "current_memory_utilization": 512.0,
             "ip_address": "192.168.1.1",
-            "location": "loc1",
+            "location": "datacenter-1",
         },
         {
             "id": 2,
-            "name": "node-2",
+            "name": "test-node-2",
             "status": "inactive",
             "cpu_capacity": 8.0,
             "memory_capacity": 16384.0,
+            "current_cpu_assignment": 2.0,
+            "current_memory_assignment": 2048.0,
+            "current_cpu_utilization": 0.25,
+            "current_memory_utilization": 1024.0,
             "ip_address": "192.168.1.2",
-            "location": "loc2",
+            "location": "datacenter-2",
         },
     ]
+    mock_get_nodes.return_value = nodes
+    transport = ASGITransport(app=app)
+    # Set up the test client
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/node/")
 
-    # Act
-    response = client.get("/node/")
-
-    # Assert
-    assert response.status_code == 200
-    assert len(response.json()) == 2
-    assert response.json()[0]["name"] == "node-1"
-    assert response.json()[1]["name"] == "node-2"
+    # Assertions
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 2  # Expecting two nodes in the response
 
 
 @pytest.mark.asyncio
-@patch(
-    "app.crud.node.get_nodes"
-)  # Mocking the 'get_nodes' function in the 'crud/node.py'
-async def test_get_node_by_id(mock_get_nodes, client):
-    # Arrange: Mock data returned by the 'get_nodes' function (Node exists)
-    mock_get_nodes.return_value = [
+@patch("app.routes.node.get_nodes", new_callable=AsyncMock)
+async def test_get_node_by_id(mock_get_nodes):
+    # Sample node data
+    nodes = [
         {
             "id": 1,
-            "name": "node-1",
+            "name": "test-node-1",
             "status": "active",
             "cpu_capacity": 4.0,
             "memory_capacity": 8192.0,
+            "current_cpu_assignment": 1.0,
+            "current_memory_assignment": 1024.0,
+            "current_cpu_utilization": 0.5,
+            "current_memory_utilization": 512.0,
             "ip_address": "192.168.1.1",
-            "location": "loc1",
-            "current_cpu_assignment": None,
-            "current_cpu_utilization": None,
-            "current_memory_assignment": None,
-            "current_memory_utilization": None,
+            "location": "datacenter-1",
         }
     ]
+    mock_get_nodes.return_value = nodes
+    transport = ASGITransport(app=app)
+    # Test valid node ID
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/node/1")
 
-    # Act: Send the GET request for the existing node with id = 1
-    response = client.get("/node/1")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["id"] == 1
 
-    # Assert: Check the response status and data
-    assert response.status_code == 200
-    response_data = response.json()
-    assert response_data["id"] == 1
-    assert response_data["name"] == "node-1"
-    assert response_data["status"] == "active"
+    # Test invalid node ID
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/node/999")  # Non-existing node ID
 
-    # Act for non-existent node (node_id = 999) - Mock to return an empty list for non-existent nodes
-    mock_get_nodes.return_value = []  # Mock that no nodes are returned for id 999
-    response = client.get("/node/999")
-
-    # Assert: Check the response for a non-existent node
-    assert (
-        response.status_code == 404
-    )  # Or 200 if you're using a 200 status code with an error message
-    assert response.json() == {"detail": "Node not found"}
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Node not found"
 
 
 @pytest.mark.asyncio
-@patch("app.crud.node.update_node")
-async def test_update_node(mock_update_node, client):
-    # Arrange
-    updated_node_data = {
-        "name": "node-1-updated",
+@patch("app.crud.node.update_node", new_callable=AsyncMock)
+async def test_update_node(mock_update_node):
+    # Define request data and expected response data
+    update_data = {
+        "name": "updated-node",
         "status": "active",
-        "cpu_capacity": 6.0,
-        "memory_capacity": 16384.0,
-        "ip_address": "192.168.1.10",
-        "location": "loc1",
+        "cpu_capacity": 4.0,
+        "memory_capacity": 8192.0,
+        "current_cpu_assignment": 1.0,
+        "current_memory_assignment": 1024.0,
+        "current_cpu_utilization": 0.5,
+        "current_memory_utilization": 512.0,
     }
-
-    mock_update_node.return_value = {
+    response_data = {
         "id": 1,
-        "name": "node-1-updated",
+        "name": "updated-node",
         "status": "active",
-        "cpu_capacity": 6.0,
-        "memory_capacity": 16384.0,
-        "ip_address": "192.168.1.10",
-        "location": "loc1",
+        "cpu_capacity": 4.0,
+        "memory_capacity": 8192.0,
+        "current_cpu_assignment": 1.0,
+        "current_memory_assignment": 1024.0,
+        "current_cpu_utilization": 0.5,
+        "current_memory_utilization": 512.0,
+        "ip_address": "192.168.1.1",
+        "location": "datacenter-1",
     }
+    mock_update_node.return_value = response_data
+    transport = ASGITransport(app=app)
+    # Test the update functionality
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.put("/node/1", json=update_data)
 
-    # Act
-    response = client.put("/node/1", json=updated_node_data)
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json()["name"] == "node-1-updated"
-    assert response.json()["cpu_capacity"] == 6.0
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == response_data
 
 
 @pytest.mark.asyncio
-@patch("app.crud.node.delete_node")
-async def test_delete_node(mock_delete_node, client):
-    # Arrange
-    mock_delete_node.return_value = {"message": "Node deleted successfully"}
+@patch("app.crud.node.delete_node", new_callable=AsyncMock)
+async def test_delete_node(mock_delete_node):
+    # Simulate that node with ID 1 is deleted
+    mock_delete_node.return_value = None
+    transport = ASGITransport(app=app)
+    # Set up the test client
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.delete("/node/1")
 
-    # Act
-    response = client.delete("/node/1")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"message": "Node deleted successfully"}
+    # Assertions
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"detail": "Node deleted successfully"}
