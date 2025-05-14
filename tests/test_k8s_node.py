@@ -90,14 +90,17 @@ def test_list_k8s_nodes_all(mock_get_client, mock_get_custom):
     assert nodes[0]["usage"]["cpu"] == "100m"
     assert nodes[0]["addresses"][0]["address"] == "192.168.1.10"
 
+@patch("app.crud.k8s_node.get_k8s_custom_objects_client")
 @patch("app.crud.k8s_node.get_k8s_core_v1_client")
-def test_list_k8s_nodes_with_filters(mock_get_client):
+def test_list_k8s_nodes_with_filters(mock_get_client, mock_get_custom):
     """
     Test listing nodes with various filters.
     """
     mock_core_v1 = MagicMock()
     mock_core_v1.list_node.return_value.items = [mock_node()]
     mock_get_client.return_value = mock_core_v1
+
+    mock_get_custom.return_value = mock_custom_api()
 
     # Filter by name (should match)
     response = k8s_node.list_k8s_nodes(name="test-node")
