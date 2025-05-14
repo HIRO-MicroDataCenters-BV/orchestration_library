@@ -3,6 +3,7 @@ Tests for node get and list functionality in Kubernetes.
 """
 import json
 from unittest.mock import MagicMock, patch
+from kubernetes.client.exceptions import ApiException
 
 from app.crud import k8s_node
 
@@ -50,14 +51,32 @@ def mock_node():
     node.spec.unschedulable = False
     return node
 
+def mock_custom_api():
+    """
+    Mock a Kubernetes custom API object for metrics.
+    """
+    custom_api = MagicMock()
+    custom_api.list_cluster_custom_object.return_value = {
+        "items": [
+            {
+                "metadata": {"name": "test-node"},
+                "usage": {"cpu": "100m", "memory": "512Mi"}
+            }
+        ]
+    }
+    return custom_api
+
+@patch("app.crud.k8s_node.get_k8s_custom_objects_client")
 @patch("app.crud.k8s_node.get_k8s_core_v1_client")
-def test_list_k8s_nodes_all(mock_get_client):
+def test_list_k8s_nodes_all(mock_get_client, mock_get_custom):
     """
     Test listing all nodes in the cluster.
     """
     mock_core_v1 = MagicMock()
     mock_core_v1.list_node.return_value.items = [mock_node()]
     mock_get_client.return_value = mock_core_v1
+
+    mock_get_custom.return_value = mock_custom_api()
 
     response = k8s_node.list_k8s_nodes()
     assert response.status_code == 200
@@ -68,16 +87,20 @@ def test_list_k8s_nodes_all(mock_get_client):
     assert nodes[0]["status"] == "Ready"
     assert nodes[0]["node_info"]["architecture"] == "amd64"
     assert nodes[0]["capacity"]["cpu"] == "4"
+    assert nodes[0]["usage"]["cpu"] == "100m"
     assert nodes[0]["addresses"][0]["address"] == "192.168.1.10"
 
+@patch("app.crud.k8s_node.get_k8s_custom_objects_client")
 @patch("app.crud.k8s_node.get_k8s_core_v1_client")
-def test_list_k8s_nodes_with_filters(mock_get_client):
+def test_list_k8s_nodes_with_filters(mock_get_client, mock_get_custom):
     """
     Test listing nodes with various filters.
     """
     mock_core_v1 = MagicMock()
     mock_core_v1.list_node.return_value.items = [mock_node()]
     mock_get_client.return_value = mock_core_v1
+
+    mock_get_custom.return_value = mock_custom_api()
 
     # Filter by name (should match)
     response = k8s_node.list_k8s_nodes(name="test-node")
@@ -111,3 +134,24 @@ def test_list_k8s_nodes_with_filters(mock_get_client):
     response = k8s_node.list_k8s_nodes(status="NotReady")
     nodes = json.loads(response.body)
     assert len(nodes) == 0
+
+@patch("app.crud.k8s_node.get_k8s_core_v1_client")
+@patch("app.crud.k8s_node.get_k8s_custom_objects_client")
+def test_list_k8s_nodes_metrics_api_exception(mock_get_custom, mock_get_core):
+    """
+    Test listing nodes when metrics.k8s.io API raises an exception.
+    """
+    mock_core_v1 = MagicMock()
+    mock_core_v1.list_node.return_value.items = [mock_node()]
+    mock_get_core.return_value = mock_core_v1
+
+    # Simulate metrics.k8s.io API exception
+    mock_custom_api1 = MagicMock()
+    mock_custom_api1.list_cluster_custom_object.side_effect = ApiException("metrics error")
+    mock_get_custom.return_value = mock_custom_api1
+
+    response = k8s_node.list_k8s_nodes()
+    assert response.status_code == 200
+    nodes = json.loads(response.body)
+    assert len(nodes) == 1
+    assert nodes[0]["usage"] == {}
