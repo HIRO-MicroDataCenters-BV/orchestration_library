@@ -1,7 +1,6 @@
 """
-CRUD operations for managing pods in the database.
-This module provides functions to create, read, update, and delete pod records.
-It uses SQLAlchemy ORM for database interactions.
+Operations on Kubernetes nodes.
+This module provides functions to list nodes in the cluster.
 """
 from fastapi.responses import JSONResponse
 from kubernetes import client
@@ -30,7 +29,6 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
         node_metrics_map = {item["metadata"]["name"]: item for item in node_metrics["items"]}
     except client.rest.ApiException as e:
         print(f"Failed to fetch node metrics: {e}")
-        
 
     nodes = core_v1.list_node(watch=False)
 
@@ -45,7 +43,7 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
                 continue
             if status and node.status.conditions[-1].type != status:
                 continue
-        
+        # Simplify node details
         usage = node_metrics_map.get(node.metadata.name, {}).get("usage", {})
         simplified_nodes.append({
             "api_version": node.api_version,
