@@ -33,8 +33,8 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    If you provide a parameter, that will be used as the cluster name.
 
    ```bash
-   scripts/kind_cluster_init.sh             # Uses default cluster name 'kind-sample'
-   scripts/kind_cluster_init.sh my-cluster  # Uses 'my-cluster' as the cluster name
+   bash scripts/kind_cluster_init.sh             # Uses default cluster name 'kind-sample'
+   bash scripts/kind_cluster_init.sh my-cluster  # Uses 'my-cluster' as the cluster name
    ```
 
 2. **Build and deploy the application**
@@ -43,8 +43,8 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    If you specified a custom cluster name above, pass the same parameter here.
 
    ```bash
-   scripts/deploy_app.py                    # Deploys to 'kind-sample' by default
-   scripts/deploy_app.py my-cluster         # Deploys to 'my-cluster'
+   bash scripts/deploy_app.sh                    # Deploys to 'kind-sample' by default
+   bash scripts/deploy_app.sh my-cluster         # Deploys to 'my-cluster'
    ```
 
    If you do not provide any parameter, the application will be deployed to the `kind-sample` cluster.
