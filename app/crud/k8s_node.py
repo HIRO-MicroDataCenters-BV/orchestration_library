@@ -4,7 +4,10 @@ This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
 from fastapi.responses import JSONResponse
-from app.crud.k8s_common import get_k8s_core_v1_client
+from kubernetes import client
+
+from app.crud.k8s_common import (get_k8s_core_v1_client,
+                                 get_k8s_custom_objects_client)
 
 
 def list_k8s_nodes(name=None, node_id=None, status=None):
@@ -13,7 +16,21 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
     If no filters are specified, list all nodes.
     """
     core_v1 = get_k8s_core_v1_client()
+    custom_api = get_k8s_custom_objects_client()
     print("Listing nodes with their details:")
+
+    # Get node metrics from metrics.k8s.io API
+    node_metrics_map = {}
+    try:
+        node_metrics = custom_api.list_cluster_custom_object(
+            group="metrics.k8s.io",
+            version="v1beta1",
+            plural="nodes"
+        )
+        node_metrics_map = {item["metadata"]["name"]: item for item in node_metrics["items"]}
+    except client.rest.ApiException as e:
+        print(f"Failed to fetch node metrics: {e}")
+        
 
     nodes = core_v1.list_node(watch=False)
 
@@ -28,6 +45,8 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
                 continue
             if status and node.status.conditions[-1].type != status:
                 continue
+        
+        usage = node_metrics_map.get(node.metadata.name, {}).get("usage", {})
         simplified_nodes.append({
             "api_version": node.api_version,
             "id": node.metadata.uid,
@@ -46,6 +65,7 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
             },
             "capacity": node.status.capacity,
             "allocatable": node.status.allocatable,
+            "usage": usage,
             "addresses": [
                 {
                     "type": address.type,
