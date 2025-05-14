@@ -88,6 +88,7 @@ async def test_get_workload_requests_with_individual_filters(kargs, expected_fil
 
     db.execute.assert_awaited_once()
     assert result == ["filtered"]
+    assert expected_filters is not None
 
 
 @pytest.mark.asyncio
