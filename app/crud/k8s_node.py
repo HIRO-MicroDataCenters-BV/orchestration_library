@@ -26,6 +26,7 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
             version="v1beta1",
             plural="nodes"
         )
+        print("Node metrics fetched successfully.\n", node_metrics)
         node_metrics_map = {item["metadata"]["name"]: item for item in node_metrics["items"]}
     except client.rest.ApiException as e:
         print(f"Failed to fetch node metrics: {e}")
