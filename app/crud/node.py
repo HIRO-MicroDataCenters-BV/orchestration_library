@@ -1,19 +1,24 @@
+"""
+CRUD operations for managing nodes in the database.
+This module provides functions to create, read, update, and delete nodes.
+"""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from app.models import Node
 from app.schemas import NodeCreate
 
 
+# pylint: disable=invalid-name
 async def create_node(db: AsyncSession, data: NodeCreate):
     """
-        Create a new node entry in the database.
+    Create a new node entry in the database.
 
-        Args:
-            db (AsyncSession): The database session.
-            data (NodeCreate): The data for creating the node.
+    Args:
+        db (AsyncSession): The database session.
+        data (NodeCreate): The data for creating the node.
 
-        Returns:
-            Node: The created node object after committing to the database.
+    Returns:
+        Node: The created node object after committing to the database.
     """
     node = Node(**data.dict())
     db.add(node)
@@ -24,15 +29,15 @@ async def create_node(db: AsyncSession, data: NodeCreate):
 
 async def get_nodes(db: AsyncSession, node_id: int = None):
     """
-        Retrieve one or all nodes from the database.
+    Retrieve one or all nodes from the database.
 
-        Args:
-            db (AsyncSession): The database session.
-            node_id (int, optional): If provided, fetches the node with this ID.
-                                     If not, returns all nodes.
+    Args:
+        db (AsyncSession): The database session.
+        node_id (int, optional): If provided, fetches the node with this ID.
+                                 If not, returns all nodes.
 
-        Returns:
-            list[Node]: A list of node objects, or a single-node list if node_id is given.
+    Returns:
+        list[Node]: A list of node objects, or a single-node list if node_id is given.
     """
     if node_id:
         query = select(Node).where(Node.id == node_id)
@@ -44,15 +49,15 @@ async def get_nodes(db: AsyncSession, node_id: int = None):
 
 async def update_node(db: AsyncSession, node_id: int, updates: dict):
     """
-        Update an existing node with new values.
+    Update an existing node with new values.
 
-        Args:
-            db (AsyncSession): The database session.
-            node_id (int): ID of the node to be updated.
-            updates (dict): Dictionary of fields to update.
+    Args:
+        db (AsyncSession): The database session.
+        node_id (int): ID of the node to be updated.
+        updates (dict): Dictionary of fields to update.
 
-        Returns:
-            Node | None: The updated node object, or None if not found.
+    Returns:
+        Node | None: The updated node object, or None if not found.
     """
     await db.execute(update(Node).where(Node.id == node_id).values(**updates))
     await db.commit()
@@ -63,14 +68,14 @@ async def update_node(db: AsyncSession, node_id: int, updates: dict):
 
 async def delete_node(db: AsyncSession, node_id: int):
     """
-        Delete a node from the database.
+    Delete a node from the database.
 
-        Args:
-            db (AsyncSession): The database session.
-            node_id (int): ID of the node to be deleted.
+    Args:
+        db (AsyncSession): The database session.
+        node_id (int): ID of the node to be deleted.
 
-        Returns:
-            dict: A dictionary confirming the deletion by ID.
+    Returns:
+        dict: A dictionary confirming the deletion by ID.
     """
     await db.execute(delete(Node).where(Node.id == node_id))
     await db.commit()
