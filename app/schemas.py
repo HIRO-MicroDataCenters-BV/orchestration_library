@@ -95,6 +95,10 @@ class WorkloadRequestPodUpdate(BaseModel):
 
 
 class NodeCreate(BaseModel):
+    """
+    Schema for creating a node.
+    """
+
     name: str
     status: Optional[str] = "active"
     cpu_capacity: float
@@ -106,6 +110,10 @@ class NodeCreate(BaseModel):
 
 
 class NodeUpdate(BaseModel):
+    """
+    Schema for updating node information.
+    """
+
     name: Optional[str] = None
     status: Optional[str] = None
     cpu_capacity: Optional[float] = None
@@ -117,6 +125,10 @@ class NodeUpdate(BaseModel):
 
 
 class NodeResponse(BaseModel):
+    """
+    Response schema for a node object, typically used in API responses.
+    """
+
     id: int
     name: str
     status: Optional[str]
@@ -130,4 +142,8 @@ class NodeResponse(BaseModel):
     location: Optional[str]
 
     class Config:
+        """
+        config class
+        """
+
         orm_mode = True
