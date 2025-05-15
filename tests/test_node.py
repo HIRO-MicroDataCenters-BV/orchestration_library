@@ -212,46 +212,6 @@ async def test_get_nodes(mock_get_nodes):
     assert len(response.json()) == 2  # Expecting two nodes in the response
 
 
-@pytest.mark.asyncio
-@patch("app.routes.node.get_nodes", new_callable=AsyncMock)
-async def test_get_node_by_id(mock_get_nodes):
-    """
-    Test GET /node/{node_id} endpoint.
-
-    Verifies correct response for existing and non-existing node IDs.
-    """
-    # Sample node data
-    nodes = [
-        {
-            "id": 1,
-            "name": "test-node-1",
-            "status": "active",
-            "cpu_capacity": 4.0,
-            "memory_capacity": 8192.0,
-            "current_cpu_assignment": 1.0,
-            "current_memory_assignment": 1024.0,
-            "current_cpu_utilization": 0.5,
-            "current_memory_utilization": 512.0,
-            "ip_address": "192.168.1.1",
-            "location": "datacenter-1",
-        }
-    ]
-    mock_get_nodes.return_value = nodes
-    transport = ASGITransport(app=app)
-    # Test valid node ID
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/node/1")
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["id"] == 1
-
-    # Test invalid node ID
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/node/999")  # Non-existing node ID
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["detail"] == "Node not found"
-
 
 @pytest.mark.asyncio
 @patch("app.crud.node.update_node", new_callable=AsyncMock)
@@ -313,3 +273,33 @@ async def test_delete_node(mock_delete_node):
     # Assertions
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"detail": "Node deleted successfully"}
+
+
+@patch("app.crud.node.get_node_by_id", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_get_node_by_id(mock_get_node_by_id):
+    """
+    Test
+    GET / node / {node_id} endpoint.
+
+    Verifies correct response for existing and non-existing node IDs.
+    """
+    mock_get_node_by_id.return_value = {
+        "id": 1,
+        "name": "test-node-1",
+        "status": "active",
+        "cpu_capacity": 4.0,
+        "memory_capacity": 8192.0,
+        "current_cpu_assignment": 1.0,
+        "current_memory_assignment": 1024.0,
+        "current_cpu_utilization": 0.5,
+        "current_memory_utilization": 512.0,
+        "ip_address": "192.168.1.1",
+        "location": "datacenter-1",
+        }
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/node/1")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 1

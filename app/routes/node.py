@@ -46,28 +46,6 @@ async def get_nodes(db: AsyncSession = Depends(get_async_db)):
     return await node.get_nodes(db)
 
 
-@router.get("/{node_id}", response_model=schemas.NodeResponse)
-async def get_node_by_id(node_id: int):
-    """
-    Retrieve a node by its ID.
-
-    Args:
-        node_id (int): The ID of the node to fetch.
-
-    Returns:
-        schemas.NodeResponse: The node with the given ID.
-
-    Raises:
-        HTTPException: If the node with the given ID does not exist.
-    """
-    nodes = await get_nodes()  # Or however you fetch nodes
-    for node_ in nodes:
-        if node_["id"] == node_id:
-            return node_
-    # Return an actual error, not a dict
-    raise HTTPException(status_code=404, detail="Node not found")
-
-
 @router.put("/{node_id}", response_model=schemas.NodeResponse)
 async def update_node(
     node_id: int, data: schemas.NodeUpdate, db: AsyncSession = Depends(get_async_db)
@@ -100,3 +78,25 @@ async def delete_node(node_id: int, db: AsyncSession = Depends(get_async_db)):
     """
     await node.delete_node(db, node_id)
     return {"detail": "Node deleted successfully"}
+
+
+@router.get("/{node_id}", response_model=schemas.NodeResponse)
+async def get_node_by_id(node_id: int, db: AsyncSession = Depends(get_async_db)):
+    """
+        Retrieve a node by its ID.
+
+        Args:
+            node_id (int): The ID of the node to fetch.
+            db: ...
+
+        Returns:
+            schemas.NodeResponse: The node with the given ID.
+
+        Raises:
+            HTTPException: If the node with the given ID does not exist.
+    """
+
+    node_ = await node.get_node_by_id(db, node_id)
+    if not node_:
+        raise HTTPException(status_code=404, detail="Node not found")
+    return node_

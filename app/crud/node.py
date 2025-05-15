@@ -80,3 +80,18 @@ async def delete_node(db: AsyncSession, node_id: int):
     await db.execute(delete(Node).where(Node.id == node_id))
     await db.commit()
     return {"deleted_id": node_id}
+
+
+async def get_node_by_id(db: AsyncSession, node_id: int):
+    """
+        Get a node from the database.
+
+        Args:
+            db (AsyncSession): The database session.
+            node_id (int): ID of the node to be deleted.
+
+        Returns:
+            int: ...
+        """
+    result = await db.execute(select(Node).where(Node.id == node_id))
+    return result.scalar_one_or_none()
