@@ -9,10 +9,9 @@ from kubernetes import config
 
 K8S_IN_USE_NAMESPACE_REGEX = "^kube-.*$|^default$"
 
-
-def get_k8s_core_v1_client():
+def load_kube_config():
     """
-    Get the Kubernetes CoreV1 API client.
+    Load the kubeconfig file for local development.
     This function attempts to load the in-cluster configuration first.
     If it fails, it falls back to loading the kubeconfig file for local development.
     """
@@ -22,18 +21,23 @@ def get_k8s_core_v1_client():
         print("Falling back to load_kube_config for local development.")
         config.load_kube_config()
 
+def get_k8s_core_v1_client():
+    """
+    Get the Kubernetes CoreV1 API client.
+    """
+    load_kube_config()
     return kubernetes.client.CoreV1Api()
 
 def get_k8s_custom_objects_client():
     """
     Get the Kubernetes Custom Objects API client.
-    This function attempts to load the in-cluster configuration first.
-    If it fails, it falls back to loading the kubeconfig file for local development.
     """
-    try:
-        config.load_incluster_config()
-    except config.ConfigException:
-        print("Falling back to load_kube_config for local development.")
-        config.load_kube_config()
-
+    load_kube_config()
     return kubernetes.client.CustomObjectsApi()
+
+def get_k8s_version_api_client():
+    """
+    Get the Kubernetes Version API client.
+    """
+    load_kube_config()
+    return kubernetes.client.VersionApi()
