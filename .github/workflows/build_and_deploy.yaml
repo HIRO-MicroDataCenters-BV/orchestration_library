@@ -27,7 +27,7 @@ jobs:
         run: echo "repo-path=${GITHUB_WORKSPACE}" >> $GITHUB_OUTPUT
 
   validate:
-    name: Validate Python and YAML files
+    name: Validate Python, YAML file Syntax and Testcoverage
     runs-on: ubuntu-latest
     needs: checkout
     steps:
