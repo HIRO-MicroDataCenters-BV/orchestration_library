@@ -4,8 +4,6 @@ Tests for the k8s_cluster_info module.
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 
-import pytest
-
 from app.crud import k8s_cluster_info
 
 
@@ -29,7 +27,9 @@ def mock_node():
     node.metadata.uid = "uid1"
     node.metadata.annotations = {"anno": "value"}
     node.metadata.labels = {"role": "worker"}
+    node.status = MagicMock()  # Explicitly mock node.status
     node.status.conditions = [MagicMock(type="Ready", message="ok", reason="KubeletReady")]
+    node.status.node_info = MagicMock()  # Explicitly mock node.status.node_info
     node.status.node_info.architecture = "amd64"
     node.status.node_info.container_runtime_version = "docker://20.10"
     node.status.node_info.kernel_version = "5.10"
@@ -114,6 +114,6 @@ def test_get_cluster_info_handles_exceptions(mock_get_version, mock_get_core):
     mock_get_core.return_value = mock_core
 
     result = k8s_cluster_info.get_cluster_info()
-    assert result["nodes"] == []
-    assert result["components"] == []
-    assert result["kube_system_pods"] == []
+    assert not result["nodes"]
+    assert not result["components"]
+    assert not result["kube_system_pods"]
