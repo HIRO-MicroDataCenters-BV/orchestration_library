@@ -85,8 +85,8 @@ def get_pod_labels_annotations(pod):
     Extracts and returns labels and annotations of a Kubernetes pod.
     """
     return {
-        "labels": pod.metadata.labels,
-        "annotations": pod.metadata.annotations,
+        "labels": pod.metadata.labels if pod and pod.metadata else {},
+        "annotations": pod.metadata.annotations if pod and pod.metadata else {},
     }
 
 def get_pod_details(pod):
@@ -96,17 +96,17 @@ def get_pod_details(pod):
     pod_labels_annotations = get_pod_labels_annotations(pod)
     pod_details = {
         "api_version": pod.api_version,
-        "id": pod.metadata.uid,
-        "namespace": pod.metadata.namespace,
-        "name": pod.metadata.name,
-        "status": pod.status.phase,
-        "message": pod.status.message,
-        "reason": pod.status.reason,
-        "host_ip": pod.status.host_ip,
-        "pod_ip": pod.status.pod_ip,
-        "start_time": str(pod.status.start_time),
-        "node_name": pod.spec.node_name,
-        "schedule_name": pod.spec.scheduler_name,
+        "id": pod.metadata.uid if pod.metadata else None,
+        "namespace": pod.metadata.namespace if pod.metadata else None,
+        "name": pod.metadata.name if pod.metadata else None,
+        "status": pod.status.phase if pod.status else None,
+        "message": pod.status.message if pod.status else None,
+        "reason": pod.status.reason if pod.status else None,
+        "host_ip": pod.status.host_ip if pod.status else None,
+        "pod_ip": pod.status.pod_ip if pod.status else None,
+        "start_time": str(pod.status.start_time) if pod.status else None,
+        "node_name": pod.spec.node_name if pod.spec else None,
+        "schedule_name": pod.spec.scheduler_name if pod.spec else None,
         "containers": [
             {
                 "name": container.name,
@@ -132,7 +132,7 @@ def get_pod_details(pod):
                     else None
                 ),
             }
-            for container in pod.spec.containers
+            for container in pod.spec.containers or []
         ],
     }
     # Combine all details into a single dictionary
@@ -144,11 +144,11 @@ def get_pod_basic_info(pod):
     Extracts and returns basic information about a Kubernetes pod.
     """
     return {
-        "id": pod.metadata.uid,
-        "name": pod.metadata.name,
-        "namespace": pod.metadata.namespace,
-        "phase": pod.status.phase,
-        "node_name": pod.spec.node_name,
+        "id": pod.metadata.uid if pod.metadata else None,
+        "name": pod.metadata.name if pod.metadata else None,
+        "namespace": pod.metadata.namespace if pod.metadata else None,
+        "phase": pod.status.phase if pod.status else None,
+        "node_name": pod.spec.node_name if pod.spec else None,
         "containers": [
             {
                 "name": c.name,

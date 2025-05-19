@@ -6,7 +6,7 @@ from kubernetes.client.exceptions import ApiException
 
 from app.repositories.k8s_common import (get_k8s_core_v1_client, 
                                          get_k8s_version_api_client)
-from app.utils.k8s import get_node_details, get_pod_details
+from app.utils.k8s import get_node_details, get_pod_basic_info, get_pod_details
 
 
 def get_cluster_info():
@@ -57,7 +57,7 @@ def get_cluster_info():
 
     kube_system_pods_info = []
     for pod in kube_system_pods:
-        kube_system_pods_info.append(get_pod_details(pod))
+        kube_system_pods_info.append(get_pod_basic_info(pod))
 
     cluster_info = {
         "kubernetes_version": version_info.git_version,

@@ -91,6 +91,23 @@ def test_list_k8s_pods_with_filters(mock_get_client):
     pods = json.loads(response.body)
     assert len(pods) == 0
 
+    # Filter by wrong pod_id
+    response = k8s_pod.list_k8s_pods(pod_id="other-uid")
+    assert response.status_code == 200
+    pods = json.loads(response.body)
+    assert len(pods) == 0
+
+    # Filter by wrong status
+    response = k8s_pod.list_k8s_pods(status="Failed")
+    assert response.status_code == 200
+    pods = json.loads(response.body)
+    assert len(pods) == 0
+
+    # Filter by wrong namespace
+    response = k8s_pod.list_k8s_pods(namespace="other-namespace")
+    assert response.status_code == 200
+    pods = json.loads(response.body)
+    assert len(pods) == 0
 
 @patch("app.repositories.k8s_pod.list_k8s_pods")
 def test_list_k8s_user_pods_calls_list_k8s_pods(mock_list_k8s_pods):
