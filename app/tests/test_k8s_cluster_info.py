@@ -4,7 +4,7 @@ Tests for the k8s_cluster_info module.
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 
-from app.repositories import k8s_cluster_info
+from app.repositories.k8s import k8s_cluster_info
 
 
 # @pytest.fixture

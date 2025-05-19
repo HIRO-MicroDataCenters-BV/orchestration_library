@@ -4,7 +4,7 @@ Get cluster information from Kubernetes.
 
 from kubernetes.client.exceptions import ApiException
 
-from app.repositories.k8s_common import (get_k8s_core_v1_client, 
+from app.repositories.k8s.k8s_common import (get_k8s_core_v1_client, 
                                          get_k8s_version_api_client)
 from app.utils.k8s import get_node_details, get_pod_basic_info
 

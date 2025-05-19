@@ -1,7 +1,5 @@
 """
-CRUD operations for managing pods in the database.
-This module provides functions to create, read, update, and delete pod records.
-It uses SQLAlchemy ORM for database interactions.
+List the pods in the Kubernetes cluster.
 """
 
 import re

@@ -5,7 +5,7 @@ import json
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 
-from app.repositories import k8s_node
+from app.repositories.k8s import k8s_node
 
 
 def mock_node():
