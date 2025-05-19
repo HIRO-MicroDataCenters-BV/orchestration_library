@@ -70,6 +70,7 @@ def mock_pod():
     pod.status.container_statuses = [container_status]
     return pod
 
+
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client")
 def test_get_cluster_info_success(mock_get_version, mock_get_core):
@@ -92,9 +93,7 @@ def test_get_cluster_info_success(mock_get_version, mock_get_core):
     assert result["components"][0]["name"] == "scheduler"
     assert result["kube_system_pods"][0]["name"] == "kube-proxy"
     assert result["cluster_id"] == "abcdef123456"
-    assert result["cluster_name"] == "v1.25.0"
-    assert result["cluster_domain"] == "test"
-    assert result["cluster_ip"] == "10.0.0.1"
+
 
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client")

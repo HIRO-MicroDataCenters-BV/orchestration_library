@@ -64,18 +64,7 @@ def get_cluster_info():
         "nodes": node_infos,
         "components": component_status,
         "kube_system_pods": kube_system_pods_info,
-        "cluster_id": version_info.git_commit,
-        "cluster_name": version_info.git_version.split("-")[0],
-        "cluster_domain": (
-            version_info.git_version.split("-")[1]
-            if "-" in version_info.git_version
-            else None
-        ),
-        "cluster_ip": (
-            version_info.git_version.split("-")[2]
-            if "-" in version_info.git_version
-            else None
-        ),
+        "cluster_id": version_info.git_commit
     }
 
     return cluster_info

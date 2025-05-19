@@ -214,3 +214,33 @@ def test_pod_by_id_not_found(_mock_batch, _mock_apps, mock_core):
         "No pod found with name: None or UID: notfound in namespace: default"
         in result["message"]
     )
+
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_pod_by_id_found(_mock_batch, mock_apps, mock_core):
+    """
+    Test that the function correctly retrieves a pod by UID.
+    """
+    owner = make_owner("DaemonSet", "ds-name")
+    # Simulate pod_id search with a match
+    pod = mock_pod()
+    pod.metadata.uid = "found-uid"
+    pod.metadata.owner_references = [owner]
+    pod_list = MagicMock()
+    pod_list.items = [pod]
+    mock_core.return_value.list_namespaced_pod.return_value = pod_list
+
+    daemonset = MagicMock()
+    daemonset.metadata.name = "ds-name"
+    daemonset.metadata.namespace = "default"
+    daemonset.api_version = "apps/v1"
+    daemonset.status.desired_number_scheduled = 2
+    mock_apps.return_value.read_namespaced_daemon_set.return_value = daemonset
+
+    result = get_parent_controller_details_of_pod(
+        namespace="default", pod_name=None, pod_id="found-uid"
+    )
+    assert result["kind"] == "DaemonSet"
+    assert result["name"] == "ds-name"
+    assert result["current_scale"] == 2
