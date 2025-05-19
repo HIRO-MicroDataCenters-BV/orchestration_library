@@ -4,8 +4,8 @@ FastAPI application entry point.
 
 import logging
 from fastapi import FastAPI
-from app.api import k8s_pod, k8s_node, k8s_user_pod, k8s_cluster_info
-from app.api import db_pod, workload_request, workload_request_decision, node
+from app.api.k8s import (k8s_pod, k8s_node, k8s_user_pod, k8s_cluster_info)
+from app.api import (db_pod, workload_request, workload_request_decision, node)
 
 app = FastAPI()
 

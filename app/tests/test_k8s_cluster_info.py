@@ -70,8 +70,8 @@ def mock_pod():
     pod.status.container_statuses = [container_status]
     return pod
 
-@patch("app.repositories.k8s_cluster_info.get_k8s_core_v1_client")
-@patch("app.repositories.k8s_cluster_info.get_k8s_version_api_client")
+@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client")
 def test_get_cluster_info_success(mock_get_version, mock_get_core):
     """
     Test the successful retrieval of cluster information.
@@ -96,8 +96,8 @@ def test_get_cluster_info_success(mock_get_version, mock_get_core):
     assert result["cluster_domain"] == "test"
     assert result["cluster_ip"] == "10.0.0.1"
 
-@patch("app.repositories.k8s_cluster_info.get_k8s_core_v1_client")
-@patch("app.repositories.k8s_cluster_info.get_k8s_version_api_client")
+@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client")
 def test_get_cluster_info_handles_exceptions(mock_get_version, mock_get_core):
     """
     Test the handling of exceptions when retrieving cluster information.

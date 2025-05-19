@@ -7,7 +7,7 @@ import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
-from app.repositories.k8s import db_pod
+from app.repositories import db_pod
 from app.main import app
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate

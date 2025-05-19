@@ -3,7 +3,7 @@ Cluster Info API
 """
 
 from fastapi import APIRouter
-from app.repositories import k8s_cluster_info
+from app.repositories.k8s import k8s_cluster_info
 
 
 router = APIRouter(prefix="/k8s_cluster_info")

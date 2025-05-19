@@ -2,7 +2,7 @@
 Get the parent controller of a Kubernetes pod.
 """
 
-from app.repositories.k8s_common import (
+from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
     get_k8s_batch_v1_client,
     get_k8s_core_v1_client
@@ -25,6 +25,8 @@ def get_parent_controller_details_of_pod(namespace, pod_name, pod_id):
 
     if not pod_name and not pod_id:
         raise ValueError("Either pod_name or pod_id must be provided.")
+
+    pod = None  # Initialize pod to None
 
     if pod_name:
         pod = core_v1.read_namespaced_pod(name=pod_name, namespace=namespace)

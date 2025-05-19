@@ -5,7 +5,7 @@ This module provides functions to list nodes in the cluster.
 from fastapi.responses import JSONResponse
 from kubernetes import client
 
-from app.repositories.k8s_common import (get_k8s_core_v1_client,
+from app.repositories.k8s.k8s_common import (get_k8s_core_v1_client,
                                  get_k8s_custom_objects_client)
 from app.utils.k8s import get_node_details
 
