@@ -24,6 +24,9 @@ def get_pod_parent(namespace: str, name: str = None, pod_id: str = None):
     Returns:
         dict: Details of the parent controller (Deployment, StatefulSet, DaemonSet, or Job).
     """
-    return k8s_pod_parent.get_parent_controller_details_of_pod(
-        namespace=namespace, pod_name=name, pod_id=pod_id
-    )
+    try:
+        return k8s_pod_parent.get_parent_controller_details_of_pod(
+            namespace=namespace, pod_name=name, pod_id=pod_id
+        )
+    except ValueError as e:
+        return {"error": "Invalid input " + str(e)}
