@@ -2,8 +2,9 @@
 Tests for the get_parent_controller_details_of_pod function.
 """
 
-import pytest
 from unittest.mock import patch, MagicMock
+import pytest
+
 from app.repositories.k8s.k8s_pod_parent import get_parent_controller_details_of_pod
 
 
@@ -191,4 +192,7 @@ def test_pod_by_id_not_found(mock_core):
     result = get_parent_controller_details_of_pod(
         namespace="default", pod_name=None, pod_id="notfound"
     )
-    assert "No pod found with UID" in result["message"]
+    assert (
+        "No pod found with name: None or UID: notfound in namespace: default"
+        in result["message"]
+    )
