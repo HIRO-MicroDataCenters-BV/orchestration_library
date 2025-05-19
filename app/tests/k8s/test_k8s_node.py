@@ -5,7 +5,7 @@ import json
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 
-from app.repositories import k8s_node
+from app.repositories.k8s import k8s_node
 
 
 def mock_node():
@@ -66,8 +66,8 @@ def mock_custom_api():
     }
     return custom_api
 
-@patch("app.repositories.k8s_node.get_k8s_custom_objects_client")
-@patch("app.repositories.k8s_node.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
+@patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 def test_list_k8s_nodes_all(mock_get_client, mock_get_custom):
     """
     Test listing all nodes in the cluster.
@@ -90,8 +90,8 @@ def test_list_k8s_nodes_all(mock_get_client, mock_get_custom):
     assert nodes[0]["usage"]["cpu"] == "100m"
     assert nodes[0]["addresses"][0]["address"] == "192.168.1.10"
 
-@patch("app.repositories.k8s_node.get_k8s_custom_objects_client")
-@patch("app.repositories.k8s_node.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
+@patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 def test_list_k8s_nodes_with_filters(mock_get_client, mock_get_custom):
     """
     Test listing nodes with various filters.
@@ -135,8 +135,8 @@ def test_list_k8s_nodes_with_filters(mock_get_client, mock_get_custom):
     nodes = json.loads(response.body)
     assert len(nodes) == 0
 
-@patch("app.repositories.k8s_node.get_k8s_core_v1_client")
-@patch("app.repositories.k8s_node.get_k8s_custom_objects_client")
+@patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
 def test_list_k8s_nodes_metrics_api_exception(mock_get_custom, mock_get_core):
     """
     Test listing nodes when metrics.k8s.io API raises an exception.

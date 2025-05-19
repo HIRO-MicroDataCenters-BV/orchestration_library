@@ -2,8 +2,7 @@
 List all nodes in the cluster.
 """
 from fastapi import APIRouter
-from app.repositories import k8s_node
-
+from app.repositories.k8s import k8s_node
 
 
 router = APIRouter(prefix="/k8s_node")

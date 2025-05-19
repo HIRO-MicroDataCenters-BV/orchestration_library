@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import json
 
-from app.repositories import k8s_pod
+from app.repositories.k8s import k8s_pod
 
 
 def pod_mock_fixture():
@@ -37,7 +37,7 @@ def pod_mock_fixture():
     return pod
 
 
-@patch("app.repositories.k8s_pod.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_list_k8s_pods_all_namespaces(mock_get_client):
     """
     Test listing all pods in all namespaces.
@@ -55,7 +55,7 @@ def test_list_k8s_pods_all_namespaces(mock_get_client):
     assert pods[0]["namespace"] == "default"
 
 
-@patch("app.repositories.k8s_pod.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_list_k8s_pods_with_namespace(mock_get_client):
     """
     Test listing pods in a specific namespace.
@@ -70,7 +70,7 @@ def test_list_k8s_pods_with_namespace(mock_get_client):
     assert pods[0]["namespace"] == "default"
 
 
-@patch("app.repositories.k8s_pod.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_list_k8s_pods_with_filters(mock_get_client):
     """
     Test listing pods with various filters.
@@ -109,7 +109,7 @@ def test_list_k8s_pods_with_filters(mock_get_client):
     pods = json.loads(response.body)
     assert len(pods) == 0
 
-@patch("app.repositories.k8s_pod.list_k8s_pods")
+@patch("app.repositories.k8s.k8s_pod.list_k8s_pods")
 def test_list_k8s_user_pods_calls_list_k8s_pods(mock_list_k8s_pods):
     """
     Test that list_k8s_user_pods calls list_k8s_pods with the correct parameters.

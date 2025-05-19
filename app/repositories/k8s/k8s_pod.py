@@ -1,13 +1,11 @@
 """
-CRUD operations for managing pods in the database.
-This module provides functions to create, read, update, and delete pod records.
-It uses SQLAlchemy ORM for database interactions.
+List the pods in the Kubernetes cluster.
 """
 
 import re
 from fastapi.responses import JSONResponse
 from app.utils.k8s import get_pod_details
-from app.repositories.k8s_common import K8S_IN_USE_NAMESPACE_REGEX, get_k8s_core_v1_client
+from app.repositories.k8s.k8s_common import K8S_IN_USE_NAMESPACE_REGEX, get_k8s_core_v1_client
 
 
 def list_k8s_pods(

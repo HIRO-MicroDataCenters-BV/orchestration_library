@@ -3,7 +3,7 @@ List pods in the cluster
 """
 
 from fastapi import APIRouter
-from app.repositories import k8s_pod
+from app.repositories.k8s import k8s_pod
 
 
 router = APIRouter(prefix="/k8s_user_pod")
