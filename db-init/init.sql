@@ -75,3 +75,19 @@ BEGIN
     RAISE NOTICE 'Table pod created or already exists.';
 END $$;
 
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'tuning_parameters') THEN
+        CREATE TABLE tuning_parameters (
+             id SERIAL PRIMARY KEY,
+             output_1 FLOAT,
+             output_2 FLOAT,
+             output_3 FLOAT,
+             alpha FLOAT,
+             beta FLOAT,
+             gamma FLOAT,
+             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    END IF;
+    RAISE NOTICE 'Table tuning_parameters created or already exists.';
+END $$;
