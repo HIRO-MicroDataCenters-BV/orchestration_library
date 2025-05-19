@@ -29,8 +29,16 @@ def make_owner(kind, name):
     owner.name = name
     return owner
 
+# Mocking the Kubernetes client methods
+# to avoid actual API calls during tests.
+# The mock functions are used to simulate the behavior of the Kubernetes API.
+# The actual functions are not used in the tests,
+# so we prefix them with _ to silence pylint warnings.
 
-def test_no_pod_name_or_id():
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_no_pod_name_or_id(_mock_batch, _mock_apps, _mock_core):
     """
     Test that ValueError is raised when neither pod_name nor pod_id is provided.
     """
@@ -41,7 +49,9 @@ def test_no_pod_name_or_id():
 
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
-def test_no_owner_references(mock_core):
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_no_owner_references(_mock_batch, _mock_apps, mock_core):
     """
     Test that the function returns a message when the pod has no owner references.
     """
@@ -54,7 +64,8 @@ def test_no_owner_references(mock_core):
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
-def test_deployment_parent(mock_apps, mock_core):
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_deployment_parent(_mock_batch, mock_apps, mock_core):
     """
     Test that the function correctly identifies a Deployment as the parent controller.
     """
@@ -87,7 +98,8 @@ def test_deployment_parent(mock_apps, mock_core):
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
-def test_statefulset_parent(mock_apps, mock_core):
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_statefulset_parent(_mock_batch, mock_apps, mock_core):
     """
     Test that the function correctly identifies a StatefulSet as the parent controller.
     """
@@ -113,7 +125,8 @@ def test_statefulset_parent(mock_apps, mock_core):
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
-def test_daemonset_parent(mock_apps, mock_core):
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_daemonset_parent(_mock_batch, mock_apps, mock_core):
     """
     Test that the function correctly identifies a DaemonSet as the parent controller.
     """
@@ -138,8 +151,9 @@ def test_daemonset_parent(mock_apps, mock_core):
 
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
-def test_job_parent(mock_batch, mock_core):
+def test_job_parent(mock_batch, _mock_apps, mock_core):
     """
     Test that the function correctly identifies a Job as the parent controller.
     """
@@ -164,7 +178,9 @@ def test_job_parent(mock_batch, mock_core):
 
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
-def test_no_known_controller(mock_core):
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_no_known_controller(_mock_batch, _mock_apps, mock_core):
     """
     Test that the function returns a message when the pod has an unknown controller.
     """
@@ -180,7 +196,9 @@ def test_no_known_controller(mock_core):
 
 
 @patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
-def test_pod_by_id_not_found(mock_core):
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_pod_by_id_not_found(_mock_batch, _mock_apps, mock_core):
     """
     Test that the function returns a message when no pod is found by UID.
     """
