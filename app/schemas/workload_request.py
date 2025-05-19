@@ -1,0 +1,28 @@
+"""
+Schemas for the API requests and responses.
+"""
+from typing import Optional
+
+from pydantic import BaseModel
+
+
+class WorkloadRequestCreate(BaseModel):
+    """
+    Schema for creating a workload request.
+    """
+
+    name: str
+    namespace: str
+    api_version: str
+    kind: str
+    current_scale: int
+
+class WorkloadRequestUpdate(BaseModel):
+    """
+    Schema for updating a workload request.
+    """
+
+    namespace: Optional[str] = None
+    api_version: Optional[str] = None
+    kind: Optional[str] = None
+    current_scale: Optional[int] = None
