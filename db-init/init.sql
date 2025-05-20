@@ -75,3 +75,31 @@ BEGIN
     RAISE NOTICE 'Table pod created or already exists.';
 END $$;
 
+-- Create configuration table to test parameter changes
+CREATE TABLE IF NOT EXISTS configuration_table (
+    id SERIAL PRIMARY KEY,
+    param_key VARCHAR(100),
+    param_value VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create a function to notify listeners on config inserts
+CREATE OR REPLACE FUNCTION notify_new_config()
+RETURNS trigger AS $$
+BEGIN
+    PERFORM pg_notify('new_config', row_to_json(NEW)::text);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Drop old trigger if exists to avoid conflicts
+DROP TRIGGER IF EXISTS config_change_trigger ON configuration_table;
+
+-- Create new trigger to call notify function on INSERT
+CREATE TRIGGER config_change_trigger
+AFTER INSERT ON configuration_table
+FOR EACH ROW
+EXECUTE FUNCTION notify_new_config();
+
+-- (Optional) Test insert:
+-- INSERT INTO configuration_table (param_key, param_value) VALUES ('cpu_limit', '4');
