@@ -8,7 +8,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/orchestration_db"
+    # "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/orchestration_db"
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/orchestration_db"
 )
 
 async_engine = create_async_engine(DATABASE_URL, echo=True)
