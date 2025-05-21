@@ -83,10 +83,14 @@ CREATE TABLE IF NOT EXISTS configuration_table (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create a function to notify listeners on config inserts
+-- Create a function to notify listeners on config inserts, with debug logging
 CREATE OR REPLACE FUNCTION notify_new_config()
 RETURNS trigger AS $$
 BEGIN
+    -- Debug log to confirm the trigger fired
+    RAISE NOTICE 'Trigger fired for new config: % = %', NEW.param_key, NEW.param_value;
+
+    -- Send async notification
     PERFORM pg_notify('new_config', row_to_json(NEW)::text);
     RETURN NEW;
 END;
@@ -100,6 +104,3 @@ CREATE TRIGGER config_change_trigger
 AFTER INSERT ON configuration_table
 FOR EACH ROW
 EXECUTE FUNCTION notify_new_config();
-
--- (Optional) Test insert:
--- INSERT INTO configuration_table (param_key, param_value) VALUES ('cpu_limit', '4');
