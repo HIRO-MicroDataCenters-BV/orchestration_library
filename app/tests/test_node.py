@@ -9,7 +9,7 @@ from httpx import AsyncClient
 
 from app.repositories.node import create_node, delete_node, get_nodes, update_node
 from app.main import app
-from app.schemas import NodeCreate, NodeResponse
+from app.schemas.node import NodeCreate, NodeResponse
 
 
 # ===========================================================================

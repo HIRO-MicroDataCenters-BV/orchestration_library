@@ -11,7 +11,7 @@ from httpx import ASGITransport, AsyncClient
 from app.main import app
 from app.repositories import workload_request_decision as wrd
 from app.models.workload_request_decision import WorkloadRequestDecision
-from app.schemas import WorkloadRequestDecisionCreate
+from app.schemas.workload_request_decision import WorkloadRequestDecisionCreate
 
 
 # ===========================================================================

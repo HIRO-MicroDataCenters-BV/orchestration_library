@@ -10,7 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from app.repositories import db_pod
 from app.main import app
 from app.models.pod import Pod
-from app.schemas import PodCreate, PodUpdate
+from app.schemas.pod import PodCreate, PodUpdate
 
 # ========================= Constants for sample pod data =========================
 
