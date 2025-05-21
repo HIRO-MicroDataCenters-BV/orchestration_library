@@ -1,6 +1,7 @@
 """
-Dtabase connection and session management.
+Database connection and session management.
 """
+
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy import create_engine
@@ -11,7 +12,7 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/orchestration_db"
 )
 
-async_engine = create_async_engine(DATABASE_URL, echo=True)
+async_engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession
 )
