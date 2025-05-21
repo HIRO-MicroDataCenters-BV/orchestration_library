@@ -1,6 +1,8 @@
+""" Monitor data change in postgres configuration table"""
 import os
-import psycopg2
 import time
+import psycopg2
+
 
 # Load environment variables
 DB_NAME = os.getenv("DB_NAME", "orchestration_db")
