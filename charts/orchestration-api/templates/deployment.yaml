@@ -12,7 +12,16 @@ metadata:
   namespace: {{ .Values.namespace }}
 rules:
 - apiGroups: [""]
-  resources: ["pods", "nodes"]
+  resources: ["pods", "nodes", "componentstatuses"]
+  verbs: ["list", "get"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+  verbs: ["list", "get"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["list", "get"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes"]
   verbs: ["list", "get"]
 
 ---
