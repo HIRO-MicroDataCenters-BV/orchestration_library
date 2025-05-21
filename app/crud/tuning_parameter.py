@@ -1,6 +1,7 @@
 """
 CRUD operations for managing tuning parameters in the database.
 """
+
 from datetime import datetime
 from typing import Optional, Sequence
 
@@ -12,7 +13,7 @@ from app.tuning_parameter_schema import TuningParameterCreate
 
 
 async def create_tuning_parameter(
-        db: AsyncSession, tuning_parameter: TuningParameterCreate
+    db: AsyncSession, tuning_parameter: TuningParameterCreate
 ) -> TuningParameter:
     """
     Create a new tuning parameter in the database.
@@ -36,11 +37,11 @@ async def create_tuning_parameter(
 
 
 async def get_tuning_parameters(
-        db: AsyncSession,
-        skip: int = 0,
-        limit: int = 100,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 100,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
 ) -> Sequence[TuningParameter]:
     """
     Get a list of tuning parameters with pagination and optional date filtering.
@@ -76,7 +77,9 @@ async def get_tuning_parameters(
     return result.scalars().all()
 
 
-async def get_latest_tuning_parameters(db: AsyncSession, limit: int = 1) -> Sequence[TuningParameter]:
+async def get_latest_tuning_parameters(
+    db: AsyncSession, limit: int = 1
+) -> Sequence[TuningParameter]:
     """
     Get the latest N tuning parameters based on creation time.
 
@@ -84,6 +87,8 @@ async def get_latest_tuning_parameters(db: AsyncSession, limit: int = 1) -> Sequ
         db: Database session
         limit: Number of latest parameters to return
     """
-    query = select(TuningParameter).order_by(desc(TuningParameter.created_at)).limit(limit)
+    query = (
+        select(TuningParameter).order_by(desc(TuningParameter.created_at)).limit(limit)
+    )
     result = await db.execute(query)
     return result.scalars().all()

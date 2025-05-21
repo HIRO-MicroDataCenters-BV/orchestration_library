@@ -1,6 +1,7 @@
 """
 Schemas for the API requests and responses.
 """
+
 from typing import Optional
 
 from pydantic import BaseModel

@@ -4,8 +4,9 @@ FastAPI application entry point.
 
 import logging
 
-import uvicorn
 from fastapi import FastAPI
+
+from app.utils.exception_handlers import init_exception_handlers
 from app.routes import k8s_user_pod as k8s_user_pod_router
 
 from app.routes.k8s_node import router as k8s_node_router
@@ -29,6 +30,6 @@ app.include_router(k8s_user_pod_router.router, tags=["K8s User Pods"])
 app.include_router(node_router, tags=["Nodes"])
 app.include_router(tuning_parameters_router, tags=["Tuning Parameters"])
 
-if __name__ == "__main__":
-    print("starting main....")
-    uvicorn.run(app, port=8083, host="0.0.0.0")
+
+init_exception_handlers(app)
+
