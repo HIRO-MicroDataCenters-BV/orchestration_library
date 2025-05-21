@@ -1,7 +1,7 @@
 """
-Tuning Parameter routes.
+Tuning Parameter API routes.
 This module defines the API endpoints for managing Tuning Parameter in the database.
-It includes routes for creating, retrieving, updating, and deleting Tuning Parameter records.
+It includes routes for creating, retrieving Tuning Parameter records.
 """
 
 from datetime import datetime
@@ -31,6 +31,16 @@ async def create_tuning_parameter(
 ):
     """
     Create a new tuning parameter.
+
+    Args:
+        tuning_parameter (TuningParameterCreate): The tuning parameter data to create
+        db (AsyncSession): Database session dependency
+
+    Returns:
+        TuningParameterResponse: The created tuning parameter
+
+    Raises:
+        HTTPException: If there's an error creating the parameter
     """
     return await tuning_parameter_crud.create_tuning_parameter(db, tuning_parameter)
 
@@ -51,6 +61,7 @@ async def read_tuning_parameters(
         limit: Maximum number of records to return (default: 100)
         start_date: Filter records created after this date (optional)
         end_date: Filter records created before this date (optional)
+        db (AsyncSession): Database session dependency
     """
     tuning_parameters = await tuning_parameter_crud.get_tuning_parameters(
         db,
@@ -71,7 +82,14 @@ async def get_latest_tuning_parameters(
     Get the latest N tuning parameters based on creation time.
 
     Args:
-        limit: Number of latest parameters to return
+        limit (int): Number of latest parameters to return
+        db (AsyncSession): Database session dependency
+
+    Returns:
+        List[TuningParameterResponse]: List of the N most recent tuning parameters
+
+    Raises:
+        HTTPException: If no tuning parameters are found
     """
     latest_parameters = await tuning_parameter_crud.get_latest_tuning_parameters(db, limit=limit)
     if not latest_parameters:
