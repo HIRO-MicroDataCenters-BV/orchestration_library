@@ -34,7 +34,7 @@ async def create_tuning_parameter(
         TuningParameter: The created tuning parameter object
 
     Raises:
-        TuningParameterDatabaseError: If there's a database error
+        DatabaseConnectionException: If there's a database error
     """
     try:
         logger.debug(f"Creating tuning parameter with data: {tuning_parameter.dict()}")
@@ -89,7 +89,7 @@ async def get_tuning_parameters(
         Sequence[TuningParameter]: List of tuning parameters matching the criteria
 
     Raises:
-        TuningParameterDatabaseError: If there's a database error
+        DatabaseConnectionException: If there's a database error
     """
     try:
         logger.debug(
@@ -138,8 +138,7 @@ async def get_latest_tuning_parameters(
         Sequence[TuningParameter]: List of the N most recent tuning parameters
 
     Raises:
-        TuningParameterDatabaseError: If there's a database error
-        TuningParameterNotFoundError: If no tuning parameters are found
+        DatabaseConnectionException: If there's a database error
     """
     try:
         logger.debug(f"Retrieving latest {limit} tuning parameters")
