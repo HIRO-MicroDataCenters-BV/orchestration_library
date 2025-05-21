@@ -23,7 +23,7 @@ class TuningParameterError(Exception):
         super().__init__(self.message)
 
 
-class TuningParameterNotFoundError(TuningParameterError):
+class DatabaseEntryNotFoundException(TuningParameterError):
     """Exception raised when a tuning parameter is not found."""
 
     def __init__(self, parameter_id: Optional[int] = None):
@@ -39,7 +39,7 @@ class TuningParameterNotFoundError(TuningParameterError):
         )
 
 
-class TuningParameterDatabaseError(TuningParameterError):
+class DatabaseConnectionException(TuningParameterError):
     """Exception raised when there's a database error related to tuning parameters."""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):

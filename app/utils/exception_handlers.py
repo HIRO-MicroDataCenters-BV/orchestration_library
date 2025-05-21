@@ -3,7 +3,7 @@ from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from starlette import status
 
-from app.utils.exceptions import TuningParameterNotFoundError, TuningParameterDatabaseError
+from app.utils.exceptions import DatabaseEntryNotFoundException, DatabaseConnectionException
 
 # Configure logger
 logger = logging.getLogger("uvicorn.error")
@@ -29,8 +29,8 @@ def init_exception_handlers(app: FastAPI):
             content={"error": "Internal Server Error. Please try again later."},
         )
 
-    @app.exception_handler(TuningParameterNotFoundError)
-    async def tuning_parameter_error_handler(request: Request, exc: TuningParameterNotFoundError):
+    @app.exception_handler(DatabaseEntryNotFoundException)
+    async def tuning_parameter_error_handler(request: Request, exc: DatabaseEntryNotFoundException):
         """Handles invalid tuning parameter exceptions
 
         Args:
@@ -45,8 +45,8 @@ def init_exception_handlers(app: FastAPI):
             status_code=status.HTTP_400_BAD_REQUEST, content={"error": str(exc)}
         )
 
-    @app.exception_handler(TuningParameterDatabaseError)
-    async def tuning_parameter_error_handler(request: Request, exc: TuningParameterDatabaseError):
+    @app.exception_handler(DatabaseConnectionException)
+    async def tuning_parameter_error_handler(request: Request, exc: DatabaseConnectionException):
         """Handles invalid tuning parameter exceptions
 
         Args:

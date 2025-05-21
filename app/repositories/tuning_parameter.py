@@ -13,8 +13,8 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.models.tuning_parameter import TuningParameter
 from app.schemas.tuning_parameter_schema import TuningParameterCreate
 from app.utils.exceptions import (
-    TuningParameterDatabaseError,
-    TuningParameterNotFoundError
+    DatabaseConnectionException,
+    DatabaseEntryNotFoundException
 )
 
 logger = logging.getLogger(__name__)
@@ -48,21 +48,21 @@ async def create_tuning_parameter(
     except IntegrityError as e:
         logger.error(f"Integrity error while creating tuning parameter: {str(e)}")
         await db.rollback()
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Invalid tuning parameter data",
             details={"error": str(e)}
         )
     except SQLAlchemyError as e:
         logger.error(f"Database error while creating tuning parameter: {str(e)}")
         await db.rollback()
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Failed to create tuning parameter",
             details={"error": str(e)}
         )
     except Exception as e:
         logger.error(f"Unexpected error while creating tuning parameter: {str(e)}")
         await db.rollback()
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "An unexpected error occurred while creating tuning parameter",
             details={"error": str(e)}
         )
@@ -112,13 +112,13 @@ async def get_tuning_parameters(
         return tuning_parameters
     except SQLAlchemyError as e:
         logger.error(f"Database error while retrieving tuning parameters: {str(e)}")
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Failed to retrieve tuning parameters",
             details={"error": str(e)}
         )
     except Exception as e:
         logger.error(f"Unexpected error while retrieving tuning parameters: {str(e)}")
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "An unexpected error occurred while retrieving tuning parameters",
             details={"error": str(e)}
         )
@@ -151,19 +151,19 @@ async def get_latest_tuning_parameters(
 
         if not tuning_parameters:
             logger.warning("No tuning parameters found")
-            raise TuningParameterNotFoundError()
+            raise DatabaseEntryNotFoundException()
 
         logger.info(f"Retrieved {len(tuning_parameters)} latest tuning parameters")
         return tuning_parameters
     except SQLAlchemyError as e:
         logger.error(f"Database error while retrieving latest tuning parameters: {str(e)}")
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Failed to retrieve latest tuning parameters",
             details={"error": str(e)}
         )
     except Exception as e:
         logger.error(f"Unexpected error while retrieving latest tuning parameters: {str(e)}")
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "An unexpected error occurred while retrieving latest tuning parameters",
             details={"error": str(e)}
         )

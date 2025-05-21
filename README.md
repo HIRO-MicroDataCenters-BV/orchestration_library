@@ -55,7 +55,7 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    To access it from your local machine, use the following port-forward command:
 
    ```bash
-   kubectl port-forward svc/orchestration-api 8000:8000 -n orchestration-api
+   kubectl port-forward svc/orchestration-api 8010:8000 -n orchestration-api
    ```
 
    Now you can access the application locally at:  

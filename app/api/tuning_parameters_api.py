@@ -16,8 +16,8 @@ from app.repositories import tuning_parameter as tuning_parameter_crud
 from app.db.database import get_async_db
 from app.schemas.tuning_parameter_schema import TuningParameterCreate, TuningParameterResponse
 from app.utils.exceptions import (
-    TuningParameterNotFoundError,
-    TuningParameterDatabaseError,
+    DatabaseEntryNotFoundException,
+    DatabaseConnectionException,
 )
 
 router = APIRouter(prefix="/tuning_parameters")
@@ -51,7 +51,7 @@ async def create_tuning_parameter(
     try:
         return await tuning_parameter_crud.create_tuning_parameter(db, tuning_parameter)
     except SQLAlchemyError as e:
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Failed to create tuning parameter", details={"error": str(e)}
         )
 
@@ -86,7 +86,7 @@ async def read_tuning_parameters(
         )
         return tuning_parameters
     except SQLAlchemyError as e:
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Failed to retrieve tuning parameters", details={"error": str(e)}
         )
 
@@ -114,9 +114,9 @@ async def get_latest_tuning_parameters(
             db, limit=limit
         )
         if not latest_parameters:
-            raise TuningParameterNotFoundError()
+            raise DatabaseEntryNotFoundException()
         return latest_parameters
     except SQLAlchemyError as e:
-        raise TuningParameterDatabaseError(
+        raise DatabaseConnectionException(
             "Failed to retrieve latest tuning parameters", details={"error": str(e)}
         )
