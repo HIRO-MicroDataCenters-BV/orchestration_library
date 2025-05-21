@@ -6,11 +6,11 @@ SQLAlchemy models for the orchestration library.
 
 from sqlalchemy import (
     Column,
-    Integer,
     String,
     TIMESTAMP,
     text,
-    Float
+    Float,
+    UUID
 )
 
 from app.db.database import Base
@@ -22,7 +22,7 @@ class Node(Base):
     """
     __tablename__ = "node"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
     status = Column(String(50), default="active")
     cpu_capacity = Column(Float, nullable=False)

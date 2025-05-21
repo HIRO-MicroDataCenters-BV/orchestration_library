@@ -2,7 +2,7 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'workload_request') THEN
         CREATE TABLE workload_request (
-            id SERIAL PRIMARY KEY,
+            id UUID PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             namespace VARCHAR(255) NOT NULL,
             api_version VARCHAR(50) NOT NULL,
@@ -36,7 +36,7 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'node') THEN
         CREATE TABLE node (
-            id SERIAL PRIMARY KEY,
+            id UUID PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             status VARCHAR(50) DEFAULT 'active',
             cpu_capacity FLOAT NOT NULL,
@@ -56,7 +56,7 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'pod') THEN
         CREATE TABLE pod (
-            id SERIAL PRIMARY KEY,
+            id UUID PRIMARY KEY,
             name VARCHAR(255),
             namespace VARCHAR(255),
             demand_cpu FLOAT NOT NULL,

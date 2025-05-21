@@ -79,14 +79,23 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
     return pod
 
 
-async def delete_pod(db: AsyncSession, pod_id: int):
+async def delete_pod(db: AsyncSession, pod_id: int,
+                      name: str = None,
+                      namespace: str = None,
+                      is_elastic: bool = None,
+                      assigned_node_id: int = None,
+                      workload_request_id: int = None,
+                      status: str = None,
+):
     """
     Delete a pod by its ID.
     """
-    pod = await get_pod(db, pod_id)
-    if not pod:
+    pods = await get_pod(db, pod_id, name, namespace, is_elastic,
+                        assigned_node_id, workload_request_id, status)
+    if not pods:
         return {"error": "Pod not found"}
 
-    await db.delete(pod)
+    for pod in pods:
+        await db.delete(pod)
     await db.commit()
     return {"message": f"Pod with ID {pod_id} has been deleted"}

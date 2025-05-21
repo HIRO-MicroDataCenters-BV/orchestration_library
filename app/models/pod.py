@@ -13,6 +13,7 @@ from sqlalchemy import (
     text,
     Float,
     Boolean,
+    UUID
 )
 
 from app.db.database import Base
@@ -24,7 +25,7 @@ class Pod(Base):
     """
     __tablename__ = "pod"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
     namespace = Column(String(255), nullable=False)
     demand_cpu = Column(Float, nullable=False)
