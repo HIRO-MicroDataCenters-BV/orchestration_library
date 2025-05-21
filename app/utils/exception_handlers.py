@@ -30,7 +30,7 @@ def init_exception_handlers(app: FastAPI):
         )
 
     @app.exception_handler(DatabaseEntryNotFoundException)
-    async def tuning_parameter_error_handler(request: Request, exc: DatabaseEntryNotFoundException):
+    async def db_entry_not_found_error_handler(request: Request, exc: DatabaseEntryNotFoundException):
         """Handles invalid tuning parameter exceptions
 
         Args:
@@ -46,7 +46,7 @@ def init_exception_handlers(app: FastAPI):
         )
 
     @app.exception_handler(DatabaseConnectionException)
-    async def tuning_parameter_error_handler(request: Request, exc: DatabaseConnectionException):
+    async def db_connection_error_handler(request: Request, exc: DatabaseConnectionException):
         """Handles invalid tuning parameter exceptions
 
         Args:
