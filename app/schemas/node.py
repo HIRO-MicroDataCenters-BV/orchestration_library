@@ -22,31 +22,6 @@ class NodeCreate(BaseModel):
     ip_address: Optional[str] = None
     location: Optional[str] = None
 
-    class Config:
-        """
-        Configuration class for Pydantic model.
-        Provides settings for model behavior and validation.
-        """
-        orm_mode = True
-
-        def get_orm_mode(self) -> bool:
-            """
-            Get the ORM mode setting.
-
-            Returns:
-                bool: True if ORM mode is enabled
-            """
-            return self.orm_mode
-
-        def set_orm_mode(self, value: bool) -> None:
-            """
-            Set the ORM mode setting.
-
-            Args:
-                value (bool): New ORM mode value
-            """
-            self.orm_mode = value
-
 
 class NodeUpdate(BaseModel):
     """
@@ -63,31 +38,6 @@ class NodeUpdate(BaseModel):
     current_memory_utilization: Optional[float] = None
     ip_address: Optional[str] = None
     location: Optional[str] = None
-
-    class Config:
-        """
-        Configuration class for Pydantic model.
-        Provides settings for model behavior and validation.
-        """
-        orm_mode = True
-
-        def get_orm_mode(self) -> bool:
-            """
-            Get the ORM mode setting.
-
-            Returns:
-                bool: True if ORM mode is enabled
-            """
-            return self.orm_mode
-
-        def set_orm_mode(self, value: bool) -> None:
-            """
-            Set the ORM mode setting.
-
-            Args:
-                value (bool): New ORM mode value
-            """
-            self.orm_mode = value
 
 
 class NodeResponse(BaseModel):
@@ -109,25 +59,7 @@ class NodeResponse(BaseModel):
 
     class Config:
         """
-        Configuration class for Pydantic model.
-        Provides settings for model behavior and validation.
+        config class
         """
+
         orm_mode = True
-
-        def get_orm_mode(self) -> bool:
-            """
-            Get the ORM mode setting.
-
-            Returns:
-                bool: True if ORM mode is enabled
-            """
-            return self.orm_mode
-
-        def set_orm_mode(self, value: bool) -> None:
-            """
-            Set the ORM mode setting.
-
-            Args:
-                value (bool): New ORM mode value
-            """
-            self.orm_mode = value
