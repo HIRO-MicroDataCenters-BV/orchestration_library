@@ -27,19 +27,6 @@ class TuningParameterCreate(TuningParameterBase):
     # Inherits all fields from TuningParameterBase
 
 
-class TuningParameterUpdate(BaseModel):
-    """
-    Schema for updating a tuning parameter
-    """
-
-    output_1: Optional[float] = None
-    output_2: Optional[float] = None
-    output_3: Optional[float] = None
-    alpha: Optional[float] = None
-    beta: Optional[float] = None
-    gamma: Optional[float] = None
-
-
 class TuningParameterResponse(TuningParameterBase):
     """
     Schema for tuning parameter response that includes database fields.

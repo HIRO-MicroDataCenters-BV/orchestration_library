@@ -17,6 +17,32 @@ class WorkloadRequestCreate(BaseModel):
     kind: str
     current_scale: int
 
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
+
+
 class WorkloadRequestUpdate(BaseModel):
     """
     Schema for updating a workload request.
@@ -26,3 +52,28 @@ class WorkloadRequestUpdate(BaseModel):
     api_version: Optional[str] = None
     kind: Optional[str] = None
     current_scale: Optional[int] = None
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
