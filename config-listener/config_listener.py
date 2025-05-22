@@ -60,8 +60,3 @@ except KeyboardInterrupt:
 
 except Exception as e:
     print(f"Error: {e}")
-#
-# finally:
-#     # Clean up if needed
-#     if 'cur' in locals(): cur.close()
-#     if 'conn' in locals(): conn.close()
