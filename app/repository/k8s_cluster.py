@@ -4,7 +4,22 @@ from kubernetes import client, config
 from kubernetes.client import configuration
 
 
-def list_cluster_info(cluster_name):
+def list_cluster_info(namespace=None, name=None, id=None, status=None):
+    """
+    List all nodes in the cluster.
+    If no filters are specified, list all nodes.
+    """
+
+    try:
+        # Load in-cluster configuration
+        config.load_incluster_config()
+    except config.ConfigException:
+        # Fallback to local kubeconfig for development
+        print("Falling back to load_kube_config for local development.")
+        config.load_kube_config()
+
+    coreV1 = kubernetes.client.CoreV1Api()
+    print("Listing cluster with the  details:")
     contexts, active_context = config.list_kube_config_contexts()
     if not contexts:
         print("Cannot find any context in kube-config file.")
