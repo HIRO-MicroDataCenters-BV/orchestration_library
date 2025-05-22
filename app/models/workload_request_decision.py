@@ -45,3 +45,21 @@ class WorkloadRequestDecision(Base):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Create a model instance from a dictionary.
+
+        Args:
+            data (dict): Dictionary containing model data.
+
+        Returns:
+            WorkloadRequestDecision: A new instance of the model.
+        """
+        return cls(
+            workload_request_id=data.get("workload_request_id"),
+            node_name=data.get("node_name"),
+            queue_name=data.get("queue_name"),
+            status=data.get("status", "pending"),
+        )
