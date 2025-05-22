@@ -1,10 +1,18 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
 
-COPY config_listener.py .
+RUN apt-get update && apt-get install -y postgresql-client && apt-get clean
 
-CMD ["python", "config_listener.py"]
+# Install dependencies
+RUN pip install psycopg2-binary
+
+# Unbuffered output
+ENV PYTHONUNBUFFERED=1
+# Make wait-for script executable
+RUN chmod +x /app/wait-for-db.sh
+
+# Use the wait-for-db script as the startup command
+CMD ["/app/wait-for-db.sh"]
