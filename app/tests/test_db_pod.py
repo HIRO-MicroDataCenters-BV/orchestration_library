@@ -159,7 +159,9 @@ async def test_delete_pod():
     """
     db = AsyncMock()
     mock_pod = SAMPLE_POD_OBJECT
-    db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=mock_pod))
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_pod
+    db.execute = AsyncMock(return_value=mock_result)
     db.delete = AsyncMock()
     db.commit = AsyncMock()
 
