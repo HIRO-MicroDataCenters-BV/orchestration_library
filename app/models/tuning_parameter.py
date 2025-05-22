@@ -1,3 +1,8 @@
+"""
+SQLAlchemy models for tuning parameters.
+This module defines the database models used for storing and retrieving tuning parameters.
+"""
+
 from sqlalchemy import (
     Column,
     Integer,
