@@ -157,7 +157,7 @@ async def test_create_node(mock_create_node):
     transport = ASGITransport(app=app)
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/node/", json=request_data.dict())
+        response = await client.post("/db_node/", json=request_data.dict())
 
     # Assertions
     assert response.status_code == status.HTTP_200_OK
@@ -205,7 +205,7 @@ async def test_get_nodes(mock_get_nodes):
     transport = ASGITransport(app=app)
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/node/")
+        response = await client.get("/db_node/")
 
     # Assertions
     assert response.status_code == status.HTTP_200_OK
@@ -249,7 +249,7 @@ async def test_update_node(mock_update_node):
     transport = ASGITransport(app=app)
     # Test the update functionality
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.put("/node/1", json=update_data)
+        response = await client.put("/db_node/1", json=update_data)
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -268,7 +268,7 @@ async def test_delete_node(mock_delete_node):
     transport = ASGITransport(app=app)
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.delete("/node/1")
+        response = await client.delete("/db_node/1")
 
     # Assertions
     assert response.status_code == status.HTTP_200_OK
@@ -299,7 +299,7 @@ async def test_get_node_by_id(mock_get_node_by_id):
         }
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/node/1")
+        response = await client.get("/db_node/1")
 
     assert response.status_code == 200
     assert response.json()["id"] == 1
