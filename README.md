@@ -55,37 +55,51 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    To access it from your local machine, use the following port-forward command:
 
    ```bash
-   kubectl port-forward svc/orchestration-api 8010:8000 -n orchestration-api
+   kubectl port-forward svc/orchestration-api 28000:8000 -n orchestration-api
    ```
 
    Now you can access the application locally at:  
-   [http://localhost:8010](http://localhost:8010)
+   [http://localhost:28000](http://localhost:28000) 
 
-   ## Database Changes
+   Similarly, to access the PostgreSQL database running on port `5432` inside the cluster from your local machine, use:
 
-   To make changes to the database schema or seed data:
+   ```bash
+   kubectl port-forward service/postgres -n orchestration-api 25432:5432
+   ```
+   The PostgreSQL database service will then be accessible at `localhost:25432`.
 
-   1. **Edit the SQL scripts**
+## Database Schema Changes
 
-      Update the `init.sql` file (or add new SQL files) in the appropriate directory, typically under `db/init/` or similar.
+To make changes to the database schema, follow these steps:
 
-   2. **Apply changes**
+1. **Add or update models**
 
-      - For Docker Compose:  
-        If you want the changes to take effect, you must remove the existing database volume and restart the containers:
-        ```bash
-        docker-compose down -v
-        docker compose up --build -d
-        ```
-        **Warning:** This will delete all existing data in the database.
+   Make your schema changes by modifying or adding files in:
 
-      - For kind cluster:  
-        Delete the existing PostgreSQL pod and persistent volume claim (PVC) to reinitialize the database with the updated scripts:
-        ```bash
-        kubectl delete pod -l app=postgres -n orchestration-api
-        kubectl delete pvc -l app=postgres -n orchestration-api
-        ```
-        Then redeploy the application as described above.
+   ```
+   app/models/
+   ```
+
+2. **Generate Alembic migration**
+
+   To generate a new Alembic migration file:
+
+   1. Run the migration script:
+      ```
+      bash scripts/db_migrate.sh
+      ```
+   2. When prompted with "_Choose an Alembic action:_", enter 1 to create a new revision.
+   3. Next, when asked "_Enter migration message:_", provide a brief description of your schema changes (for example, "add user table" or "update order status column").  
+   
+   A new migration file will be created in the versions directory, named in the format `revisionId_migrationMessage.py`.
+
+3. **Verify migration**
+
+   Check the newly generated migration file(s) in `alembic/versions/` and confirm the changes are correct before pushing.
+
+4. **Merge and apply**
+
+   Once your pull request is merged, the migration changes will be applied automatically during deployment.
 
    **Note:** Always back up important data before making destructive changes to the database.
 

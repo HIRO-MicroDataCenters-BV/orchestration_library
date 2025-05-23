@@ -3,6 +3,13 @@
 # Exit on any error
 set -e
 
+LUSTER_NAME=${1:-sample}
+
+if [ -z "$CLUSTER_NAME" ]; then
+  echo "Usage: $0 <cluster-name>"
+  exit 1
+fi
+
 # Check if alembic is installed
 if ! command -v alembic &> /dev/null; then
   echo "Alembic not found. Please install it with 'pip install alembic'."
@@ -10,18 +17,25 @@ if ! command -v alembic &> /dev/null; then
 fi
 
 # Read database local Port from arguments which is port-forwarded to the database service
-# If not provided, default to 25432
-if [ -z "$1" ]; then
-  export DATABASE_PORT=25432
+# If not provided, default to 35432
+if [ -z "$2" ]; then
+  export DATABASE_PORT=35432
 else
-  export DATABASE_PORT="$1"
+  export DATABASE_PORT="$2"
 fi
+
+
+echo "Port-forwarding the database service to localhost:$DATABASE_PORT"
+kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
+
+echo "Wait for port-forwarding to be ready"
+sleep 5
 
 
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then
     # Export the database URL
-    export DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:$DATABASE_PORT/postgres"
+    export DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:$DATABASE_PORT/orchestration_db"
 fi
 
 echo "Using database: $DATABASE_URL"
@@ -61,5 +75,8 @@ case $choice in
     exit 1
     ;;
 esac
+
+echo "Remove the port-forwarding on the database service"
+pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
 
 echo "Done."

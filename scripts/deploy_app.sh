@@ -31,22 +31,8 @@ helm upgrade --install orchestration-api ./charts/orchestration-api \
   # set dummyRedeployTimestamp to force redeploy
 
 echo "Wait for the orchestration-api to be ready"
-kubectl wait --for=condition=available --timeout=60s deployment/orchestration-api -n orchestration-api
+kubectl wait --for=condition=available --timeout=60s deployment/orchestration-api -n orchestration-api --context kind-$CLUSTER_NAME
 
 echo "Get the orchestration-api service"
-kubectl get service -n orchestration-api
+kubectl get service -n orchestration-api --context kind-$CLUSTER_NAME
 
-echo "Remove any old port-forwarding on the orchestration-api service"
-pkill -f "kubectl port-forward service/orchestration-api -n orchestration-api"
-
-echo "Port-forward the orchestration-api service to localhost:8010"
-kubectl port-forward service/orchestration-api -n orchestration-api 8010:8000 &
-
-echo "Remoe any old port-forwarding on the database service"
-pkill -f "kubectl port-forward service/postgres -n orchestration-api"
-
-echo "Port-forwarding the database service to localhost:25432"
-kubectl port-forward service/postgres -n orchestration-api 25432:5432 &
-
-echo "Wait for port-forwarding to be ready"
-sleep 5
