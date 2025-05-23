@@ -61,4 +61,32 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    Now you can access the application locally at:  
    [http://localhost:8010](http://localhost:8010)
 
+   ## Database Changes
+
+   To make changes to the database schema or seed data:
+
+   1. **Edit the SQL scripts**
+
+      Update the `init.sql` file (or add new SQL files) in the appropriate directory, typically under `db/init/` or similar.
+
+   2. **Apply changes**
+
+      - For Docker Compose:  
+        If you want the changes to take effect, you must remove the existing database volume and restart the containers:
+        ```bash
+        docker-compose down -v
+        docker compose up --build -d
+        ```
+        **Warning:** This will delete all existing data in the database.
+
+      - For kind cluster:  
+        Delete the existing PostgreSQL pod and persistent volume claim (PVC) to reinitialize the database with the updated scripts:
+        ```bash
+        kubectl delete pod -l app=postgres -n orchestration-api
+        kubectl delete pvc -l app=postgres -n orchestration-api
+        ```
+        Then redeploy the application as described above.
+
+   **Note:** Always back up important data before making destructive changes to the database.
+
 ---
