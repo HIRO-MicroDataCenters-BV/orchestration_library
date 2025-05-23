@@ -3,7 +3,7 @@
 # Exit on any error
 set -e
 
-LUSTER_NAME=${1:-sample}
+CLUSTER_NAME=${1:-sample}
 
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name>"
