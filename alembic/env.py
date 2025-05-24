@@ -3,8 +3,6 @@ import os
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
@@ -43,34 +41,34 @@ print("Models tuning_parameter:", tuning_parameter.__name__)
 print("Database URL:", db_url)
 
 def run_migrations_offline():
-    context.configure(
+    """Run migrations in 'offline' mode."""
+    context.configure( # pylint: disable=no-member
         url=db_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
-    with context.begin_transaction():
-        context.run_migrations()
+    with context.begin_transaction(): # pylint: disable=no-member
+        context.run_migrations() # pylint: disable=no-member
 
 def do_run_migrations(connection):
-    context.configure(
+    """Run migrations in 'online' mode."""
+    context.configure( # pylint: disable=no-member
         connection=connection,
         target_metadata=target_metadata,
     )
-    with context.begin_transaction():
-        context.run_migrations()
+    with context.begin_transaction(): # pylint: disable=no-member
+        context.run_migrations() # pylint: disable=no-member
 
 async def run_migrations_online():
+    """Run migrations in 'online' mode."""
     connectable = create_async_engine(db_url, future=True)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
 
-if context.is_offline_mode():
+if context.is_offline_mode(): # pylint: disable=no-member
     run_migrations_offline()
 else:
     asyncio.run(run_migrations_online())
-
-
-# run_migrations_online()
