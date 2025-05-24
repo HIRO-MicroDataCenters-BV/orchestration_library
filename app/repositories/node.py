@@ -8,7 +8,6 @@ from app.models.node import Node
 from app.schemas.node import NodeCreate
 
 
-# pylint: disable=invalid-name
 async def create_node(db: AsyncSession, data: NodeCreate):
     """
     Create a new node entry in the database.

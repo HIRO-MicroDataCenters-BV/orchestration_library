@@ -53,7 +53,7 @@ async def create_tuning_parameter(
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
             "Failed to create tuning parameter", details={"error": str(e)}
-        )
+        ) from e
 
 
 @router.get("/", response_model=List[TuningParameterResponse])
@@ -88,7 +88,7 @@ async def read_tuning_parameters(
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
             "Failed to retrieve tuning parameters", details={"error": str(e)}
-        )
+        ) from e
 
 
 @router.get("/latest/{limit}", response_model=List[TuningParameterResponse])
@@ -119,4 +119,4 @@ async def get_latest_tuning_parameters(
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
             "Failed to retrieve latest tuning parameters", details={"error": str(e)}
-        )
+        ) from e

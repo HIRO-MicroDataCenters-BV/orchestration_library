@@ -14,7 +14,6 @@ from app.repositories import node
 router = APIRouter(prefix="/db_node")
 
 
-# pylint: disable=invalid-name
 @router.post("/", response_model=NodeResponse)
 async def create_node(
     data: NodeCreate, db: AsyncSession = Depends(get_async_db)
