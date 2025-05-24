@@ -24,12 +24,16 @@ else
   export DATABASE_PORT="$2"
 fi
 
+echo "Remove the port-forwarding on the database service"
+if pgrep -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME" > /dev/null; then
+  pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+fi
 
 echo "Port-forwarding the database service to localhost:$DATABASE_PORT"
 kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
 
 echo "Wait for port-forwarding to be ready"
-sleep 5
+sleep 3
 
 
 # Check if DATABASE_URL is set

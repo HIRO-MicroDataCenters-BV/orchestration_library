@@ -34,6 +34,14 @@ fileConfig(config.config_file_name)
 target_metadata = Base.metadata
 
 
+print("Running migrations online...")
+print("Models node:", node.__name__)
+print("Models pod:", pod.__name__)
+print("Models workload_request_decision:", workload_request_decision.__name__)
+print("Models workload_request:", workload_request.__name__)
+print("Models tuning_parameter:", tuning_parameter.__name__)
+print("Database URL:", db_url)
+
 def run_migrations_offline():
     context.configure(
         url=db_url,
@@ -64,11 +72,5 @@ if context.is_offline_mode():
 else:
     asyncio.run(run_migrations_online())
 
-print("Running migrations online...")
-print("Models node:", node.__name__)
-print("Models pod:", pod.__name__)
-print("Models workload_request_decision:", workload_request_decision.__name__)
-print("Models workload_request:", workload_request.__name__)
-print("Models tuning_parameter:", tuning_parameter.__name__)
-print("Database URL:", db_url)
-run_migrations_online()
+
+# run_migrations_online()
