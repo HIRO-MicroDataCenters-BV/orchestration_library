@@ -25,7 +25,7 @@ helm upgrade --install orchestration-api ./charts/orchestration-api \
   --set app.image.tag=alpha1 \
   --set namespace=orchestration-api \
   --set app.image.pullPolicy=IfNotPresent \
-  --set runMigration=false \
+  --set runMigration=true \
   --set dummyRedeployTimestamp=$(date +%s)  
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
