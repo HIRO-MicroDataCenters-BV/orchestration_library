@@ -28,8 +28,6 @@ class PodUpdate(BaseModel):
     Schema for updating a pod.
     """
 
-    name: Optional[str] = None
-    namespace: Optional[str] = None
     demand_cpu: Optional[float] = None
     demand_memory: Optional[float] = None
     demand_slack_cpu: Optional[float] = None

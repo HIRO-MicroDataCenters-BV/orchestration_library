@@ -1,0 +1,25 @@
+{{- if .Values.runMigration }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alembic-migration-{{ now | unixEpoch }}
+  namespace: {{ .Values.namespace }}
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: alembic
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+          command: ["bash", "-c"]
+          args:
+            - alembic upgrade head
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.configmap.databaseURLConfig }}
+                  key: databaseURL
+{{- end }}

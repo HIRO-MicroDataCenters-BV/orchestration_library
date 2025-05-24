@@ -11,7 +11,7 @@ from app.schemas.node import NodeCreate, NodeUpdate, NodeResponse
 from app.repositories import node
 
 
-router = APIRouter(prefix="/node")
+router = APIRouter(prefix="/db_node")
 
 
 @router.post("/", response_model=NodeResponse)
