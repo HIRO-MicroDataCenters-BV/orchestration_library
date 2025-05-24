@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: alembic-migration
+  name: alembic-migration-{{ now | unixEpoch }}
   namespace: {{ .Values.namespace }}
 spec:
   backoffLimit: 3
