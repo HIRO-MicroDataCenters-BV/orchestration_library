@@ -98,6 +98,7 @@ To make changes to the database schema, follow these steps:
    Review the newly generated migration file(s) in `alembic/versions/` and ensure the changes accurately reflect your intended schema updates.
 
    Next, run the migration script again and select option `2` at the "_Choose an Alembic action:_" prompt to upgrade the database to the latest revision.  
+   
    If the migration completes successfully, you can proceed to push your changes.  
    If there are any errors, review and fix the issues in the generated migration file(s) before retrying.
 
