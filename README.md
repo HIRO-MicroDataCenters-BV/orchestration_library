@@ -88,14 +88,18 @@ To make changes to the database schema, follow these steps:
       ```
       bash scripts/db_migrate.sh
       ```
-   2. When prompted with "_Choose an Alembic action:_", enter 1 to create a new revision.
+   2. When prompted with "_Choose an Alembic action:_", enter `1` to create a new revision.
    3. Next, when asked "_Enter migration message:_", provide a brief description of your schema changes (for example, "add user table" or "update order status column").  
    
    A new migration file will be created in the versions directory, named in the format `revisionId_migrationMessage.py`.
 
 3. **Verify migration**
 
-   Check the newly generated migration file(s) in `alembic/versions/` and confirm the changes are correct before pushing.
+   Review the newly generated migration file(s) in `alembic/versions/` and ensure the changes accurately reflect your intended schema updates.
+
+   Next, run the migration script again and select option `2` at the "_Choose an Alembic action:_" prompt to upgrade the database to the latest revision.  
+   If the migration completes successfully, you can proceed to push your changes.  
+   If there are any errors, review and fix the issues in the generated migration file(s) before retrying.
 
 4. **Merge and apply**
 
