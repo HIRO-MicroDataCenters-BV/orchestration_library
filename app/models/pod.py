@@ -33,9 +33,9 @@ class Pod(Base):
     demand_slack_cpu = Column(Float)
     demand_slack_memory = Column(Float)
     is_elastic = Column(Boolean, nullable=False)
-    assigned_node_id = Column(Integer, ForeignKey("node.id"))
+    assigned_node_id = Column(UUID(as_uuid=True), ForeignKey("node.id"))
     workload_request_id = Column(
-        Integer, ForeignKey("workload_request.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("workload_request.id"), nullable=False
     )
     status = Column(String(50), nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
