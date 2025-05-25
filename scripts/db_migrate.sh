@@ -44,6 +44,32 @@ fi
 
 echo "Using database: $DATABASE_URL"
 
+rename_latest_revision_file() {
+  local message="$1"
+  local versions_dir="alembic/versions"
+
+  # Find the newest migration file created
+  newfile=$(ls -t "$versions_dir"/*.py | head -n 1)
+
+  # Extract the revision ID from filename
+  filename=$(basename "$newfile")
+  revision_id=$(echo "$filename" | cut -d'_' -f1)
+
+  # Count existing migration files before rename (excluding this one)
+  serial=$(ls "$versions_dir"/*.py | grep -v "$filename" | wc -l | xargs)
+  serial=$((serial + 1))  # increment for new file
+  serial=$(printf "%03d" "$serial")  # zero-padded
+
+  # Sanitize the migration message
+  safe_message=$(echo "$message" | tr '[:space:]' '_' | tr -cd '[:alnum:]_')
+
+  # New filename
+  newname="${serial}_${revision_id}_${safe_message}.py"
+
+  mv "${newfile}" "${versions_dir}/${newname}"
+  echo "Renamed migration to: ${newname}"
+}
+
 # Ask for action
 echo "Choose an Alembic action:"
 echo "1) Create new revision"
@@ -58,6 +84,7 @@ case $choice in
   1)
     read -rp "Enter migration message: " message
     alembic revision --autogenerate -m "$message"
+    rename_latest_revision_file "$message"
     ;;
   2)
     alembic upgrade head

@@ -79,7 +79,7 @@ To make changes to the database schema, follow these steps:
    ```
    app/models/
    ```
-
+   > **Note:** Stay in the project root directory to perform the following steps.
 2. **Generate Alembic migration**
 
    To generate a new Alembic migration file:
@@ -91,13 +91,13 @@ To make changes to the database schema, follow these steps:
    2. When prompted with "_Choose an Alembic action:_", enter `1` to create a new revision.
    3. Next, when asked "_Enter migration message:_", provide a brief description of your schema changes (for example, "add user table" or "update order status column").  
    
-   A new migration file will be created in the versions directory, named in the format `revisionId_migrationMessage.py`.
+   A new migration file will be created in the versions directory, named in the format `nextSerialNumber_revisionId_migrationMessage.py`.
 
 3. **Verify migration**
 
    Review the newly generated migration file(s) in `alembic/versions/` and ensure the changes accurately reflect your intended schema updates.
 
-   Next, run the migration script again and select option `2` at the "_Choose an Alembic action:_" prompt to upgrade the database to the latest revision.  
+   Next, run the migration script `scripts/db_migrate.sh` again and select option `2` at the "_Choose an Alembic action:_" prompt to upgrade the database to the latest revision.  
    
    If the migration completes successfully, you can proceed to push your changes.  
    If there are any errors, review and fix the issues in the generated migration file(s) before retrying.

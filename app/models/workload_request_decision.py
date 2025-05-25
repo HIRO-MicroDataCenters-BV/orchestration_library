@@ -25,7 +25,7 @@ class WorkloadRequestDecision(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     workload_request_id = Column(
-        Integer, ForeignKey("workload_request.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("workload_request.id"), nullable=False
     )
     node_name = Column(String(255), nullable=False)
     queue_name = Column(String(255), nullable=False)
