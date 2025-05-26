@@ -59,8 +59,8 @@ jobs:
       - name: Lint Helm chart
         run: helm lint charts/orchestration-api
 
-  test-migrations:
-    name: Test Alembic Migrations
+  test-db-migrations:
+    name: Test Alembic DB Migrations
     runs-on: ubuntu-latest
     needs: validate
     services:
