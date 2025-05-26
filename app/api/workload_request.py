@@ -27,6 +27,7 @@ async def read_workload_requests(
     namespace: str = None,
     api_version: str = None,
     kind: str = None,
+    status: str = None,
     current_scale: int = None,
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -40,6 +41,7 @@ async def read_workload_requests(
         namespace=namespace,
         api_version=api_version,
         kind=kind,
+        status=status,
         current_scale=current_scale,
     )
     if not workloads:

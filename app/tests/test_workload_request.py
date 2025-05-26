@@ -37,6 +37,7 @@ async def test_create_workload_request(mock_work):
         namespace="default",
         api_version="v1",
         kind="Deployment",
+        status="2/2 Running",
         current_scale=1,
     )
     result = await create_workload_request(db_call, data)
@@ -71,6 +72,7 @@ async def test_get_workload_requests_no_filters():
         ({"namespace": "default"}, [WorkloadRequest.namespace == "default"]),
         ({"api_version": "v1"}, [WorkloadRequest.api_version == "v1"]),
         ({"kind": "Deployment"}, [WorkloadRequest.kind == "Deployment"]),
+        ({"status": "3/3 Running"}, [WorkloadRequest.status == "3/3 Running"]),
         ({"current_scale": 3}, [WorkloadRequest.current_scale == 3]),
     ],
 )
@@ -109,6 +111,7 @@ async def test_get_workload_requests_with_multiple_filters():
         namespace="default",
         api_version="v1",
         kind="Deployment",
+        status="2/2 Running",
         current_scale=2,
     )
 
@@ -245,6 +248,7 @@ async def test_create_workload_request_route(mock_create):
         "namespace": "default",
         "api_version": "v1",
         "kind": "Deployment",
+        "status": "3/3 Running",
         "current_scale": 3,
     }
 
@@ -254,6 +258,7 @@ async def test_create_workload_request_route(mock_create):
         "namespace": "default",
         "api_version": "v1",
         "kind": "Deployment",
+        "status": "3/3 Running",
         "current_scale": 3,
         "created_at": "2023-01-01T12:00:00Z",
         "updated_at": "2023-01-01T12:00:00Z",
@@ -286,6 +291,7 @@ async def test_update_workload_request_route(mock_update):
         "namespace": "default",
         "api_version": "v1",
         "kind": "Deployment",
+        "status": "3/3 Running",
         "current_scale": 5,
         "created_at": "2023-01-01T12:00:00Z",
         "updated_at": "2023-01-01T12:30:00Z",
@@ -338,6 +344,7 @@ async def test_read_workload_requests_route(mock_get):
             "namespace": "default",
             "api_version": "v1",
             "kind": "Deployment",
+            "status": "3/3 Running",
             "current_scale": 3,
             "created_at": "2023-01-01T12:00:00Z",
             "updated_at": "2023-01-01T12:00:00Z",
@@ -369,6 +376,7 @@ async def test_read_workload_request_by_id_route(mock_get):
         "namespace": "default",
         "api_version": "v1",
         "kind": "Deployment",
+        "status": "3/3 Running",
         "current_scale": 3,
         "created_at": "2023-01-01T12:00:00Z",
         "updated_at": "2023-01-01T12:00:00Z",

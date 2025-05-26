@@ -15,6 +15,7 @@ class WorkloadRequestCreate(BaseModel):
     namespace: str
     api_version: str
     kind: str
+    status: str
     current_scale: int
 
 class WorkloadRequestUpdate(BaseModel):
@@ -25,4 +26,5 @@ class WorkloadRequestUpdate(BaseModel):
     namespace: Optional[str] = None
     api_version: Optional[str] = None
     kind: Optional[str] = None
+    status: Optional[str] = None
     current_scale: Optional[int] = None
