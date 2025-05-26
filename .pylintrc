@@ -1,0 +1,4 @@
+[MASTER]
+ignore=alembic/versions # ignore alembic versions as these are generated on fly
+ignore-patterns=.*_test.py,.*_old.py,
+

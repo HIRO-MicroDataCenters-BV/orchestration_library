@@ -60,12 +60,20 @@ async def get_pod(
     return pods
 
 
+async def get_pod_by_id(db: AsyncSession, pod_id: int):
+    """
+    Retrieve a pod by its ID.
+    """
+    result = await db.execute(select(Pod).where(Pod.id == pod_id))
+    pod = result.scalar_one_or_none()
+    return pod
+
+
 async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
     """
     Update an existing pod.
     """
-    result = await db.execute(select(Pod).where(Pod.id == pod_id))
-    pod = result.scalar_one_or_none()
+    pod = await get_pod_by_id(db, pod_id)
     if not pod:
         return None
 
@@ -83,7 +91,7 @@ async def delete_pod(db: AsyncSession, pod_id: int):
     """
     Delete a pod by its ID.
     """
-    pod = await get_pod(db, pod_id)
+    pod = await get_pod_by_id(db, pod_id)
     if not pod:
         return {"error": "Pod not found"}
 

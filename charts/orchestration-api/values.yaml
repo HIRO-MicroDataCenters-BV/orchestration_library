@@ -36,4 +36,5 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
+runMigration: false
 namespace: orchestration-api

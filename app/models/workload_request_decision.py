@@ -2,16 +2,17 @@
 SQLAlchemy models for the orchestration library.
 """
 
-import uuid
+# pylint: disable=too-few-public-methods
+
 from sqlalchemy import (
     Column,
     Integer,
     String,
     ForeignKey,
     TIMESTAMP,
-    text
+    text,
+    UUID
 )
-from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.database import Base
 
@@ -22,9 +23,9 @@ class WorkloadRequestDecision(Base):
     """
     __tablename__ = "workload_request_decision"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     workload_request_id = Column(
-        Integer, ForeignKey("workload_request.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("workload_request.id"), nullable=False
     )
     node_name = Column(String(255), nullable=False)
     queue_name = Column(String(255), nullable=False)

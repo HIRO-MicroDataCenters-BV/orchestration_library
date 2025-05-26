@@ -12,6 +12,7 @@ from sqlalchemy import (
     text,
     Float,
     Boolean,
+    UUID
 )
 
 from app.db.database import Base
@@ -23,7 +24,7 @@ class Pod(Base):
     """
     __tablename__ = "pod"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
     namespace = Column(String(255), nullable=False)
     demand_cpu = Column(Float, nullable=False)
@@ -31,9 +32,9 @@ class Pod(Base):
     demand_slack_cpu = Column(Float)
     demand_slack_memory = Column(Float)
     is_elastic = Column(Boolean, nullable=False)
-    assigned_node_id = Column(Integer, ForeignKey("node.id"))
+    assigned_node_id = Column(UUID(as_uuid=True), ForeignKey("node.id"))
     workload_request_id = Column(
-        Integer, ForeignKey("workload_request.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("workload_request.id"), nullable=False
     )
     status = Column(String(50), nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))

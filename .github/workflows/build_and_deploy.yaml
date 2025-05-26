@@ -121,4 +121,5 @@ jobs:
             --create-namespace \
             --set namespace=${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
-            --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }}
+            --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
+            --set runMigration=true \

@@ -25,12 +25,14 @@ helm upgrade --install orchestration-api ./charts/orchestration-api \
   --set app.image.tag=alpha1 \
   --set namespace=orchestration-api \
   --set app.image.pullPolicy=IfNotPresent \
+  --set runMigration=true \
   --set dummyRedeployTimestamp=$(date +%s)  
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
-echo "Wait for the orchestration-api to be ready"
-kubectl wait --for=condition=available --timeout=60s deployment/orchestration-api -n orchestration-api
-echo "Get the orchestration-api service"
-kubectl get service -n orchestration-api
 
+echo "Wait for the orchestration-api to be ready"
+kubectl wait --for=condition=available --timeout=60s deployment/orchestration-api -n orchestration-api --context kind-$CLUSTER_NAME
+
+echo "Get the orchestration-api service"
+kubectl get service -n orchestration-api --context kind-$CLUSTER_NAME
 

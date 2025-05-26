@@ -7,7 +7,7 @@ import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
-from app.repositories import db_pod
+from app.repositories import pod
 from app.main import app
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
@@ -90,7 +90,7 @@ async def test_create_pod():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
-    result = await db_pod.create_pod(db, pod_data)
+    result = await pod.create_pod(db, pod_data)
 
     db.add.assert_called_once()
     db.commit.assert_called_once()
@@ -113,7 +113,7 @@ async def test_get_pod():
     db = AsyncMock()
     db.execute.return_value = mock_result
 
-    result = await db_pod.get_pod(
+    result = await pod.get_pod(
         db,
         pod_id=1,
         name="test-pod",
@@ -143,7 +143,7 @@ async def test_update_pod():
     db.refresh = AsyncMock()
 
     updates = PodUpdate(status="completed")
-    result = await db_pod.update_pod(db, pod_id=1, updates=updates)
+    result = await pod.update_pod(db, pod_id=1, updates=updates)
 
     db.execute.assert_called_once()
     db.commit.assert_called_once()
@@ -159,11 +159,13 @@ async def test_delete_pod():
     """
     db = AsyncMock()
     mock_pod = SAMPLE_POD_OBJECT
-    db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=mock_pod))
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_pod
+    db.execute = AsyncMock(return_value=mock_result)
     db.delete = AsyncMock()
     db.commit = AsyncMock()
 
-    result = await db_pod.delete_pod(db, pod_id=1)
+    result = await pod.delete_pod(db, pod_id=1)
 
     db.execute.assert_called_once()
     db.delete.assert_called_once()
@@ -174,7 +176,7 @@ async def test_delete_pod():
 # ========================= Tests for pod routes =========================
 
 @pytest.mark.asyncio
-@patch("app.repositories.db_pod.create_pod", new_callable=AsyncMock)
+@patch("app.repositories.pod.create_pod", new_callable=AsyncMock)
 async def test_create_pod_route(mock_create):
     """
     Test the create_pod route
@@ -194,7 +196,7 @@ async def test_create_pod_route(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.db_pod.get_pod", new_callable=AsyncMock)
+@patch("app.repositories.pod.get_pod", new_callable=AsyncMock)
 async def test_get_pod_route(mock_get):
     """
     Test the get_pod route
@@ -212,7 +214,7 @@ async def test_get_pod_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.db_pod.get_pod", new_callable=AsyncMock)
+@patch("app.repositories.pod.get_pod", new_callable=AsyncMock)
 async def test_get_pod_by_id_route(mock_get):
     """
     Test the get_pod_by_id route
@@ -231,7 +233,7 @@ async def test_get_pod_by_id_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.db_pod.update_pod", new_callable=AsyncMock)
+@patch("app.repositories.pod.update_pod", new_callable=AsyncMock)
 async def test_update_pod_route(mock_update):
     """
     Test the update_pod route
@@ -251,7 +253,7 @@ async def test_update_pod_route(mock_update):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.db_pod.delete_pod", new_callable=AsyncMock)
+@patch("app.repositories.pod.delete_pod", new_callable=AsyncMock)
 async def test_delete_pod_route(mock_delete):
     """
     Test the delete_pod route
