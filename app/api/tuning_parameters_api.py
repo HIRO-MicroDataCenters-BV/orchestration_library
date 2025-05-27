@@ -16,7 +16,6 @@ from app.repositories import tuning_parameter as tuning_parameter_crud
 from app.db.database import get_async_db
 from app.schemas.tuning_parameter_schema import TuningParameterCreate, TuningParameterResponse
 from app.utils.exceptions import (
-    DatabaseEntryNotFoundException,
     DatabaseConnectionException,
 )
 

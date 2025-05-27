@@ -2,10 +2,12 @@
 Tests for tuning_parameter CRUD functions.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from app.models.tuning_parameter import TuningParameter
-from app.repositories import tuning_parameter as tuning_parameter
+from app.repositories import tuning_parameter
 from app.schemas.tuning_parameter_schema import TuningParameterCreate
 
 
