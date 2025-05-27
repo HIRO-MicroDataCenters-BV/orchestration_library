@@ -23,6 +23,7 @@ def get_cluster_info():
     # Get cluster nodes
     try:
         nodes = get_k8s_nodes()
+        print(f"Fetched {nodes}")
     except ApiException as e:
         nodes = []
         print(f"Error fetching nodes: {e}")
@@ -41,11 +42,6 @@ def get_cluster_info():
         kube_system_pods = []
         print(f"Error fetching kube-system pods: {e}")
 
-    node_infos = []
-    for node in nodes:
-        print(f"Processing node: {node}")
-        node_infos.append(get_node_details(node))
-
     component_status = []
     for comp in components:
         component_status.append(
@@ -63,7 +59,7 @@ def get_cluster_info():
 
     cluster_info = {
         "kubernetes_version": version_info.git_version,
-        "nodes": node_infos,
+        "nodes": nodes,
         "components": component_status,
         "kube_system_pods": kube_system_pods_info,
         "cluster_id": version_info.git_commit
