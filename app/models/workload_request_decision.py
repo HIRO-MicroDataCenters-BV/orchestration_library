@@ -2,8 +2,6 @@
 SQLAlchemy models for the orchestration library.
 """
 
-# pylint: disable=too-few-public-methods
-
 from sqlalchemy import (
     Column,
     Integer,

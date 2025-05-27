@@ -152,6 +152,10 @@ async def get_latest_tuning_parameters(
         result = await db.execute(query)
         tuning_parameters = result.scalars().all()
 
+        if not tuning_parameters:
+            logger.warning("No tuning parameters found")
+            raise DatabaseEntryNotFoundException()
+
         logger.info("Retrieved %d latest tuning parameters", len(tuning_parameters))
         return tuning_parameters
     except SQLAlchemyError as e:
