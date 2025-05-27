@@ -25,6 +25,7 @@ class WorkloadRequest(Base):
     namespace = Column(String(255), nullable=False)
     api_version = Column(String(50), nullable=False)
     kind = Column(String(50), nullable=False)
+    status = Column(String(100), nullable=True)
     current_scale = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
@@ -39,6 +40,7 @@ class WorkloadRequest(Base):
             "namespace": self.namespace,
             "api_version": self.api_version,
             "kind": self.kind,
+            "status": self.status,
             "current_scale": self.current_scale,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
@@ -60,5 +62,6 @@ class WorkloadRequest(Base):
             namespace=data.get("namespace"),
             api_version=data.get("api_version"),
             kind=data.get("kind"),
+            status=data.get("status"),
             current_scale=data.get("current_scale"),
         )

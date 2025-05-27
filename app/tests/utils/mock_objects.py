@@ -1,0 +1,170 @@
+"""Mock objects for testing Kubernetes cluster information retrieval"""""
+from unittest.mock import MagicMock, patch
+
+def mock_version_info():
+    """
+    Mock version information for the Kubernetes cluster.
+    """
+    version = MagicMock()
+    version.git_version = "v1.25.0-test-10.0.0.1"
+    version.git_commit = "abcdef123456"
+    return version
+
+# @pytest.fixture
+# def mock_node():
+#     """
+#     Mock a Kubernetes node object.
+#     """
+#     node = MagicMock()
+#     node.metadata.name = "node1"
+#     node.metadata.uid = "uid1"
+#     node.metadata.annotations = {"anno": "value"}
+#     node.metadata.labels = {"role": "worker"}
+#     node.status = MagicMock()  # Explicitly mock node.status
+#     node.status.conditions = [MagicMock(type="Ready", message="ok", reason="KubeletReady")]
+#     node.status.node_info = MagicMock()  # Explicitly mock node.status.node_info
+#     node.status.node_info.architecture = "amd64"
+#     node.status.node_info.container_runtime_version = "docker://20.10"
+#     node.status.node_info.kernel_version = "5.10"
+#     node.status.node_info.kubelet_version = "v1.25.0"
+#     node.status.node_info.os_image = "Ubuntu"
+#     node.status.capacity = {"cpu": "4", "memory": "8Gi"}
+#     node.status.allocatable = {"cpu": "4", "memory": "8Gi"}
+#     node.spec.taints = []
+#     node.spec.unschedulable = False
+#     return node
+
+# @pytest.fixture
+def mock_component():
+    """
+    Mock a Kubernetes component status object.
+    """
+    comp = MagicMock()
+    comp.metadata.name = "scheduler"
+    cond = MagicMock(type="Healthy", status="True")
+    comp.conditions = [cond]
+    return comp
+
+# @pytest.fixture
+def mock_pod():
+    """
+    Mock a Kubernetes pod object in the kube-system namespace.
+    """
+    pod = MagicMock()
+    pod.metadata.name = "kube-proxy"
+    pod.metadata.namespace = "kube-system"
+    pod.status.phase = "Running"
+    pod.spec.node_name = "node1"
+    container_status = MagicMock()
+    container_status.name = "kube-proxy"
+    container_status.ready = True
+    container_status.restart_count = 0
+    container_status.image = "kube-proxy:v1.25.0"
+    pod.status.container_statuses = [container_status]
+    return pod
+
+def mock_node():
+    """
+    Mock a Kubernetes node object with various attributes.
+    """
+    node = MagicMock()
+    node.api_version = "v1"
+    node.metadata.uid = "node-uid"
+    node.metadata.name = "test-node"
+    node.metadata.labels = {"role": "worker"}
+    node.metadata.annotations = {"anno": "value"}
+    # Node conditions
+    condition = MagicMock()
+    condition.type = "Ready"
+    condition.message = "Node is ready"
+    condition.reason = "KubeletReady"
+    node.status.conditions = [condition]
+    # Node info
+    node_info = MagicMock()
+    node_info.architecture = "amd64"
+    node_info.container_runtime_version = "docker://20.10"
+    node_info.kernel_version = "5.10"
+    node_info.kubelet_version = "v1.21.0"
+    node_info.os_image = "Ubuntu 20.04"
+    node.status.node_info = node_info
+    # Capacity and allocatable
+    node.status.capacity = {"cpu": "4", "memory": "8Gi"}
+    node.status.allocatable = {"cpu": "4", "memory": "8Gi"}
+    # Addresses
+    address = MagicMock()
+    address.type = "InternalIP"
+    address.address = "192.168.1.10"
+    node.status.addresses = [address]
+    # Pod CIDR
+    node.spec.pod_cidr = "10.244.0.0/24"
+    # Taints
+    taint = MagicMock()
+    taint.key = "node-role.kubernetes.io/master"
+    taint.value = "true"
+    taint.effect = "NoSchedule"
+    node.spec.taints = [taint]
+    node.spec.unschedulable = False
+    return node
+
+def mock_custom_api():
+    """
+    Mock a Kubernetes custom API object for metrics.
+    """
+    custom_api = MagicMock()
+    custom_api.list_cluster_custom_object.return_value = {
+        "items": [
+            {
+                "metadata": {"name": "test-node"},
+                "usage": {"cpu": "100m", "memory": "512Mi"}
+            }
+        ]
+    }
+    return custom_api
+
+def pod_mock_fixture():
+    """
+    Fixture to create a mock pod object with necessary attributes.
+    """
+    pod = MagicMock()
+    pod.api_version = "v1"
+    pod.metadata.uid = "pod-uid"
+    pod.metadata.namespace = "default"
+    pod.metadata.name = "test-pod"
+    pod.metadata.labels = {"app": "test"}
+    pod.metadata.annotations = {"anno": "value"}
+    pod.status.phase = "Running"
+    pod.status.message = "All good"
+    pod.status.reason = "Started"
+    pod.status.host_ip = "1.2.3.4"
+    pod.status.pod_ip = "5.6.7.8"
+    pod.status.start_time = "2024-01-01T00:00:00Z"
+    pod.spec.node_name = "node1"
+    pod.spec.scheduler_name = "default-scheduler"
+    container = MagicMock()
+    container.name = "container1"
+    container.image = "image:latest"
+    container.resources.requests = {"cpu": "100m", "memory": "128Mi"}
+    container.resources.limits = {"cpu": "200m", "memory": "256Mi"}
+    pod.spec.containers = [container]
+    return pod
+
+def mock_user_pod():
+    """
+    Mock pod object with necessary attributes.
+    """
+    pod = MagicMock()
+    pod.metadata.owner_references = []
+    pod.metadata.uid = "pod-uid"
+    pod.metadata.name = "test-pod"
+    pod.metadata.namespace = "default"
+    return pod
+
+
+def make_owner(kind, name):
+    """
+    Create a mock owner reference with the specified kind and name.
+    """
+    owner = MagicMock()
+    owner.kind = kind
+    owner.name = name
+    return owner

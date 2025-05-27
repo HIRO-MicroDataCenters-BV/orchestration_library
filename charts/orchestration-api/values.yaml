@@ -5,6 +5,7 @@ postgres:
     repository: postgres
     tag: "14"
     pullPolicy: Always
+  replicaCount: 1
   service:
     type: ClusterIP
     port: 5432

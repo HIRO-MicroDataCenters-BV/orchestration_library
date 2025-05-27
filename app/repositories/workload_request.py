@@ -25,6 +25,7 @@ async def get_workload_requests(
     namespace: str = None,
     api_version: str = None,
     kind: str = None,
+    status: str = None,
     current_scale: int = None,
 ):
     """
@@ -41,6 +42,8 @@ async def get_workload_requests(
         filters.append(WorkloadRequest.api_version == api_version)
     if kind:
         filters.append(WorkloadRequest.kind == kind)
+    if status:
+        filters.append(WorkloadRequest.status == status)
     if current_scale is not None:
         filters.append(WorkloadRequest.current_scale == current_scale)
 

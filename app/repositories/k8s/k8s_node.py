@@ -2,6 +2,7 @@
 Operations on Kubernetes nodes.
 This module provides functions to list nodes in the cluster.
 """
+from operator import ge
 from fastapi.responses import JSONResponse
 from kubernetes import client
 
@@ -12,6 +13,16 @@ from app.utils.k8s import get_node_details
 
 def list_k8s_nodes(name=None, node_id=None, status=None):
     """
+    List all nodes in the Kubernetes cluster with optional filters.
+    :param name: Filter by node name.
+    :param node_id: Filter by node ID (UID).
+    :param status: Filter by node status (e.g., "Ready", "NotReady").
+    :return: A list of nodes with their details.
+    """
+    return JSONResponse(content=get_k8s_nodes(name, node_id, status))
+
+def get_k8s_nodes(name=None, node_id=None, status=None):
+    """
     List all nodes in the cluster.
     If no filters are specified, list all nodes.
     """
@@ -20,17 +31,8 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
     print("Listing nodes with their details:")
 
     # Get node metrics from metrics.k8s.io API
-    node_metrics_map = {}
-    try:
-        node_metrics = custom_api.list_cluster_custom_object(
-            group="metrics.k8s.io",
-            version="v1beta1",
-            plural="nodes"
-        )
-        node_metrics_map = {item["metadata"]["name"]: item for item in node_metrics["items"]}
-    except client.rest.ApiException as e:
-        print(f"Failed to fetch node metrics: {e}")
-
+    node_metrics_map = get_k8s_node_metric_map()
+    
     nodes = core_v1.list_node(watch=False)
 
     simplified_nodes = []
@@ -49,5 +51,21 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
         node_details = get_node_details(node)
         node_details["usage"] = usage
         simplified_nodes.append(node_details)
+    return simplified_nodes
 
-    return JSONResponse(content=simplified_nodes)
+def get_k8s_node_metric_map():
+    """
+    Get a map of node names to their metrics.
+    :return: A dictionary mapping node names to their metrics.
+    """
+    custom_api = get_k8s_custom_objects_client()
+    try:
+        node_metrics = custom_api.list_cluster_custom_object(
+            group="metrics.k8s.io",
+            version="v1beta1",
+            plural="nodes"
+        )
+        return {item["metadata"]["name"]: item for item in node_metrics["items"]}
+    except client.rest.ApiException as e:
+        print(f"Failed to fetch node metrics: {e}")
+        return {}

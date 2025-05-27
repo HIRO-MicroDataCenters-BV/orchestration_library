@@ -7,34 +7,35 @@ from unittest.mock import MagicMock, patch
 import json
 
 from app.repositories.k8s import k8s_pod
+from app.tests.utils.mock_objects import pod_mock_fixture
 
 
-def pod_mock_fixture():
-    """
-    Fixture to create a mock pod object with necessary attributes.
-    """
-    pod = MagicMock()
-    pod.api_version = "v1"
-    pod.metadata.uid = "pod-uid"
-    pod.metadata.namespace = "default"
-    pod.metadata.name = "test-pod"
-    pod.metadata.labels = {"app": "test"}
-    pod.metadata.annotations = {"anno": "value"}
-    pod.status.phase = "Running"
-    pod.status.message = "All good"
-    pod.status.reason = "Started"
-    pod.status.host_ip = "1.2.3.4"
-    pod.status.pod_ip = "5.6.7.8"
-    pod.status.start_time = "2024-01-01T00:00:00Z"
-    pod.spec.node_name = "node1"
-    pod.spec.scheduler_name = "default-scheduler"
-    container = MagicMock()
-    container.name = "container1"
-    container.image = "image:latest"
-    container.resources.requests = {"cpu": "100m", "memory": "128Mi"}
-    container.resources.limits = {"cpu": "200m", "memory": "256Mi"}
-    pod.spec.containers = [container]
-    return pod
+# def pod_mock_fixture():
+#     """
+#     Fixture to create a mock pod object with necessary attributes.
+#     """
+#     pod = MagicMock()
+#     pod.api_version = "v1"
+#     pod.metadata.uid = "pod-uid"
+#     pod.metadata.namespace = "default"
+#     pod.metadata.name = "test-pod"
+#     pod.metadata.labels = {"app": "test"}
+#     pod.metadata.annotations = {"anno": "value"}
+#     pod.status.phase = "Running"
+#     pod.status.message = "All good"
+#     pod.status.reason = "Started"
+#     pod.status.host_ip = "1.2.3.4"
+#     pod.status.pod_ip = "5.6.7.8"
+#     pod.status.start_time = "2024-01-01T00:00:00Z"
+#     pod.spec.node_name = "node1"
+#     pod.spec.scheduler_name = "default-scheduler"
+#     container = MagicMock()
+#     container.name = "container1"
+#     container.image = "image:latest"
+#     container.resources.requests = {"cpu": "100m", "memory": "128Mi"}
+#     container.resources.limits = {"cpu": "200m", "memory": "256Mi"}
+#     pod.spec.containers = [container]
+#     return pod
 
 
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")

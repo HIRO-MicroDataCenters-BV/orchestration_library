@@ -6,28 +6,29 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from app.repositories.k8s.k8s_pod_parent import get_parent_controller_details_of_pod
+from app.tests.utils.mock_objects import mock_user_pod, make_owner
 
 
-def mock_pod():
-    """
-    Mock pod object with necessary attributes.
-    """
-    pod = MagicMock()
-    pod.metadata.owner_references = []
-    pod.metadata.uid = "pod-uid"
-    pod.metadata.name = "test-pod"
-    pod.metadata.namespace = "default"
-    return pod
+# def mock_user_pod():
+#     """
+#     Mock pod object with necessary attributes.
+#     """
+#     pod = MagicMock()
+#     pod.metadata.owner_references = []
+#     pod.metadata.uid = "pod-uid"
+#     pod.metadata.name = "test-pod"
+#     pod.metadata.namespace = "default"
+#     return pod
 
 
-def make_owner(kind, name):
-    """
-    Create a mock owner reference with the specified kind and name.
-    """
-    owner = MagicMock()
-    owner.kind = kind
-    owner.name = name
-    return owner
+# def make_owner(kind, name):
+#     """
+#     Create a mock owner reference with the specified kind and name.
+#     """
+#     owner = MagicMock()
+#     owner.kind = kind
+#     owner.name = name
+#     return owner
 
 # Mocking the Kubernetes client methods
 # to avoid actual API calls during tests.
@@ -55,7 +56,7 @@ def test_no_owner_references(_mock_batch, _mock_apps, mock_core):
     """
     Test that the function returns a message when the pod has no owner references.
     """
-    mock_core.return_value.read_namespaced_pod.return_value = mock_pod()
+    mock_core.return_value.read_namespaced_pod.return_value = mock_user_pod()
     result = get_parent_controller_details_of_pod(
         namespace="default", pod_name="test-pod", pod_id=None
     )
@@ -71,7 +72,7 @@ def test_deployment_parent(_mock_batch, mock_apps, mock_core):
     """
     # Setup pod with ReplicaSet owner
     owner = make_owner("ReplicaSet", "rs-name")
-    m_pod = mock_pod()
+    m_pod = mock_user_pod()
     m_pod.metadata.owner_references = [owner]
     mock_core.return_value.read_namespaced_pod.return_value = m_pod
 
@@ -104,7 +105,7 @@ def test_statefulset_parent(_mock_batch, mock_apps, mock_core):
     Test that the function correctly identifies a StatefulSet as the parent controller.
     """
     owner = make_owner("StatefulSet", "ss-name")
-    m_pod = mock_pod()
+    m_pod = mock_user_pod()
     m_pod.metadata.owner_references = [owner]
     mock_core.return_value.read_namespaced_pod.return_value = m_pod
 
@@ -131,7 +132,7 @@ def test_daemonset_parent(_mock_batch, mock_apps, mock_core):
     Test that the function correctly identifies a DaemonSet as the parent controller.
     """
     owner = make_owner("DaemonSet", "ds-name")
-    m_pod = mock_pod()
+    m_pod = mock_user_pod()
     m_pod.metadata.owner_references = [owner]
     mock_core.return_value.read_namespaced_pod.return_value = m_pod
 
@@ -158,7 +159,7 @@ def test_job_parent(mock_batch, _mock_apps, mock_core):
     Test that the function correctly identifies a Job as the parent controller.
     """
     owner = make_owner("Job", "job-name")
-    m_pod = mock_pod()
+    m_pod = mock_user_pod()
     m_pod.metadata.owner_references = [owner]
     mock_core.return_value.read_namespaced_pod.return_value = m_pod
 
@@ -185,7 +186,7 @@ def test_no_known_controller(_mock_batch, _mock_apps, mock_core):
     Test that the function returns a message when the pod has an unknown controller.
     """
     owner = make_owner("UnknownKind", "unknown")
-    m_pod = mock_pod()
+    m_pod = mock_user_pod()
     m_pod.metadata.owner_references = [owner]
     mock_core.return_value.read_namespaced_pod.return_value = m_pod
 
@@ -224,7 +225,7 @@ def test_pod_by_id_found(_mock_batch, mock_apps, mock_core):
     """
     owner = make_owner("DaemonSet", "ds-name")
     # Simulate pod_id search with a match
-    pod = mock_pod()
+    pod = mock_user_pod()
     pod.metadata.uid = "found-uid"
     pod.metadata.owner_references = [owner]
     pod_list = MagicMock()
