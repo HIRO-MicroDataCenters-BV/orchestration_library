@@ -12,6 +12,16 @@ from app.utils.k8s import get_node_details
 
 def list_k8s_nodes(name=None, node_id=None, status=None):
     """
+    List all nodes in the Kubernetes cluster with optional filters.
+    :param name: Filter by node name.
+    :param node_id: Filter by node ID (UID).
+    :param status: Filter by node status (e.g., "Ready", "NotReady").
+    :return: A list of nodes with their details.
+    """
+    return JSONResponse(content=get_k8s_nodes(name, node_id, status))
+
+def get_k8s_nodes(name=None, node_id=None, status=None):
+    """
     List all nodes in the cluster.
     If no filters are specified, list all nodes.
     """
@@ -49,5 +59,4 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
         node_details = get_node_details(node)
         node_details["usage"] = usage
         simplified_nodes.append(node_details)
-
-    return JSONResponse(content=simplified_nodes)
+    return simplified_nodes

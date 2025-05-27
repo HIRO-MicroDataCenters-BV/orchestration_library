@@ -6,65 +6,66 @@ from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 
 from app.repositories.k8s import k8s_node
+from app.tests.utils.mock_objects import mock_node, mock_custom_api
 
 
-def mock_node():
-    """
-    Mock a Kubernetes node object with various attributes.
-    """
-    node = MagicMock()
-    node.api_version = "v1"
-    node.metadata.uid = "node-uid"
-    node.metadata.name = "test-node"
-    node.metadata.labels = {"role": "worker"}
-    node.metadata.annotations = {"anno": "value"}
-    # Node conditions
-    condition = MagicMock()
-    condition.type = "Ready"
-    condition.message = "Node is ready"
-    condition.reason = "KubeletReady"
-    node.status.conditions = [condition]
-    # Node info
-    node_info = MagicMock()
-    node_info.architecture = "amd64"
-    node_info.container_runtime_version = "docker://20.10"
-    node_info.kernel_version = "5.10"
-    node_info.kubelet_version = "v1.21.0"
-    node_info.os_image = "Ubuntu 20.04"
-    node.status.node_info = node_info
-    # Capacity and allocatable
-    node.status.capacity = {"cpu": "4", "memory": "8Gi"}
-    node.status.allocatable = {"cpu": "4", "memory": "8Gi"}
-    # Addresses
-    address = MagicMock()
-    address.type = "InternalIP"
-    address.address = "192.168.1.10"
-    node.status.addresses = [address]
-    # Pod CIDR
-    node.spec.pod_cidr = "10.244.0.0/24"
-    # Taints
-    taint = MagicMock()
-    taint.key = "node-role.kubernetes.io/master"
-    taint.value = "true"
-    taint.effect = "NoSchedule"
-    node.spec.taints = [taint]
-    node.spec.unschedulable = False
-    return node
+# def mock_node():
+#     """
+#     Mock a Kubernetes node object with various attributes.
+#     """
+#     node = MagicMock()
+#     node.api_version = "v1"
+#     node.metadata.uid = "node-uid"
+#     node.metadata.name = "test-node"
+#     node.metadata.labels = {"role": "worker"}
+#     node.metadata.annotations = {"anno": "value"}
+#     # Node conditions
+#     condition = MagicMock()
+#     condition.type = "Ready"
+#     condition.message = "Node is ready"
+#     condition.reason = "KubeletReady"
+#     node.status.conditions = [condition]
+#     # Node info
+#     node_info = MagicMock()
+#     node_info.architecture = "amd64"
+#     node_info.container_runtime_version = "docker://20.10"
+#     node_info.kernel_version = "5.10"
+#     node_info.kubelet_version = "v1.21.0"
+#     node_info.os_image = "Ubuntu 20.04"
+#     node.status.node_info = node_info
+#     # Capacity and allocatable
+#     node.status.capacity = {"cpu": "4", "memory": "8Gi"}
+#     node.status.allocatable = {"cpu": "4", "memory": "8Gi"}
+#     # Addresses
+#     address = MagicMock()
+#     address.type = "InternalIP"
+#     address.address = "192.168.1.10"
+#     node.status.addresses = [address]
+#     # Pod CIDR
+#     node.spec.pod_cidr = "10.244.0.0/24"
+#     # Taints
+#     taint = MagicMock()
+#     taint.key = "node-role.kubernetes.io/master"
+#     taint.value = "true"
+#     taint.effect = "NoSchedule"
+#     node.spec.taints = [taint]
+#     node.spec.unschedulable = False
+#     return node
 
-def mock_custom_api():
-    """
-    Mock a Kubernetes custom API object for metrics.
-    """
-    custom_api = MagicMock()
-    custom_api.list_cluster_custom_object.return_value = {
-        "items": [
-            {
-                "metadata": {"name": "test-node"},
-                "usage": {"cpu": "100m", "memory": "512Mi"}
-            }
-        ]
-    }
-    return custom_api
+# def mock_custom_api():
+#     """
+#     Mock a Kubernetes custom API object for metrics.
+#     """
+#     custom_api = MagicMock()
+#     custom_api.list_cluster_custom_object.return_value = {
+#         "items": [
+#             {
+#                 "metadata": {"name": "test-node"},
+#                 "usage": {"cpu": "100m", "memory": "512Mi"}
+#             }
+#         ]
+#     }
+#     return custom_api
 
 @patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")

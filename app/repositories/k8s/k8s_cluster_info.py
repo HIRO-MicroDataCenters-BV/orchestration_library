@@ -6,7 +6,7 @@ from kubernetes.client.exceptions import ApiException
 
 from app.repositories.k8s.k8s_common import (get_k8s_core_v1_client,
                                          get_k8s_version_api_client)
-from app.repositories.k8s.k8s_node import list_k8s_nodes
+from app.repositories.k8s.k8s_node import get_k8s_nodes
 from app.utils.k8s import get_node_details, get_pod_basic_info
 
 
@@ -22,7 +22,7 @@ def get_cluster_info():
 
     # Get cluster nodes
     try:
-        nodes = list_k8s_nodes()
+        nodes = get_k8s_nodes()
     except ApiException as e:
         nodes = []
         print(f"Error fetching nodes: {e}")
@@ -43,6 +43,7 @@ def get_cluster_info():
 
     node_infos = []
     for node in nodes:
+        print(f"Processing node: {node}")
         node_infos.append(get_node_details(node))
 
     component_status = []
