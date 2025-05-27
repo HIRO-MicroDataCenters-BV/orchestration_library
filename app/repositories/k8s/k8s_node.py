@@ -2,7 +2,6 @@
 Operations on Kubernetes nodes.
 This module provides functions to list nodes in the cluster.
 """
-from operator import ge
 from fastapi.responses import JSONResponse
 from kubernetes import client
 
@@ -27,12 +26,10 @@ def get_k8s_nodes(name=None, node_id=None, status=None):
     If no filters are specified, list all nodes.
     """
     core_v1 = get_k8s_core_v1_client()
-    custom_api = get_k8s_custom_objects_client()
     print("Listing nodes with their details:")
 
     # Get node metrics from metrics.k8s.io API
     node_metrics_map = get_k8s_node_metric_map()
-    
     nodes = core_v1.list_node(watch=False)
 
     simplified_nodes = []

@@ -1,5 +1,5 @@
 """Mock objects for testing Kubernetes cluster information retrieval"""""
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 def mock_version_info():
     """
@@ -9,30 +9,6 @@ def mock_version_info():
     version.git_version = "v1.25.0-test-10.0.0.1"
     version.git_commit = "abcdef123456"
     return version
-
-# @pytest.fixture
-# def mock_node():
-#     """
-#     Mock a Kubernetes node object.
-#     """
-#     node = MagicMock()
-#     node.metadata.name = "node1"
-#     node.metadata.uid = "uid1"
-#     node.metadata.annotations = {"anno": "value"}
-#     node.metadata.labels = {"role": "worker"}
-#     node.status = MagicMock()  # Explicitly mock node.status
-#     node.status.conditions = [MagicMock(type="Ready", message="ok", reason="KubeletReady")]
-#     node.status.node_info = MagicMock()  # Explicitly mock node.status.node_info
-#     node.status.node_info.architecture = "amd64"
-#     node.status.node_info.container_runtime_version = "docker://20.10"
-#     node.status.node_info.kernel_version = "5.10"
-#     node.status.node_info.kubelet_version = "v1.25.0"
-#     node.status.node_info.os_image = "Ubuntu"
-#     node.status.capacity = {"cpu": "4", "memory": "8Gi"}
-#     node.status.allocatable = {"cpu": "4", "memory": "8Gi"}
-#     node.spec.taints = []
-#     node.spec.unschedulable = False
-#     return node
 
 # @pytest.fixture
 def mock_component():

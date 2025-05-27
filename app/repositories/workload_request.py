@@ -1,11 +1,26 @@
 """
 CRUD operations for managing workload requests in the database.
 """
+from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.workload_request import WorkloadRequest
 from app.schemas.workload_request import WorkloadRequestCreate
 
+
+@dataclass
+class WorkloadRequestFilter:
+    """
+    Data class for filtering workload requests.
+    This class can be extended with additional filter fields as needed.
+    """
+    workload_request_id: int = None
+    name: str = None
+    namespace: str = None
+    api_version: str = None
+    kind: str = None
+    status: str = None
+    current_scale: int = None
 
 async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     """
@@ -19,33 +34,26 @@ async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
 
 
 async def get_workload_requests(
-    db: AsyncSession,
-    workload_request_id: int = None,
-    name: str = None,
-    namespace: str = None,
-    api_version: str = None,
-    kind: str = None,
-    status: str = None,
-    current_scale: int = None,
+    db: AsyncSession, wrfilter: WorkloadRequestFilter
 ):
     """
     Get workload requests based on various optional filters.
     """
     filters = []
-    if workload_request_id:
-        filters.append(WorkloadRequest.id == workload_request_id)
-    if name:
-        filters.append(WorkloadRequest.name == name)
-    if namespace:
-        filters.append(WorkloadRequest.namespace == namespace)
-    if api_version:
-        filters.append(WorkloadRequest.api_version == api_version)
-    if kind:
-        filters.append(WorkloadRequest.kind == kind)
-    if status:
-        filters.append(WorkloadRequest.status == status)
-    if current_scale is not None:
-        filters.append(WorkloadRequest.current_scale == current_scale)
+    if wrfilter.workload_request_id:
+        filters.append(WorkloadRequest.id == wrfilter.workload_request_id)
+    if wrfilter.name:
+        filters.append(WorkloadRequest.name == wrfilter.name)
+    if wrfilter.namespace:
+        filters.append(WorkloadRequest.namespace == wrfilter.namespace)
+    if wrfilter.api_version:
+        filters.append(WorkloadRequest.api_version == wrfilter.api_version)
+    if wrfilter.kind:
+        filters.append(WorkloadRequest.kind == wrfilter.kind)
+    if wrfilter.status:
+        filters.append(WorkloadRequest.status == wrfilter.status)
+    if wrfilter.current_scale is not None:
+        filters.append(WorkloadRequest.current_scale == wrfilter.current_scale)
 
     query = (
         select(WorkloadRequest).where(*filters) if filters else select(WorkloadRequest)

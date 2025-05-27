@@ -5,92 +5,21 @@ from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 
 from app.repositories.k8s import k8s_cluster_info
-from app.tests.utils.mock_objects import mock_version_info, mock_node, mock_component, mock_pod, mock_custom_api
+from app.tests.utils.mock_objects import (mock_version_info,
+                                          mock_node,
+                                          mock_component,
+                                          mock_pod,
+                                          mock_custom_api)
 
-
-# @pytest.fixture
-# def mock_version_info():
-#     """
-#     Mock version information for the Kubernetes cluster.
-#     """
-#     version = MagicMock()
-#     version.git_version = "v1.25.0-test-10.0.0.1"
-#     version.git_commit = "abcdef123456"
-#     return version
-
-# # @pytest.fixture
-# def mock_node():
-#     """
-#     Mock a Kubernetes node object.
-#     """
-#     node = MagicMock()
-#     node.metadata.name = "node1"
-#     node.metadata.uid = "uid1"
-#     node.metadata.annotations = {"anno": "value"}
-#     node.metadata.labels = {"role": "worker"}
-#     node.status = MagicMock()  # Explicitly mock node.status
-#     node.status.conditions = [MagicMock(type="Ready", message="ok", reason="KubeletReady")]
-#     node.status.node_info = MagicMock()  # Explicitly mock node.status.node_info
-#     node.status.node_info.architecture = "amd64"
-#     node.status.node_info.container_runtime_version = "docker://20.10"
-#     node.status.node_info.kernel_version = "5.10"
-#     node.status.node_info.kubelet_version = "v1.25.0"
-#     node.status.node_info.os_image = "Ubuntu"
-#     node.status.capacity = {"cpu": "4", "memory": "8Gi"}
-#     node.status.allocatable = {"cpu": "4", "memory": "8Gi"}
-#     node.spec.taints = []
-#     node.spec.unschedulable = False
-#     return node
-
-# # @pytest.fixture
-# def mock_component():
-#     """
-#     Mock a Kubernetes component status object.
-#     """
-#     comp = MagicMock()
-#     comp.metadata.name = "scheduler"
-#     cond = MagicMock(type="Healthy", status="True")
-#     comp.conditions = [cond]
-#     return comp
-
-# # @pytest.fixture
-# def mock_pod():
-#     """
-#     Mock a Kubernetes pod object in the kube-system namespace.
-#     """
-#     pod = MagicMock()
-#     pod.metadata.name = "kube-proxy"
-#     pod.metadata.namespace = "kube-system"
-#     pod.status.phase = "Running"
-#     pod.spec.node_name = "node1"
-#     container_status = MagicMock()
-#     container_status.name = "kube-proxy"
-#     container_status.ready = True
-#     container_status.restart_count = 0
-#     container_status.image = "kube-proxy:v1.25.0"
-#     pod.status.container_statuses = [container_status]
-#     return pod
-
-# def mock_custom_api():
-#     """
-#     Mock a Kubernetes custom API object for metrics.
-#     """
-#     custom_api = MagicMock()
-#     custom_api.list_cluster_custom_object.return_value = {
-#         "items": [
-#             {
-#                 "metadata": {"name": "test-node"},
-#                 "usage": {"cpu": "100m", "memory": "512Mi"}
-#             }
-#         ]
-#     }
-#     return custom_api
 
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client")
-def test_get_cluster_info_success(mock_get_version, mock_get_core, mock_get_custom, mock_get_k8s_core):
+def test_get_cluster_info_success(mock_get_version,
+                                  mock_get_core,
+                                  mock_get_custom,
+                                  mock_get_k8s_core):
     """
     Test the successful retrieval of cluster information.
     """
@@ -119,7 +48,10 @@ def test_get_cluster_info_success(mock_get_version, mock_get_core, mock_get_cust
 @patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client")
-def test_get_cluster_info_handles_exceptions(mock_get_version, mock_get_core, mock_get_custom, mock_get_k8s_core):
+def test_get_cluster_info_handles_exceptions(mock_get_version,
+                                             mock_get_core,
+                                             mock_get_custom,
+                                             mock_get_k8s_core):
     """
     Test the handling of exceptions when retrieving cluster information.
     """

@@ -115,13 +115,13 @@ async def test_get_pod():
 
     result = await pod.get_pod(
         db,
-        pod_id=1,
+        pod.PodFilter(pod_id=1,
         name="test-pod",
         namespace="default",
         is_elastic=False,
         assigned_node_id=1,
         workload_request_id=100,
-        status="running"
+        status="running")
     )
 
     db.execute.assert_called_once()
