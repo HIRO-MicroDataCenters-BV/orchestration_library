@@ -48,10 +48,10 @@ async def test_create_tuning_parameters():
 
 
 @pytest.mark.asyncio
-async def test_get_tuning_parameters(mock_tuning_parameter):
+async def test_get_tuning_parameters(mock_param):
     """Test retrieving tuning parameters."""
     mock_scalars = MagicMock()
-    mock_scalars.all.return_value = [mock_tuning_parameter]
+    mock_scalars.all.return_value = [mock_param]
 
     mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
@@ -69,10 +69,10 @@ async def test_get_tuning_parameters(mock_tuning_parameter):
 
 
 @pytest.mark.asyncio
-async def test_get_latest_tuning_parameters(mock_tuning_parameter):
+async def test_get_latest_tuning_parameters(mock_param):
     """Test retrieving the latest tuning parameters."""
     mock_scalars = MagicMock()
-    mock_scalars.all.return_value = [mock_tuning_parameter]
+    mock_scalars.all.return_value = [mock_param]
 
     mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
