@@ -5,7 +5,6 @@ SQLAlchemy models for the orchestration library.
 
 from sqlalchemy import (
     Column,
-    Integer,
     String,
     ForeignKey,
     TIMESTAMP,

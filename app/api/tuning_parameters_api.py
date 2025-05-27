@@ -16,7 +16,6 @@ from app.repositories import tuning_parameter as tuning_parameter_crud
 from app.db.database import get_async_db
 from app.schemas.tuning_parameter_schema import TuningParameterCreate, TuningParameterResponse
 from app.utils.exceptions import (
-    DatabaseEntryNotFoundException,
     DatabaseConnectionException,
 )
 
@@ -113,8 +112,6 @@ async def get_latest_tuning_parameters(
         latest_parameters = await tuning_parameter_crud.get_latest_tuning_parameters(
             db, limit=limit
         )
-        if not latest_parameters:
-            raise DatabaseEntryNotFoundException()
         return latest_parameters
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
