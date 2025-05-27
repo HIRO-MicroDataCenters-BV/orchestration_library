@@ -1,6 +1,7 @@
 """
 Tests for workload_request CRUD functions and routes.
 """
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -8,10 +9,13 @@ from fastapi import status
 from httpx import AsyncClient
 from httpx._transports.asgi import ASGITransport
 
-from app.repositories.workload_request import (create_workload_request,
-                                       delete_workload_request,
-                                       get_workload_requests,
-                                       update_workload_request)
+from app.repositories.workload_request import (
+    create_workload_request,
+    delete_workload_request,
+    get_workload_requests,
+    update_workload_request,
+    WorkloadRequestFilter,
+)
 from app.main import app
 from app.models.workload_request import WorkloadRequest
 from app.schemas.workload_request import WorkloadRequestCreate
@@ -57,7 +61,7 @@ async def test_get_workload_requests_no_filters():
     mock_result.scalars.return_value.all.return_value = ["obj1", "obj2"]
     db.execute.return_value = mock_result
 
-    result = await get_workload_requests(db)
+    result = await get_workload_requests(db, WorkloadRequestFilter())
 
     db.execute.assert_awaited_once()
     assert result == ["obj1", "obj2"]
@@ -67,13 +71,25 @@ async def test_get_workload_requests_no_filters():
 @pytest.mark.parametrize(
     "kargs, expected_filters",
     [
-        ({"workload_request_id": 1}, [WorkloadRequest.id == 1]),
-        ({"name": "test"}, [WorkloadRequest.name == "test"]),
-        ({"namespace": "default"}, [WorkloadRequest.namespace == "default"]),
-        ({"api_version": "v1"}, [WorkloadRequest.api_version == "v1"]),
-        ({"kind": "Deployment"}, [WorkloadRequest.kind == "Deployment"]),
-        ({"status": "3/3 Running"}, [WorkloadRequest.status == "3/3 Running"]),
-        ({"current_scale": 3}, [WorkloadRequest.current_scale == 3]),
+        (WorkloadRequestFilter(workload_request_id=1), [WorkloadRequest.id == 1]),
+        (WorkloadRequestFilter(name="test"), [WorkloadRequest.name == "test"]),
+        (
+            WorkloadRequestFilter(namespace="default"),
+            [WorkloadRequest.namespace == "default"],
+        ),
+        (
+            WorkloadRequestFilter(api_version="v1"),
+            [WorkloadRequest.api_version == "v1"],
+        ),
+        (
+            WorkloadRequestFilter(kind="Deployment"),
+            [WorkloadRequest.kind == "Deployment"],
+        ),
+        (
+            WorkloadRequestFilter(status="3/3 Running"),
+            [WorkloadRequest.status == "3/3 Running"],
+        ),
+        (WorkloadRequestFilter(current_scale=3), [WorkloadRequest.current_scale == 3]),
     ],
 )
 async def test_get_workload_requests_with_individual_filters(kargs, expected_filters):
@@ -86,7 +102,7 @@ async def test_get_workload_requests_with_individual_filters(kargs, expected_fil
     mock_result.scalars.return_value.all.return_value = ["filtered"]
     db.execute.return_value = mock_result
 
-    result = await get_workload_requests(db, **kargs)
+    result = await get_workload_requests(db, kargs)
 
     db.execute.assert_awaited_once()
     assert result == ["filtered"]
@@ -106,13 +122,15 @@ async def test_get_workload_requests_with_multiple_filters():
 
     result = await get_workload_requests(
         db,
-        workload_request_id=1,
-        name="demo",
-        namespace="default",
-        api_version="v1",
-        kind="Deployment",
-        status="2/2 Running",
-        current_scale=2,
+        WorkloadRequestFilter(
+            workload_request_id=1,
+            name="demo",
+            namespace="default",
+            api_version="v1",
+            kind="Deployment",
+            status="2/2 Running",
+            current_scale=2,
+        ),
     )
 
     db.execute.assert_awaited_once()
@@ -236,7 +254,9 @@ async def test_delete_workload_request_not_found():
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.workload_request.create_workload_request", new_callable=AsyncMock)
+@patch(
+    "app.repositories.workload_request.create_workload_request", new_callable=AsyncMock
+)
 async def test_create_workload_request_route(mock_create):
     """
     Test the creation of a new workload request using mocked CRUD logic.
@@ -276,7 +296,9 @@ async def test_create_workload_request_route(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.workload_request.update_workload_request", new_callable=AsyncMock)
+@patch(
+    "app.repositories.workload_request.update_workload_request", new_callable=AsyncMock
+)
 async def test_update_workload_request_route(mock_update):
     """
     Test updating a workload request using mocked CRUD logic.
@@ -309,7 +331,9 @@ async def test_update_workload_request_route(mock_update):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.workload_request.delete_workload_request", new_callable=AsyncMock)
+@patch(
+    "app.repositories.workload_request.delete_workload_request", new_callable=AsyncMock
+)
 async def test_delete_workload_request_route(mock_delete):
     """
     Test deleting a workload request using mocked CRUD logic.
@@ -330,7 +354,9 @@ async def test_delete_workload_request_route(mock_delete):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.workload_request.get_workload_requests", new_callable=AsyncMock)
+@patch(
+    "app.repositories.workload_request.get_workload_requests", new_callable=AsyncMock
+)
 async def test_read_workload_requests_route(mock_get):
     """
     Test retrieving workload requests using mocked CRUD logic.
@@ -363,7 +389,9 @@ async def test_read_workload_requests_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.workload_request.get_workload_requests", new_callable=AsyncMock)
+@patch(
+    "app.repositories.workload_request.get_workload_requests", new_callable=AsyncMock
+)
 async def test_read_workload_request_by_id_route(mock_get):
     """
     Test retrieving a specific workload request by ID using mocked CRUD logic.

@@ -63,3 +63,14 @@ class NodeResponse(BaseModel):
         """
 
         orm_mode = True
+
+        def is_orm_mode(self):
+            """
+            Check if the model is in ORM mode.
+            """
+            return self.orm_mode
+        def to_dict(self):
+            """
+            Convert the model instance to a dictionary.
+            """
+            return {"orm_mode": self.orm_mode}

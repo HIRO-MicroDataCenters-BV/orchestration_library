@@ -3,11 +3,26 @@ CRUD operations for managing pods in the database.
 This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
+from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
 
+
+@dataclass
+class PodFilter:
+    """
+    Data class for filtering pods.
+    This class can be extended with additional filter fields as needed.
+    """
+    pod_id: int = None
+    name: str = None
+    namespace: str = None
+    is_elastic: bool = None
+    assigned_node_id: int = None
+    workload_request_id: int = None
+    status: str = None
 
 async def create_pod(db: AsyncSession, pod_data: PodCreate):
     """
@@ -22,33 +37,27 @@ async def create_pod(db: AsyncSession, pod_data: PodCreate):
 
 async def get_pod(
     db: AsyncSession,
-    pod_id: int = None,
-    name: str = None,
-    namespace: str = None,
-    is_elastic: bool = None,
-    assigned_node_id: int = None,
-    workload_request_id: int = None,
-    status: str = None,
+    pfilter: PodFilter
 ):
     """
     Retrieve pods based on various filters. If no filters are provided, 
     return all pods.
     """
     filters = []
-    if pod_id is not None:
-        filters.append(Pod.id == pod_id)
-    if name is not None:
-        filters.append(Pod.name == name)
-    if namespace is not None:
-        filters.append(Pod.namespace == namespace)
-    if is_elastic is not None:
-        filters.append(Pod.is_elastic == is_elastic)
-    if assigned_node_id is not None:
-        filters.append(Pod.assigned_node_id == assigned_node_id)
-    if workload_request_id is not None:
-        filters.append(Pod.workload_request_id == workload_request_id)
-    if status is not None:
-        filters.append(Pod.status == status)
+    if pfilter.pod_id is not None:
+        filters.append(Pod.id == pfilter.pod_id)
+    if pfilter.name is not None:
+        filters.append(Pod.name == pfilter.name)
+    if pfilter.namespace is not None:
+        filters.append(Pod.namespace == pfilter.namespace)
+    if pfilter.is_elastic is not None:
+        filters.append(Pod.is_elastic == pfilter.is_elastic)
+    if pfilter.assigned_node_id is not None:
+        filters.append(Pod.assigned_node_id == pfilter.assigned_node_id)
+    if pfilter.workload_request_id is not None:
+        filters.append(Pod.workload_request_id == pfilter.workload_request_id)
+    if pfilter.status is not None:
+        filters.append(Pod.status == pfilter.status)
 
     if filters:
         query = select(Pod).where(*filters)

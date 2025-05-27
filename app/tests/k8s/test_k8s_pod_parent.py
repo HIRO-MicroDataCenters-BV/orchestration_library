@@ -9,27 +9,6 @@ from app.repositories.k8s.k8s_pod_parent import get_parent_controller_details_of
 from app.tests.utils.mock_objects import mock_user_pod, make_owner
 
 
-# def mock_user_pod():
-#     """
-#     Mock pod object with necessary attributes.
-#     """
-#     pod = MagicMock()
-#     pod.metadata.owner_references = []
-#     pod.metadata.uid = "pod-uid"
-#     pod.metadata.name = "test-pod"
-#     pod.metadata.namespace = "default"
-#     return pod
-
-
-# def make_owner(kind, name):
-#     """
-#     Create a mock owner reference with the specified kind and name.
-#     """
-#     owner = MagicMock()
-#     owner.kind = kind
-#     owner.name = name
-#     return owner
-
 # Mocking the Kubernetes client methods
 # to avoid actual API calls during tests.
 # The mock functions are used to simulate the behavior of the Kubernetes API.
