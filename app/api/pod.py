@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
+from app.schemas.pod import PodFilterQuery
 from app.schemas.pod import PodCreate, PodUpdate
 from app.repositories import pod
 from app.utils.exceptions import DatabaseConnectionException
@@ -18,28 +19,14 @@ router = APIRouter(prefix="/db_pod")
 """# pylint: disable=too-many-positional-arguments"""
 
 
-def pod_filter_from_query(
-    pod_id: Optional[int] = Query(None),
-    name: Optional[str] = Query(None),
-    namespace: Optional[str] = Query(None),
-    is_elastic: Optional[bool] = Query(None),
-    assigned_node_id: Optional[int] = Query(None),
-    workload_request_id: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
-):
+def pod_filter_from_query(filter_query: PodFilterQuery):
     """
     Create a PodFilter object from query parameters.
     This function is used to filter pods based on various criteria.
     """
-    return pod.PodFilter(
-        pod_id=pod_id,
-        name=name,
-        namespace=namespace,
-        is_elastic=is_elastic,
-        assigned_node_id=assigned_node_id,
-        workload_request_id=workload_request_id,
-        status=status,
-    )
+
+    filter_dict = filter_query.dict(exclude_none=True)
+    return pod.PodFilter(**filter_dict)
 
 
 @router.post("/")

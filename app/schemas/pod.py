@@ -37,3 +37,13 @@ class PodUpdate(BaseModel):
     workload_request_id: Optional[int] = None
     status: Optional[str] = None
     queue_name: Optional[str] = None
+
+
+class PodFilterQuery(BaseModel):
+    pod_id: Optional[int] = None
+    name: Optional[str] = None
+    namespace: Optional[str] = None
+    is_elastic: Optional[bool] = None
+    assigned_node_id: Optional[int] = None
+    workload_request_id: Optional[int] = None
+    status: Optional[str] = None
