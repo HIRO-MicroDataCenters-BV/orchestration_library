@@ -15,6 +15,7 @@ from app.utils.exceptions import DatabaseConnectionException
 router = APIRouter(prefix="/db_pod")
 
 # pylint: disable=too-many-arguments, disable=invalid-name
+"""# pylint: disable=too-many-positional-arguments"""
 
 
 def pod_filter_from_query(
