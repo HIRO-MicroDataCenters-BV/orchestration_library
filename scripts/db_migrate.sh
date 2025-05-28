@@ -4,7 +4,7 @@
 set -e
 
 # Usage: ./db_migrate.sh [PORT] [CLUSTER_NAME] [--local]
-DATABASE_PORT=35432
+DATABASE_PORT=5432
 CLUSTER_NAME="sample"
 LOCAL_MODE=0
 
