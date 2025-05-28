@@ -20,8 +20,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PodFilter:
     """
-    Data class for filtering pods.
-    This class can be extended with additional filter fields as needed.
+        Data class for filtering pod query results.
+
+        Attributes:
+            pod_id (int, optional): Filter by pod ID.
+            name (str, optional): Filter by pod name.
+            namespace (str, optional): Filter by Kubernetes namespace.
+            is_elastic (bool, optional): Filter by elastic status.
+            assigned_node_id (int, optional): Filter by assigned node ID.
+            workload_request_id (int, optional): Filter by workload request ID.
+            status (str, optional): Filter by pod status.
     """
     pod_id: int = None
     name: str = None
@@ -34,7 +42,17 @@ class PodFilter:
 
 async def create_pod(db: AsyncSession, pod_data: PodCreate):
     """
-    Create a new pod.
+        Create a new pod entry in the database.
+
+        Args:
+            db (AsyncSession): SQLAlchemy async session.
+            pod_data (PodCreate): Data for the new pod.
+
+        Returns:
+            Pod: The newly created Pod instance.
+
+        Raises:
+            DatabaseConnectionException: If the insert fails due to constraints or DB error.
     """
     try:
         logger.debug("Creating pod  with data: %s", pod_data.dict())
@@ -72,8 +90,17 @@ async def get_pod(
     pfilter: PodFilter
 ):
     """
-    Retrieve pods based on various filters. If no filters are provided, 
-    return all pods.
+    Retrieve pods from the database using filters.
+
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        pfilter (PodFilter): Filter conditions.
+
+    Returns:
+        List[Pod]: List of pods matching the filter.
+
+    Raises:
+        DatabaseConnectionException: On database error or failure.
     """
     try:
         filters = []
@@ -149,7 +176,19 @@ async def get_pod_by_id(db: AsyncSession, pod_id: int):
 
 async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
     """
-    Update an existing pod.
+    Update an existing pod in the database.
+
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        pod_id (int): ID of the pod to update.
+        updates (PodUpdate): Fields to update.
+
+    Returns:
+        Pod: The updated pod.
+
+    Raises:
+        DatabaseEntryNotFoundException: If the pod does not exist.
+        DatabaseConnectionException: On update failure.
     """
     try:
         pod = await get_pod_by_id(db, pod_id)
@@ -182,6 +221,17 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
 async def delete_pod(db: AsyncSession, pod_id: int):
     """
     Delete a pod by its ID.
+
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        pod_id (int): ID of the pod to delete.
+
+    Returns:
+        dict: Success message with deleted pod ID.
+
+    Raises:
+        DatabaseEntryNotFoundException: If the pod does not exist.
+        DatabaseConnectionException: On delete failure.
     """
     try:
         pod = await get_pod_by_id(db, pod_id)
