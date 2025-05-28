@@ -4,6 +4,7 @@ This module defines the API endpoints for managing pods in the database.
 It includes routes for creating, retrieving, updating, and deleting pod records.
 """
 from typing import Optional
+from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
@@ -15,12 +16,12 @@ router = APIRouter(prefix="/db_pod")
 # pylint: disable=too-many-arguments,too-many-positional-arguments
 # This is a filter function, and it can have many parameters.
 def pod_filter_from_query(
-    pod_id: Optional[int] = Query(None),
+    pod_id: Optional[UUID] = Query(None),
     name: Optional[str] = Query(None),
     namespace: Optional[str] = Query(None),
     is_elastic: Optional[bool] = Query(None),
-    assigned_node_id: Optional[int] = Query(None),
-    workload_request_id: Optional[int] = Query(None),
+    assigned_node_id: Optional[UUID] = Query(None),
+    workload_request_id: Optional[UUID] = Query(None),
     status: Optional[str] = Query(None),
 ):
     """
@@ -42,6 +43,7 @@ async def create(data: PodCreate, db: AsyncSession = Depends(get_async_db)):
     """
     Create a new pod.
     """
+    print(f"Creating pod with data: {data}")
     return await pod.create_pod(db, data)
 
 
@@ -56,15 +58,15 @@ async def get(db: AsyncSession = Depends(get_async_db),
 
 
 @router.get("/{pod_id}")
-async def get_by_id(pod_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_by_id(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Retrieve a pod by its ID.
     """
-    return await pod.get_pod(db, pod_id)
+    return await pod.get_pod_by_id(db, pod_id)
 
 @router.put("/{pod_id}")
 async def update(
-    pod_id: int, data: PodUpdate, db: AsyncSession = Depends(get_async_db)
+    pod_id: UUID, data: PodUpdate, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Update a pod by its ID.
@@ -73,7 +75,7 @@ async def update(
 
 
 @router.delete("/{pod_id}")
-async def delete(pod_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Delete a pod by its ID.
     """

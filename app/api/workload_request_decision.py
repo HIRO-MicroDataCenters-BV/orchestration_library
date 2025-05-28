@@ -2,6 +2,7 @@
 Routes for managing workload request decisions.
 """
 
+from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,7 +33,7 @@ async def create(
 
 @router.get("/")
 async def read(
-    workload_request_id: int = None,
+    workload_request_id: UUID = None,
     node_name: str = None,
     queue_name: str = None,
     status: str = None,
@@ -56,7 +57,7 @@ async def read(
 
 @router.get("/{workload_request_id}")
 async def read_by_id(
-    workload_request_id: int, db: AsyncSession = Depends(get_async_db)
+    workload_request_id: UUID, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Retrieve a workload request decision by its ID.
@@ -71,7 +72,7 @@ async def read_by_id(
 
 @router.put("/{workload_request_id}")
 async def update(
-    workload_request_id: int,
+    workload_request_id: UUID,
     data: WorkloadRequestDecisionUpdate,
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -82,7 +83,7 @@ async def update(
 
 
 @router.delete("/{workload_request_id}")
-async def delete(workload_request_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete(workload_request_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Delete a workload request decision by its ID.
     """

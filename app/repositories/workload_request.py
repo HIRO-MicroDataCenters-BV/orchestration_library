@@ -2,6 +2,7 @@
 CRUD operations for managing workload requests in the database.
 """
 from dataclasses import dataclass
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.workload_request import WorkloadRequest
@@ -14,7 +15,7 @@ class WorkloadRequestFilter:
     Data class for filtering workload requests.
     This class can be extended with additional filter fields as needed.
     """
-    workload_request_id: int = None
+    workload_request_id: UUID = None
     name: str = None
     namespace: str = None
     api_version: str = None
@@ -65,7 +66,7 @@ async def get_workload_requests(
 
 
 async def update_workload_request(
-    db: AsyncSession, workload_request_id: int, updates: dict
+    db: AsyncSession, workload_request_id: UUID, updates: dict
 ):
     """
     Update a WorkloadRequest based on its ID.
@@ -89,7 +90,7 @@ async def update_workload_request(
     return workload_request
 
 
-async def delete_workload_request(db: AsyncSession, workload_request_id: int):
+async def delete_workload_request(db: AsyncSession, workload_request_id: UUID):
     """
     Delete a WorkloadRequest by its ID.
     """

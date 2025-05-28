@@ -2,6 +2,7 @@
 Routes for managing workload request
 """
 from typing import Optional
+from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/workload_request")
 # pylint: disable=too-many-arguments,too-many-positional-arguments
 # This is a filter function, and it can have many parameters.
 def workload_request_filter_from_query(
-    workload_request_id:  Optional[int] = Query(None),
+    workload_request_id:  Optional[UUID] = Query(None),
     name: Optional[str] = Query(None),
     namespace: Optional[str] = Query(None),
     api_version: Optional[str] = Query(None),
@@ -65,7 +66,7 @@ async def read_workload_requests(
 
 @router.put("/{workload_request_id}")
 async def update_workload_request(
-    workload_request_id: int,
+    workload_request_id: UUID,
     data: WorkloadRequestUpdate,
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -79,7 +80,7 @@ async def update_workload_request(
 
 @router.delete("/{workload_request_id}")
 async def delete_workload_request(
-    workload_request_id: int,
+    workload_request_id: UUID,
     db: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -90,7 +91,7 @@ async def delete_workload_request(
 
 @router.get("/{workload_request_id}")
 async def read_workload_request_by_id(
-    workload_request_id: int, db: AsyncSession = Depends(get_async_db)
+    workload_request_id: UUID, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Retrieve a workload request by its ID.

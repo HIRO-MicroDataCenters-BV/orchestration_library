@@ -2,6 +2,7 @@
 CRUD operations for managing workload request decission in the database.
 """
 
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.workload_request_decision import WorkloadRequestDecision
@@ -22,7 +23,7 @@ async def create_workload_request_decision(
 
 
 async def update_workload_request_decision(
-    db: AsyncSession, workload_request_id: int, updates: dict
+    db: AsyncSession, workload_request_id: UUID, updates: dict
 ):
     """
     Update a workload request decision by its workload_request_id.
@@ -48,7 +49,7 @@ async def update_workload_request_decision(
 
 async def get_workload_request_decision(
     db: AsyncSession,
-    workload_request_id: int = None,
+    workload_request_id: UUID = None,
     node_name: str = None,
     queue_name: str = None,
     status: str = None,
@@ -77,7 +78,7 @@ async def get_workload_request_decision(
     return decision
 
 
-async def delete_workload_request_decision(db: AsyncSession, workload_request_id: int):
+async def delete_workload_request_decision(db: AsyncSession, workload_request_id: UUID):
     """
     Delete a workload request decision by its workload_request_id.
     """
