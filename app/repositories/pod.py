@@ -4,11 +4,18 @@ This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
 from dataclasses import dataclass
+import logging
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
+from app.utils.exceptions import (
+    DatabaseConnectionException,
+    DatabaseEntryNotFoundException
+)
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class PodFilter:
@@ -24,15 +31,40 @@ class PodFilter:
     workload_request_id: int = None
     status: str = None
 
+
 async def create_pod(db: AsyncSession, pod_data: PodCreate):
     """
     Create a new pod.
     """
-    pod = Pod(**pod_data.model_dump())
-    db.add(pod)
-    await db.commit()
-    await db.refresh(pod)
-    return pod
+    try:
+        logger.debug("Creating pod  with data: %s", pod_data.dict())
+        pod = Pod(**pod_data.dict())
+        db.add(pod)
+        await db.commit()
+        await db.refresh(pod)
+        logger.debug("Added pod to session")
+        return pod
+    except IntegrityError as e:
+        logger.error("Integrity error while creating pod: %s", str(e))
+        await db.rollback()
+        raise DatabaseConnectionException(
+            "Invalid pod data",
+            details={"error": str(e)}
+        ) from e
+    except SQLAlchemyError as e:
+        logger.error("Database error while creating pod: %s", str(e))
+        await db.rollback()
+        raise DatabaseConnectionException(
+            "Failed to create  pod",
+            details={"error": str(e)}
+        ) from e
+    except Exception as e:
+        logger.error("Unexpected error while creating  pod: %s", str(e))
+        await db.rollback()
+        raise DatabaseConnectionException(
+            "An unexpected error occurred while creating pod",
+            details={"error": str(e)}
+        ) from e
 
 
 async def get_pod(
