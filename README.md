@@ -68,44 +68,89 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    ```
    The PostgreSQL database service will then be accessible at `localhost:25432`.
 
+Sure! Here's the entire section fully formatted in Markdown — ready for one-click copy:
+
 ## Database Schema Changes
 
-To make changes to the database schema, follow these steps:
+Follow these steps to modify the database schema using Alembic:
 
-1. **Add or update models**
+### 1. Modify or Add Models
 
-   Make your schema changes by modifying or adding files in:
+   Update or add new models in the following directory:
 
    ```
    app/models/
    ```
-   > **Note:** Stay in the project root directory to perform the following steps.
-2. **Generate Alembic migration**
 
-   To generate a new Alembic migration file:
+   > **Note:** Stay in the project root directory when performing the following steps.
 
-   1. Run the migration script:
-      ```
+### 2. Generate Alembic Migration
+
+   #### Script Usage
+   ```bash
+   bash scripts/db_migrate.sh [DB_PORT] [CLUSTER_NAME] [--local]
+   ```
+
+   - `DB_PORT` (default: `5432`)
+   - `CLUSTER_NAME` (default: `sample`)
+   - `--local` (use for Docker setup)
+
+   #### Upgrade Before Creating Migration
+   
+   Ensure your local database is up to date:
+
+   ```bash
+   bash scripts/db_migrate.sh
+   ```
+
+   At the _`Choose an Alembic action:`_ prompt, enter `2` to upgrade.
+
+   #### Create a New Migration
+   Assuming the DB is hosted on localhost 5432 port
+
+   - **For a local kind cluster:**
+      ```bash
       bash scripts/db_migrate.sh
       ```
-   2. When prompted with "_Choose an Alembic action:_", enter `1` to create a new revision.
-   3. Next, when asked "_Enter migration message:_", provide a brief description of your schema changes (for example, "add user table" or "update order status column").  
-   
-   A new migration file will be created in the versions directory, named in the format `nextSerialNumber_revisionId_migrationMessage.py`.
 
-3. **Verify migration**
+   - **For a local Docker container:**
+      ```bash
+      bash scripts/db_migrate.sh --local
+      ```
 
-   Review the newly generated migration file(s) in `alembic/versions/` and ensure the changes accurately reflect your intended schema updates.
+   Steps:
+   1. At the _`Choose an Alembic action:`_ prompt, enter `1` to create a new migration revision.
+   2. When prompted for a migration message, enter a concise description (e.g., `add_user_table`, `update_order_status_column`).
 
-   Next, run the migration script `scripts/db_migrate.sh` again and select option `2` at the "_Choose an Alembic action:_" prompt to upgrade the database to the latest revision.  
-   
-   If the migration completes successfully, you can proceed to push your changes.  
-   If there are any errors, review and fix the issues in the generated migration file(s) before retrying.
+   Migration files are created in:
 
-4. **Merge and apply**
+   ```
+   alembic/versions/
+   ```
 
-   Once your pull request is merged, the migration changes will be applied automatically during deployment.
+   Named as:
 
-   **Note:** Always back up important data before making destructive changes to the database.
+   ```
+   <serialNumber>_<revisionId>_<migrationMessage>.py
+```
 
----
+### 3. Verify Migration
+
+- Review the generated migration file(s) in `alembic/versions/`.
+- Ensure the changes match your intended schema update.
+
+To apply the migration, run:
+
+```bash
+bash scripts/db_migrate.sh
+```
+
+Then enter `2` at the prompt to upgrade to the latest revision.
+
+If errors occur, review and fix the migration script before retrying.
+
+### 4. Merge and Apply
+
+Once your pull request is merged, the migration changes will be applied automatically during deployment.
+
+> **Important:** Always back up critical data before applying destructive schema changes.
