@@ -87,13 +87,13 @@ Follow these steps to modify the database schema using Alembic:
 ### 2. Generate Alembic Migration
 
    #### Script Usage
-      ```
-      bash scripts/db_migrate.sh [DB_PORT] [CLUSTER_NAME] [--local]
-      ```
+   ```bash
+   bash scripts/db_migrate.sh [DB_PORT] [CLUSTER_NAME] [--local]
+   ```
 
-      - `DB_PORT` (default: `5432`)
-      - `CLUSTER_NAME` (default: `sample`)
-      - `--local` (use for Docker setup)
+   - `DB_PORT` (default: `5432`)
+   - `CLUSTER_NAME` (default: `sample`)
+   - `--local` (use for Docker setup)
 
    #### Upgrade Before Creating Migration
    
