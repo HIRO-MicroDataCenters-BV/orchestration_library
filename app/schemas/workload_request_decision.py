@@ -2,6 +2,7 @@
 Schemas for the API requests and responses.
 """
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -11,7 +12,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     Schema for creating a workload request decision.
     """
 
-    workload_request_id: int
+    workload_request_id: UUID
     node_name: str
     queue_name: str
     status: Optional[str] = "pending"

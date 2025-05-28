@@ -4,6 +4,7 @@ This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
 from dataclasses import dataclass
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.pod import Pod
@@ -16,12 +17,12 @@ class PodFilter:
     Data class for filtering pods.
     This class can be extended with additional filter fields as needed.
     """
-    pod_id: int = None
+    pod_id: UUID = None
     name: str = None
     namespace: str = None
     is_elastic: bool = None
-    assigned_node_id: int = None
-    workload_request_id: int = None
+    assigned_node_id: UUID = None
+    workload_request_id: UUID = None
     status: str = None
 
 async def create_pod(db: AsyncSession, pod_data: PodCreate):
@@ -69,7 +70,7 @@ async def get_pod(
     return pods
 
 
-async def get_pod_by_id(db: AsyncSession, pod_id: int):
+async def get_pod_by_id(db: AsyncSession, pod_id: UUID):
     """
     Retrieve a pod by its ID.
     """
@@ -78,7 +79,7 @@ async def get_pod_by_id(db: AsyncSession, pod_id: int):
     return pod
 
 
-async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
+async def update_pod(db: AsyncSession, pod_id: UUID, updates: PodUpdate):
     """
     Update an existing pod.
     """
@@ -96,7 +97,7 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
     return pod
 
 
-async def delete_pod(db: AsyncSession, pod_id: int):
+async def delete_pod(db: AsyncSession, pod_id: UUID):
     """
     Delete a pod by its ID.
     """

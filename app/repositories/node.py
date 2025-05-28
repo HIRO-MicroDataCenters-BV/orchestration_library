@@ -2,6 +2,7 @@
 CRUD operations for managing nodes in the database.
 This module provides functions to create, read, update, and delete nodes.
 """
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from app.models.node import Node
@@ -19,14 +20,14 @@ async def create_node(db: AsyncSession, data: NodeCreate):
     Returns:
         Node: The created node object after committing to the database.
     """
-    node = Node(**data.dict())
+    node = Node(**data.model_dump())
     db.add(node)
     await db.commit()
     await db.refresh(node)
     return node
 
 
-async def get_nodes(db: AsyncSession, node_id: int = None):
+async def get_nodes(db: AsyncSession, node_id: UUID = None):
     """
     Retrieve one or all nodes from the database.
 
@@ -46,7 +47,7 @@ async def get_nodes(db: AsyncSession, node_id: int = None):
     return result.scalars().all()
 
 
-async def update_node(db: AsyncSession, node_id: int, updates: dict):
+async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
     """
     Update an existing node with new values.
 
@@ -65,7 +66,7 @@ async def update_node(db: AsyncSession, node_id: int, updates: dict):
     return result.scalar_one_or_none()
 
 
-async def delete_node(db: AsyncSession, node_id: int):
+async def delete_node(db: AsyncSession, node_id: UUID):
     """
     Delete a node from the database.
 
@@ -81,7 +82,7 @@ async def delete_node(db: AsyncSession, node_id: int):
     return {"deleted_id": node_id}
 
 
-async def get_node_by_id(db: AsyncSession, node_id: int):
+async def get_node_by_id(db: AsyncSession, node_id: UUID):
     """
         Get a node from the database.
 

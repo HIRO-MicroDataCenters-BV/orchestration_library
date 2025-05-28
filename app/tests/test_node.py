@@ -1,5 +1,6 @@
 """Unit tests for the Node CRUD functions and routes."""
 
+import json
 from unittest.mock import MagicMock, AsyncMock, patch
 
 import pytest
@@ -18,14 +19,15 @@ from app.schemas.node import NodeCreate, NodeResponse
 
 
 @pytest.mark.asyncio
-async def test_create_node_crud():
+async def test_create_node():
     """
-    Test the `create_node` CRUD function.
+    Test the `create_node` function.
 
     Verifies that a node is added, committed, and refreshed using the DB session.
     """
     mock_db_session = AsyncMock()
     data = NodeCreate(
+        id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",  # Example UUID
         name="node-1",
         status="active",
         cpu_capacity=4.0,
@@ -50,14 +52,18 @@ async def test_create_node_crud():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "node_id, expected", [(None, ["node1", "node2"]), (1, ["filtered-node"])]
+    "node_id, expected",
+    [
+        (None, ["node1", "node2"]),
+        ("c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c", ["filtered-node"]),
+    ],
 )
-async def test_get_nodes_crud(node_id, expected):
+async def test_get_nodes(node_id, expected):
     """
-    Test the `get_nodes` CRUD function.
+    Test the `get_nodes` function.
 
     Args:
-        node_id (int or None): If None, all nodes are fetched; otherwise, filtered by ID.
+        node_id (UUID or None): If None, all nodes are fetched; otherwise, filtered by ID.
         expected (list): Expected return value from DB query.
 
     Asserts that returned results match expectations.
@@ -74,31 +80,39 @@ async def test_get_nodes_crud(node_id, expected):
 
 
 @pytest.mark.asyncio
-async def test_update_node_crud():
+async def test_update_node():
     """
-    Test the `update_node` CRUD function.
+    Test the `update_node` function.
 
     Ensures that the node is updated and the updated record is fetched correctly.
     """
     mock_db_session = AsyncMock()
     mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = {"id": 1, "name": "updated-node"}
+    mock_result.scalar_one_or_none.return_value = {
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        "name": "updated-node",
+    }
 
     mock_db_session.execute = AsyncMock(side_effect=[None, mock_result])
     mock_db_session.commit = AsyncMock()
 
     updates = {"name": "updated-node"}
-    result = await update_node(mock_db_session, node_id=1, updates=updates)
+    result = await update_node(
+        mock_db_session, node_id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c", updates=updates
+    )
 
-    assert result == {"id": 1, "name": "updated-node"}
+    assert result == {
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        "name": "updated-node",
+    }
     assert mock_db_session.execute.await_count == 2
     mock_db_session.commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_delete_node_crud():
+async def test_delete_node():
     """
-    Test the `delete_node` CRUD function.
+    Test the `delete_node` function.
 
     Verifies that the node is deleted and commit is called.
     """
@@ -106,11 +120,11 @@ async def test_delete_node_crud():
     mock_db_session.execute = AsyncMock()
     mock_db_session.commit = AsyncMock()
 
-    result = await delete_node(mock_db_session, node_id=1)
+    result = await delete_node(mock_db_session, node_id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c")
 
     mock_db_session.execute.assert_awaited_once()
     mock_db_session.commit.assert_awaited_once()
-    assert result == {"deleted_id": 1}
+    assert result == {"deleted_id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"}
 
 
 # =====================================================================================
@@ -120,7 +134,7 @@ async def test_delete_node_crud():
 
 @pytest.mark.asyncio
 @patch("app.repositories.node.create_node", new_callable=AsyncMock)
-async def test_create_node(mock_create_node):
+async def test_create_node_api(mock_create_node):
     """
     Test POST /node/ endpoint.
 
@@ -128,6 +142,7 @@ async def test_create_node(mock_create_node):
     """
 
     request_data = NodeCreate(
+        id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",  # Example UUID
         name="test-node",
         status="active",
         cpu_capacity=4.0,
@@ -139,7 +154,7 @@ async def test_create_node(mock_create_node):
     )
 
     response_data = NodeResponse(
-        id=1,
+        id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
         name="test-node",
         status="active",
         cpu_capacity=4.0,
@@ -157,16 +172,18 @@ async def test_create_node(mock_create_node):
     transport = ASGITransport(app=app)
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/db_node/", json=request_data.dict())
+        response = await client.post(
+            "/db_node/", json=json.loads(request_data.model_dump_json())
+        )
 
     # Assertions
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == response_data.dict()
+    assert response.json() == response_data.model_dump(mode="json")
 
 
 @pytest.mark.asyncio
 @patch("app.repositories.node.get_nodes", new_callable=AsyncMock)
-async def test_get_nodes(mock_get_nodes):
+async def test_get_nodes_api(mock_get_nodes):
     """
     Test GET /node/ endpoint.
 
@@ -175,7 +192,7 @@ async def test_get_nodes(mock_get_nodes):
     # Sample node data to be returned
     nodes = [
         {
-            "id": 1,
+            "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
             "name": "test-node-1",
             "status": "active",
             "cpu_capacity": 4.0,
@@ -188,7 +205,7 @@ async def test_get_nodes(mock_get_nodes):
             "location": "datacenter-1",
         },
         {
-            "id": 2,
+            "id": "b7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6d",
             "name": "test-node-2",
             "status": "inactive",
             "cpu_capacity": 8.0,
@@ -212,10 +229,9 @@ async def test_get_nodes(mock_get_nodes):
     assert len(response.json()) == 2  # Expecting two nodes in the response
 
 
-
 @pytest.mark.asyncio
 @patch("app.repositories.node.update_node", new_callable=AsyncMock)
-async def test_update_node(mock_update_node):
+async def test_update_node_api(mock_update_node):
     """
     Test PUT /node/{node_id} endpoint.
 
@@ -233,7 +249,7 @@ async def test_update_node(mock_update_node):
         "current_memory_utilization": 512.0,
     }
     response_data = {
-        "id": 1,
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
         "name": "updated-node",
         "status": "active",
         "cpu_capacity": 4.0,
@@ -249,7 +265,9 @@ async def test_update_node(mock_update_node):
     transport = ASGITransport(app=app)
     # Test the update functionality
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.put("/db_node/1", json=update_data)
+        response = await client.put(
+            "/db_node/c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c", json=update_data
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -257,7 +275,7 @@ async def test_update_node(mock_update_node):
 
 @pytest.mark.asyncio
 @patch("app.repositories.node.delete_node", new_callable=AsyncMock)
-async def test_delete_node(mock_delete_node):
+async def test_delete_node_api(mock_delete_node):
     """
     Test DELETE /node/{node_id} endpoint.
 
@@ -268,7 +286,7 @@ async def test_delete_node(mock_delete_node):
     transport = ASGITransport(app=app)
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.delete("/db_node/1")
+        response = await client.delete("/db_node/c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c")
 
     # Assertions
     assert response.status_code == status.HTTP_200_OK
@@ -277,7 +295,7 @@ async def test_delete_node(mock_delete_node):
 
 @patch("app.repositories.node.get_node_by_id", new_callable=AsyncMock)
 @pytest.mark.asyncio
-async def test_get_node_by_id(mock_get_node_by_id):
+async def test_get_node_by_id_api(mock_get_node_by_id):
     """
     Test
     GET / node / {node_id} endpoint.
@@ -285,7 +303,7 @@ async def test_get_node_by_id(mock_get_node_by_id):
     Verifies correct response for existing and non-existing node IDs.
     """
     mock_get_node_by_id.return_value = {
-        "id": 1,
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
         "name": "test-node-1",
         "status": "active",
         "cpu_capacity": 4.0,
@@ -296,10 +314,10 @@ async def test_get_node_by_id(mock_get_node_by_id):
         "current_memory_utilization": 512.0,
         "ip_address": "192.168.1.1",
         "location": "datacenter-1",
-        }
+    }
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/db_node/1")
+        response = await client.get("/db_node/c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c")
 
     assert response.status_code == 200
-    assert response.json()["id"] == 1
+    assert response.json()["id"] == "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"

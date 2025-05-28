@@ -37,6 +37,7 @@ async def test_create_workload_request(mock_work):
     mock_work.return_value = mock_wr_obj
 
     data = WorkloadRequestCreate(
+        id="123e4567-e89b-12d3-a456-426614174000",  # Example UUID, replace with actual UUID
         name="demo",
         namespace="default",
         api_version="v1",
@@ -71,7 +72,12 @@ async def test_get_workload_requests_no_filters():
 @pytest.mark.parametrize(
     "kargs, expected_filters",
     [
-        (WorkloadRequestFilter(workload_request_id=1), [WorkloadRequest.id == 1]),
+        (
+            WorkloadRequestFilter(
+                workload_request_id="123e4567-e89b-12d3-a456-426614174000"
+            ),
+            [WorkloadRequest.id == "123e4567-e89b-12d3-a456-426614174000"],
+        ),
         (WorkloadRequestFilter(name="test"), [WorkloadRequest.name == "test"]),
         (
             WorkloadRequestFilter(namespace="default"),
@@ -123,7 +129,7 @@ async def test_get_workload_requests_with_multiple_filters():
     result = await get_workload_requests(
         db,
         WorkloadRequestFilter(
-            workload_request_id=1,
+            workload_request_id="123e4567-e89b-12d3-a456-426614174000",
             name="demo",
             namespace="default",
             api_version="v1",
@@ -149,7 +155,9 @@ async def test_update_workload_request():
     mock_result.scalar_one_or_none.return_value = mock_workload_request
 
     updates = {"name": "Deployment"}
-    result = await update_workload_request(db, 1, updates)
+    result = await update_workload_request(
+        db, "123e4567-e89b-12d3-a456-426614174000", updates
+    )
     db.execute.assert_awaited_once()
     assert mock_workload_request.name == "Deployment"
     db.add.assert_called_once_with(mock_workload_request)
@@ -173,14 +181,16 @@ async def test_delete_workload_request():
 
     # Act
 
-    result = await delete_workload_request(db, 1)
+    result = await delete_workload_request(db, "123e4567-e89b-12d3-a456-426614174000")
 
     # Assertion
 
     db.execute.assert_awaited_once()
     db.delete.assert_awaited_once_with(mock_workload_request)
     db.commit.assert_awaited_once()
-    assert result == {"message": "WorkloadRequest with ID 1 has been deleted"}
+    assert result == {
+        "message": "WorkloadRequest with ID 123e4567-e89b-12d3-a456-426614174000 has been deleted"
+    }
 
 
 @pytest.mark.asyncio
@@ -218,7 +228,9 @@ async def test_update_workload_request_ignores_invalid_fields():
 
     updates = {"invalid_field": "value"}  # should be ignored
 
-    result = await update_workload_request(db, 1, updates)
+    result = await update_workload_request(
+        db, "123e4567-e89b-12d3-a456-426614174000", updates
+    )
 
     db.add.assert_called_once_with(mock_workload_request)
     db.commit.assert_awaited_once()
@@ -264,6 +276,7 @@ async def test_create_workload_request_route(mock_create):
     """
 
     request_data = {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
         "name": "test-workload",
         "namespace": "default",
         "api_version": "v1",
@@ -273,7 +286,7 @@ async def test_create_workload_request_route(mock_create):
     }
 
     response_data = {
-        "id": 1,
+        "id": "123e4567-e89b-12d3-a456-426614174000",
         "name": "test-workload",
         "namespace": "default",
         "api_version": "v1",
@@ -308,7 +321,7 @@ async def test_update_workload_request_route(mock_update):
     request_data = {"current_scale": 5}
 
     response_data = {
-        "id": 1,
+        "id": "123e4567-e89b-12d3-a456-426614174000",
         "name": "test-workload",
         "namespace": "default",
         "api_version": "v1",
@@ -324,7 +337,9 @@ async def test_update_workload_request_route(mock_update):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.put("/workload_request/1", json=request_data)
+        response = await ac.put(
+            "/workload_request/123e4567-e89b-12d3-a456-426614174000", json=request_data
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -347,7 +362,9 @@ async def test_delete_workload_request_route(mock_delete):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.delete("/workload_request/1")
+        response = await ac.delete(
+            "/workload_request/123e4567-e89b-12d3-a456-426614174000"
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -365,7 +382,7 @@ async def test_read_workload_requests_route(mock_get):
 
     response_data = [
         {
-            "id": 1,
+            "id": "123e4567-e89b-12d3-a456-426614174000",
             "name": "test-workload",
             "namespace": "default",
             "api_version": "v1",
@@ -399,7 +416,7 @@ async def test_read_workload_request_by_id_route(mock_get):
     """
 
     response_data = {
-        "id": 1,
+        "id": "123e4567-e89b-12d3-a456-426614174000",
         "name": "test-workload",
         "namespace": "default",
         "api_version": "v1",
@@ -415,7 +432,9 @@ async def test_read_workload_request_by_id_route(mock_get):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/workload_request/1")
+        response = await ac.get(
+            "/workload_request/123e4567-e89b-12d3-a456-426614174000"
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data

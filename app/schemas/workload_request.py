@@ -2,6 +2,7 @@
 Schemas for the API requests and responses.
 """
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -11,6 +12,7 @@ class WorkloadRequestCreate(BaseModel):
     Schema for creating a workload request.
     """
 
+    id: UUID
     name: str
     namespace: str
     api_version: str

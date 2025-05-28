@@ -3,6 +3,7 @@ DB node routes.
 This module defines the API endpoints for managing nodes in the database.
 It includes routes for creating, retrieving, updating, and deleting nodes.
 """
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,13 +48,13 @@ async def get_nodes(db: AsyncSession = Depends(get_async_db)):
 
 @router.put("/{node_id}", response_model=NodeResponse)
 async def update_node(
-    node_id: int, data: NodeUpdate, db: AsyncSession = Depends(get_async_db)
+    node_id: UUID, data: NodeUpdate, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Update an existing node by ID.
 
     Args:
-        node_id (int): The ID of the node to update.
+        node_id (UUID): The ID of the node to update.
         data (schemas.NodeUpdate): Fields to update.
         db (AsyncSession): Database session dependency.
 
@@ -64,12 +65,12 @@ async def update_node(
 
 
 @router.delete("/{node_id}")
-async def delete_node(node_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete_node(node_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Delete a node by ID.
 
     Args:
-        node_id (int): The ID of the node to delete.
+        node_id (UUID): The ID of the node to delete.
         db (AsyncSession): Database session dependency.
 
     Returns:
@@ -80,12 +81,12 @@ async def delete_node(node_id: int, db: AsyncSession = Depends(get_async_db)):
 
 
 @router.get("/{node_id}", response_model=NodeResponse)
-async def get_node_by_id(node_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_node_by_id(node_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
         Retrieve a node by its ID.
 
         Args:
-            node_id (int): The ID of the node to fetch.
+            node_id (UUID): The ID of the node to fetch.
             db: ...
 
         Returns:
