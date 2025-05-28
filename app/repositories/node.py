@@ -7,7 +7,8 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.node import Node
 from app.schemas.node import NodeCreate
-from app.utils.exceptions import DBEntryCreationException
+from app.utils.exceptions import DBEntryCreationException, DatabaseConnectionException, DatabaseEntryNotFoundException, \
+    DBEntryNotFoundException, DataBaseException
 
 
 async def create_node(db: AsyncSession, data: NodeCreate):
@@ -55,13 +56,36 @@ async def get_nodes(db: AsyncSession, node_id: int = None):
 
     Returns:
         list[Node]: A list of node objects, or a single-node list if node_id is given.
+
+    Raises:
+        DatabaseConnectionException: If there is an error connecting to the database.
+        DBEntryCreationException: If there is an error retrieving the nodes.
     """
-    if node_id:
-        query = select(Node).where(Node.id == node_id)
-    else:
-        query = select(Node)
-    result = await db.execute(query)
-    return result.scalars().all()
+    try:
+        if node_id:
+            query = select(Node).where(Node.id == node_id)
+        else:
+            query = select(Node)
+        result = await db.execute(query)
+        nodes = result.scalars().all()
+
+        if node_id and not nodes:
+            raise DBEntryNotFoundException(
+                message=f"Node not found with id: {node_id}"
+            )
+
+        return nodes
+    except SQLAlchemyError as e:
+        raise DataBaseException(
+            message=f"Database error while retrieving nodes: {str(e)}",
+            details={"error_type": "database_error", "original_error": str(e)}
+        )
+    except Exception as e:
+        raise DataBaseException(
+            message=f"Unexpected error while retrieving nodes: {str(e)}",
+            details={"error_type": "unexpected_error", "original_error": str(e)}
+        )
+
 
 
 async def update_node(db: AsyncSession, node_id: int, updates: dict):

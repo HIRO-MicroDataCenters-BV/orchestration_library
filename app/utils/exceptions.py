@@ -33,8 +33,8 @@ class DatabaseEntryNotFoundException(DataBaseException):
         if db_id is not None:
             message = f"DB entry with ID {db_id} not found"
         super().__init__(
-            message=message,
             status_code=status.HTTP_404_NOT_FOUND,
+            message=message,
             details=(
                 {"id": db_id} if db_id is not None else None
             ),
@@ -57,5 +57,16 @@ class DBEntryCreationException(DataBaseException):
         super().__init__(
             message=message,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            details=details
+        )
+
+
+class DBEntryNotFoundException(DataBaseException):
+    """Exception raised when there's an error creating a DB Entry."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_404_NOT_FOUND,
             details=details
         )

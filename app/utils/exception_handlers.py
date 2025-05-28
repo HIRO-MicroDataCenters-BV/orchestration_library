@@ -8,7 +8,8 @@ import logging
 from fastapi import Request, FastAPI, HTTPException
 from starlette import status
 
-from app.utils.exceptions import DatabaseEntryNotFoundException, DatabaseConnectionException, DBEntryCreationException
+from app.utils.exceptions import DatabaseEntryNotFoundException, DatabaseConnectionException, DBEntryCreationException, \
+    DBEntryNotFoundException, DataBaseException
 
 # Configure logger
 logger = logging.getLogger("uvicorn.error")
@@ -28,11 +29,30 @@ def init_exception_handlers(app: FastAPI):
         Returns:
             JSONResponse with a 500 status code and error message
         """
-        logger.error("Unhandled exception: %s", exc, exc_info=True)
+        logger.error("Unhandled exception: %s", exc, exc_info=False)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "details": "Internal Server Error. Please try again later."
+            }
+        )
+
+    @app.exception_handler(DataBaseException)
+    async def db__exception_handler(_: Request, exc: DataBaseException):
+        """Handles database entry creation exceptions
+
+        Args:
+            _: The FastAPI request object (unused)
+            exc: The DataBaseException that was raised
+
+        Returns:
+            HTTPException with appropriate status code and error details
+        """
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={
+                "message": exc.message,
+                "details": exc.details
             }
         )
 
@@ -81,6 +101,25 @@ def init_exception_handlers(app: FastAPI):
         Args:
             _: The FastAPI request object (unused)
             exc: The DBEntryCreationException that was raised
+
+        Returns:
+            HTTPException with appropriate status code and error details
+        """
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={
+                "message": exc.message,
+                "details": exc.details
+            }
+        )
+
+    @app.exception_handler(DBEntryNotFoundException)
+    async def db_entry_not_found_exception_handler(_: Request, exc: DBEntryNotFoundException):
+        """Handles database entry creation exceptions
+
+        Args:
+            _: The FastAPI request object (unused)
+            exc: The DBEntryNotFoundException that was raised
 
         Returns:
             HTTPException with appropriate status code and error details
