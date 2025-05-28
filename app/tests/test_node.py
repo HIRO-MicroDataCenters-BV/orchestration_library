@@ -164,7 +164,7 @@ async def test_create_node(mock_create_node):
 
     # Assertions
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == response_data.model_dump()
+    assert response.json() == response_data.model_dump(mode="json")
 
 
 @pytest.mark.asyncio
