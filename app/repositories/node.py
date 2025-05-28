@@ -2,13 +2,11 @@
 CRUD operations for managing nodes in the database.
 This module provides functions to create, read, update, and delete nodes.
 """
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
-from sqlalchemy.exc import SQLAlchemyError
 from app.models.node import Node
 from app.schemas.node import NodeCreate
-from app.utils.exceptions import DBEntryCreationException, DatabaseConnectionException, DatabaseEntryNotFoundException, \
-    DBEntryNotFoundException, DataBaseException
 
 
 async def create_node(db: AsyncSession, data: NodeCreate):
@@ -21,31 +19,15 @@ async def create_node(db: AsyncSession, data: NodeCreate):
 
     Returns:
         Node: The created node object after committing to the database.
-
-    Raises:
-        DBEntryCreationException: If there is an error during node creation.
     """
-    try:
-        node = Node(**data.dict())
-        db.add(node)
-        await db.commit()
-        await db.refresh(node)
-        return node
-    except SQLAlchemyError as e:
-        await db.rollback()
-        raise DBEntryCreationException(
-            message=f"Failed to create node: {str(e)}",
-            details={"error_type": "database_error", "original_error": str(e)}
-        )
-    except Exception as e:
-        await db.rollback()
-        raise DBEntryCreationException(
-            message=f"Unexpected error while creating node: {str(e)}",
-            details={"error_type": "unexpected_error", "original_error": str(e)}
-        )
+    node = Node(**data.model_dump())
+    db.add(node)
+    await db.commit()
+    await db.refresh(node)
+    return node
 
 
-async def get_nodes(db: AsyncSession, node_id: int = None):
+async def get_nodes(db: AsyncSession, node_id: UUID = None):
     """
     Retrieve one or all nodes from the database.
 
@@ -56,39 +38,16 @@ async def get_nodes(db: AsyncSession, node_id: int = None):
 
     Returns:
         list[Node]: A list of node objects, or a single-node list if node_id is given.
-
-    Raises:
-        DatabaseConnectionException: If there is an error connecting to the database.
-        DBEntryCreationException: If there is an error retrieving the nodes.
     """
-    try:
-        if node_id:
-            query = select(Node).where(Node.id == node_id)
-        else:
-            query = select(Node)
-        result = await db.execute(query)
-        nodes = result.scalars().all()
-
-        if node_id and not nodes:
-            raise DBEntryNotFoundException(
-                message=f"Node not found with id: {node_id}"
-            )
-
-        return nodes
-    except SQLAlchemyError as e:
-        raise DataBaseException(
-            message=f"Database error while retrieving nodes: {str(e)}",
-            details={"error_type": "database_error", "original_error": str(e)}
-        )
-    except Exception as e:
-        raise DataBaseException(
-            message=f"Unexpected error while retrieving nodes: {str(e)}",
-            details={"error_type": "unexpected_error", "original_error": str(e)}
-        )
+    if node_id:
+        query = select(Node).where(Node.id == node_id)
+    else:
+        query = select(Node)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
-
-async def update_node(db: AsyncSession, node_id: int, updates: dict):
+async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
     """
     Update an existing node with new values.
 
@@ -107,7 +66,7 @@ async def update_node(db: AsyncSession, node_id: int, updates: dict):
     return result.scalar_one_or_none()
 
 
-async def delete_node(db: AsyncSession, node_id: int):
+async def delete_node(db: AsyncSession, node_id: UUID):
     """
     Delete a node from the database.
 
@@ -123,7 +82,7 @@ async def delete_node(db: AsyncSession, node_id: int):
     return {"deleted_id": node_id}
 
 
-async def get_node_by_id(db: AsyncSession, node_id: int):
+async def get_node_by_id(db: AsyncSession, node_id: UUID):
     """
         Get a node from the database.
 
