@@ -196,8 +196,9 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
             raise DatabaseEntryNotFoundException()
 
         for key, value in updates.model_dump(exclude_unset=True).items():
-            if hasattr(pod, key):
-                setattr(pod, key, value)
+            if not hasattr(pod, key):
+                raise AttributeError(f"Pod has no attribute named '{key}'")
+            setattr(pod, key, value)
 
         db.add(pod)
         await db.commit()
