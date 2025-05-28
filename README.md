@@ -68,59 +68,89 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    ```
    The PostgreSQL database service will then be accessible at `localhost:25432`.
 
+Sure! Here's the entire section fully formatted in Markdown — ready for one-click copy:
+
 ## Database Schema Changes
 
-To make changes to the database schema, follow these steps:
+Follow these steps to modify the database schema using Alembic:
 
-1. **Add or update models**
+### 1. Modify or Add Models
 
-   Make your schema changes by modifying or adding files in:
+   Update or add new models in the following directory:
 
    ```
    app/models/
    ```
-   > **Note:** Stay in the project root directory to perform the following steps.
-2. **Generate Alembic migration**
 
-   To create a new Alembic migration file, follow these steps:
+   > **Note:** Stay in the project root directory when performing the following steps.
 
-   - **If the database is running in a local kind cluster:**
-     ```bash
-     bash scripts/db_migrate.sh
-     ```
+### 2. Generate Alembic Migration
 
-   - **If the database is running locally with Docker:**
-     ```bash
-     bash scripts/db_migrate.sh --local
-     ```
+   #### Script Usage
+      ```
+      bash scripts/db_migrate.sh [DB_PORT] [CLUSTER_NAME] [--local]
+      ```
 
-   **Script usage:**
-   ```bash
-   bash scripts/db_migrate.sh [DB_PORT] [CLUSTER_NAME] [--local]
-   ```
-   - `DB_PORT` (default: `5432`)
-   - `CLUSTER_NAME` (default: `sample`)
-   - `--local` (use this flag for Docker)
+      - `DB_PORT` (default: `5432`)
+      - `CLUSTER_NAME` (default: `sample`)
+      - `--local` (use for Docker setup)
 
-   1. When prompted with "_Choose an Alembic action:_", enter `1` to create a new revision.
-   2. When asked "_Enter migration message:_", provide a brief description of your schema changes (e.g., "add user table" or "update order status column").
-
-   The new migration file will be created in the `alembic/versions/` directory, named in the format:  
-   `nextSerialNumber_revisionId_migrationMessage.py`
-
-3. **Verify migration**
-
-   Review the newly generated migration file(s) in `alembic/versions/` and ensure the changes accurately reflect your intended schema updates.
-
-   Next, run the migration script `scripts/db_migrate.sh` again and select option `2` at the "_Choose an Alembic action:_" prompt to upgrade the database to the latest revision.  
+   #### Upgrade Before Creating Migration
    
-   If the migration completes successfully, you can proceed to push your changes.  
-   If there are any errors, review and fix the issues in the generated migration file(s) before retrying.
+   Ensure your local database is up to date:
 
-4. **Merge and apply**
+   ```bash
+   bash scripts/db_migrate.sh
+   ```
 
-   Once your pull request is merged, the migration changes will be applied automatically during deployment.
+   At the _`Choose an Alembic action:`_ prompt, enter `2` to upgrade.
 
-   **Note:** Always back up important data before making destructive changes to the database.
+   #### Create a New Migration
+   Assuming the DB is hosted on localhost 5432 port
 
----
+   - **For a local kind cluster:**
+      ```bash
+      bash scripts/db_migrate.sh
+      ```
+
+   - **For a local Docker container:**
+      ```bash
+      bash scripts/db_migrate.sh --local
+      ```
+
+   Steps:
+   1. At the _`Choose an Alembic action:`_ prompt, enter `1` to create a new migration revision.
+   2. When prompted for a migration message, enter a concise description (e.g., `add_user_table`, `update_order_status_column`).
+
+   Migration files are created in:
+
+   ```
+   alembic/versions/
+   ```
+
+   Named as:
+
+   ```
+   <serialNumber>_<revisionId>_<migrationMessage>.py
+```
+
+### 3. Verify Migration
+
+- Review the generated migration file(s) in `alembic/versions/`.
+- Ensure the changes match your intended schema update.
+
+To apply the migration, run:
+
+```bash
+bash scripts/db_migrate.sh
+```
+
+Then enter `2` at the prompt to upgrade to the latest revision.
+
+If errors occur, review and fix the migration script before retrying.
+
+### 4. Merge and Apply
+
+Once your pull request is merged, the migration changes will be applied automatically during deployment.
+
+> **Important:** Always back up critical data before applying destructive schema changes.
