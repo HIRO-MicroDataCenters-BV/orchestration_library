@@ -82,16 +82,31 @@ To make changes to the database schema, follow these steps:
    > **Note:** Stay in the project root directory to perform the following steps.
 2. **Generate Alembic migration**
 
-   To generate a new Alembic migration file:
+   To create a new Alembic migration file, follow these steps:
 
-   1. Run the migration script:
-      ```
-      bash scripts/db_migrate.sh
-      ```
-   2. When prompted with "_Choose an Alembic action:_", enter `1` to create a new revision.
-   3. Next, when asked "_Enter migration message:_", provide a brief description of your schema changes (for example, "add user table" or "update order status column").  
-   
-   A new migration file will be created in the versions directory, named in the format `nextSerialNumber_revisionId_migrationMessage.py`.
+   - **If the database is running in a local kind cluster:**
+     ```bash
+     bash scripts/db_migrate.sh
+     ```
+
+   - **If the database is running locally with Docker:**
+     ```bash
+     bash scripts/db_migrate.sh --local
+     ```
+
+   **Script usage:**
+   ```bash
+   bash scripts/db_migrate.sh [DB_PORT] [CLUSTER_NAME] [--local]
+   ```
+   - `DB_PORT` (default: `5432`)
+   - `CLUSTER_NAME` (default: `sample`)
+   - `--local` (use this flag for Docker)
+
+   1. When prompted with "_Choose an Alembic action:_", enter `1` to create a new revision.
+   2. When asked "_Enter migration message:_", provide a brief description of your schema changes (e.g., "add user table" or "update order status column").
+
+   The new migration file will be created in the `alembic/versions/` directory, named in the format:  
+   `nextSerialNumber_revisionId_migrationMessage.py`
 
 3. **Verify migration**
 

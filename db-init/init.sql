@@ -20,7 +20,7 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'workload_request_decision') THEN
         CREATE TABLE workload_request_decision (
             id UUID PRIMARY KEY,
-            workload_request_id INT NOT NULL,
+            workload_request_id UUID NOT NULL,
             node_name VARCHAR(255) NOT NULL,
             queue_name VARCHAR(255) NOT NULL,
             status VARCHAR(50) DEFAULT 'pending',
@@ -64,8 +64,8 @@ BEGIN
             demand_slack_cpu FLOAT,
             demand_slack_memory FLOAT,
             is_elastic BOOLEAN NOT NULL,
-            assigned_node_id INT,
-            workload_request_id INT NOT NULL,
+            assigned_node_id UUID,
+            workload_request_id UUID NOT NULL,
             status VARCHAR(50) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
