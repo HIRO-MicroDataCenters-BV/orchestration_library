@@ -14,8 +14,9 @@ from app.utils.exceptions import DatabaseConnectionException
 
 router = APIRouter(prefix="/db_pod")
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-# This is a filter function, and it can have many parameters.
+# pylint: disable=too-many-arguments, disable=invalid-name
+
+
 def pod_filter_from_query(
     pod_id: Optional[int] = Query(None),
     name: Optional[str] = Query(None),
@@ -48,12 +49,16 @@ async def create(data: PodCreate, db: AsyncSession = Depends(get_async_db)):
     try:
         return await pod.create_pod(db, data)
     except SQLAlchemyError as e:
-        raise DatabaseConnectionException("Failed to create pod", details={"error": str(e)}) from e
+        raise DatabaseConnectionException(
+            "Failed to create pod", details={"error": str(e)}
+        ) from e
 
 
 @router.get("/")
-async def get(db: AsyncSession = Depends(get_async_db),
-                pod_filter: pod.PodFilter = Depends(pod_filter_from_query)):
+async def get(
+    db: AsyncSession = Depends(get_async_db),
+    pod_filter: pod.PodFilter = Depends(pod_filter_from_query),
+):
     """
     Retrieve pods based on various filters. If no filters are provided,
     return all pods.
@@ -61,7 +66,9 @@ async def get(db: AsyncSession = Depends(get_async_db),
     try:
         return await pod.get_pod(db, pod_filter)
     except SQLAlchemyError as e:
-        raise DatabaseConnectionException("Failed to retrieve pods", details={"error": str(e)}) from e
+        raise DatabaseConnectionException(
+            "Failed to retrieve pods", details={"error": str(e)}
+        ) from e
 
 
 @router.get("/{pod_id}")
@@ -72,8 +79,10 @@ async def get_by_id(pod_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
         return await pod.get_pod(db, pod_id)
     except SQLAlchemyError as e:
-        raise DatabaseConnectionException(f"Failed to retrieve pod with ID {pod_id}",
-                                          details={"error": str(e)}) from e
+        raise DatabaseConnectionException(
+            f"Failed to retrieve pod with ID {pod_id}", details={"error": str(e)}
+        ) from e
+
 
 @router.put("/{pod_id}")
 async def update(
@@ -85,8 +94,9 @@ async def update(
     try:
         return await pod.update_pod(db, pod_id, data)
     except SQLAlchemyError as e:
-        raise DatabaseConnectionException(f"Failed to update pod with ID {pod_id}",
-                                          details={"error": str(e)}) from e
+        raise DatabaseConnectionException(
+            f"Failed to update pod with ID {pod_id}", details={"error": str(e)}
+        ) from e
 
 
 @router.delete("/{pod_id}")
@@ -97,5 +107,6 @@ async def delete(pod_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
         return await pod.delete_pod(db, pod_id)
     except SQLAlchemyError as e:
-        raise DatabaseConnectionException(f"Failed to delete pod with ID {pod_id}",
-                                          details={"error": str(e)}) from e
+        raise DatabaseConnectionException(
+            f"Failed to delete pod with ID {pod_id}", details={"error": str(e)}
+        ) from e

@@ -12,25 +12,28 @@ from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
 from app.utils.exceptions import (
     DatabaseConnectionException,
-    DatabaseEntryNotFoundException
+    DatabaseEntryNotFoundException,
 )
 
 logger = logging.getLogger(__name__)
 
+
+# pylint: disable=invalid-name
 @dataclass
 class PodFilter:
     """
-        Data class for filtering pod query results.
+    Data class for filtering pod query results.
 
-        Attributes:
-            pod_id (int, optional): Filter by pod ID.
-            name (str, optional): Filter by pod name.
-            namespace (str, optional): Filter by Kubernetes namespace.
-            is_elastic (bool, optional): Filter by elastic status.
-            assigned_node_id (int, optional): Filter by assigned node ID.
-            workload_request_id (int, optional): Filter by workload request ID.
-            status (str, optional): Filter by pod status.
+    Attributes:
+        pod_id (int, optional): Filter by pod ID.
+        name (str, optional): Filter by pod name.
+        namespace (str, optional): Filter by Kubernetes namespace.
+        is_elastic (bool, optional): Filter by elastic status.
+        assigned_node_id (int, optional): Filter by assigned node ID.
+        workload_request_id (int, optional): Filter by workload request ID.
+        status (str, optional): Filter by pod status.
     """
+
     pod_id: int = None
     name: str = None
     namespace: str = None
@@ -42,17 +45,17 @@ class PodFilter:
 
 async def create_pod(db: AsyncSession, pod_data: PodCreate):
     """
-        Create a new pod entry in the database.
+    Create a new pod entry in the database.
 
-        Args:
-            db (AsyncSession): SQLAlchemy async session.
-            pod_data (PodCreate): Data for the new pod.
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        pod_data (PodCreate): Data for the new pod.
 
-        Returns:
-            Pod: The newly created Pod instance.
+    Returns:
+        Pod: The newly created Pod instance.
 
-        Raises:
-            DatabaseConnectionException: If the insert fails due to constraints or DB error.
+    Raises:
+        DatabaseConnectionException: If the insert fails due to constraints or DB error.
     """
     try:
         logger.debug("Creating pod  with data: %s", pod_data.dict())
@@ -66,29 +69,23 @@ async def create_pod(db: AsyncSession, pod_data: PodCreate):
         logger.error("Integrity error while creating pod: %s", str(e))
         await db.rollback()
         raise DatabaseConnectionException(
-            "Invalid pod data",
-            details={"error": str(e)}
+            "Invalid pod data", details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
         logger.error("Database error while creating pod: %s", str(e))
         await db.rollback()
         raise DatabaseConnectionException(
-            "Failed to create  pod",
-            details={"error": str(e)}
+            "Failed to create  pod", details={"error": str(e)}
         ) from e
     except Exception as e:
         logger.error("Unexpected error while creating  pod: %s", str(e))
         await db.rollback()
         raise DatabaseConnectionException(
-            "An unexpected error occurred while creating pod",
-            details={"error": str(e)}
+            "An unexpected error occurred while creating pod", details={"error": str(e)}
         ) from e
 
 
-async def get_pod(
-    db: AsyncSession,
-    pfilter: PodFilter
-):
+async def get_pod(db: AsyncSession, pfilter: PodFilter):
     """
     Retrieve pods from the database using filters.
 
@@ -136,24 +133,24 @@ async def get_pod(
         logger.error("Unexpected error while retrieving pods: %s", str(e))
         raise DatabaseConnectionException(
             "An unexpected error occurred while retrieving pods",
-            details={"error": str(e)}
+            details={"error": str(e)},
         ) from e
 
 
 async def get_pod_by_id(db: AsyncSession, pod_id: int):
     """
-        Retrieve a pod by its ID.
+    Retrieve a pod by its ID.
 
-        Args:
-            db (AsyncSession): The database session.
-            pod_id (int): The ID of the pod to retrieve.
+    Args:
+        db (AsyncSession): The database session.
+        pod_id (int): The ID of the pod to retrieve.
 
-        Returns:
-            Pod: The pod instance if found.
+    Returns:
+        Pod: The pod instance if found.
 
-        Raises:
-            DatabaseEntryNotFoundException: If the pod does not exist.
-            DatabaseConnectionException: If a database error occurs.
+    Raises:
+        DatabaseEntryNotFoundException: If the pod does not exist.
+        DatabaseConnectionException: If a database error occurs.
     """
     try:
         if not isinstance(pod_id, int):
@@ -172,7 +169,7 @@ async def get_pod_by_id(db: AsyncSession, pod_id: int):
         logger.error("Unexpected error while retrieving pod by ID: %s", str(e))
         raise DatabaseConnectionException(
             "An unexpected error occurred while retrieving pod by ID",
-            details={"error": str(e)}
+            details={"error": str(e)},
         ) from e
 
 
@@ -218,8 +215,7 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
         logger.error("Unexpected error while updating pod: %s", str(e))
         await db.rollback()
         raise DatabaseConnectionException(
-            "An unexpected error occurred while updating pod",
-            details={"error": str(e)}
+            "An unexpected error occurred while updating pod", details={"error": str(e)}
         ) from e
 
 
@@ -257,6 +253,5 @@ async def delete_pod(db: AsyncSession, pod_id: int):
         logger.error("Unexpected error while deleting pod: %s", str(e))
         await db.rollback()
         raise DatabaseConnectionException(
-            "An unexpected error occurred while deleting pod",
-            details={"error": str(e)}
+            "An unexpected error occurred while deleting pod", details={"error": str(e)}
         ) from e
