@@ -79,12 +79,17 @@ async def test_delete_workload_request_decision():
     db.delete = AsyncMock()
     db.commit = AsyncMock()
 
-    result = await wrd.delete_workload_request_decision(db, workload_request_id="123e4567-e89b-12d3-a456-426614174000")
+    result = await wrd.delete_workload_request_decision(
+        db, workload_request_id="123e4567-e89b-12d3-a456-426614174000"
+    )
 
     db.execute.assert_called_once()
     db.delete.assert_called()
     db.commit.assert_called_once()
-    assert result["message"] == "Decision with ID 123e4567-e89b-12d3-a456-426614174000 has been deleted"
+    assert (
+        result["message"]
+        == "Decision with ID 123e4567-e89b-12d3-a456-426614174000 has been deleted"
+    )
 
 
 @pytest.mark.asyncio
@@ -193,7 +198,10 @@ async def test_update_workload_request_decision_route(mock_update):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.put("/workload_request_decision/123e4567-e89b-12d3-a456-426614174000", json=request_data)
+        response = await ac.put(
+            "/workload_request_decision/123e4567-e89b-12d3-a456-426614174000",
+            json=request_data,
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -216,7 +224,9 @@ async def test_delete_workload_request_decision_route(mock_delete):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.delete("/workload_request_decision/123e4567-e89b-12d3-a456-426614174000")
+        response = await ac.delete(
+            "/workload_request_decision/123e4567-e89b-12d3-a456-426614174000"
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
@@ -279,7 +289,9 @@ async def test_get_workload_request_decision_by_id_route(mock_get):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/workload_request_decision/123e4567-e89b-12d3-a456-426614174000")
+        response = await ac.get(
+            "/workload_request_decision/123e4567-e89b-12d3-a456-426614174000"
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data

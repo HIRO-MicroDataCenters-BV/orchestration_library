@@ -1,6 +1,7 @@
 """
 Tests for DB Pod operations
 """
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,19 +15,21 @@ from app.schemas.pod import PodCreate, PodUpdate
 
 # ========================= Constants for sample pod data =========================
 
-SAMPLE_POD_OBJECT = Pod(**{
-    "id": "e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f",
-    "name": "test-pod",
-    "namespace": "default",
-    "is_elastic": False,
-    "assigned_node_id": "a3d5f9b2-4c6e-4f1a-9b2e-7c8d1e5a2f3b",
-    "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
-    "status": "running",
-    "demand_cpu": 0.5,
-    "demand_memory": 256,
-    "demand_slack_cpu": 0.1,
-    "demand_slack_memory": 64
-})
+SAMPLE_POD_OBJECT = Pod(
+    **{
+        "id": "e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f",
+        "name": "test-pod",
+        "namespace": "default",
+        "is_elastic": False,
+        "assigned_node_id": "a3d5f9b2-4c6e-4f1a-9b2e-7c8d1e5a2f3b",
+        "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
+        "status": "running",
+        "demand_cpu": 0.5,
+        "demand_memory": 256,
+        "demand_slack_cpu": 0.1,
+        "demand_slack_memory": 64,
+    }
+)
 
 SAMPLE_POD_REQUEST_DATA = {
     "id": "e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f",
@@ -39,7 +42,7 @@ SAMPLE_POD_REQUEST_DATA = {
     "demand_cpu": 0.5,
     "demand_memory": 256,
     "demand_slack_cpu": 0.1,
-    "demand_slack_memory": 64
+    "demand_slack_memory": 64,
 }
 
 SAMPLE_POD_RESPONSE_DATA = {
@@ -53,22 +56,19 @@ SAMPLE_POD_RESPONSE_DATA = {
     "demand_cpu": 0.5,
     "demand_memory": 256,
     "demand_slack_cpu": 0.1,
-    "demand_slack_memory": 64
+    "demand_slack_memory": 64,
 }
 
-SAMPLE_POD_LIST_RESPONSE_DATA = [
-    SAMPLE_POD_RESPONSE_DATA
-]
+SAMPLE_POD_LIST_RESPONSE_DATA = [SAMPLE_POD_RESPONSE_DATA]
 
-SAMPLE_POD_UPDATE_REQUEST_DATA = {
-    "status": "completed"
-}
+SAMPLE_POD_UPDATE_REQUEST_DATA = {"status": "completed"}
 
 SAMPLE_POD_DELETE_RESPONSE_DATA = {
     "message": "Pod with ID e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f has been deleted"
 }
 
 # ========================= Tests for pod CRUD functions =========================
+
 
 @pytest.mark.asyncio
 async def test_create_pod():
@@ -87,7 +87,7 @@ async def test_create_pod():
         demand_cpu=0.5,
         demand_memory=256,
         demand_slack_cpu=0.1,
-        demand_slack_memory=64
+        demand_slack_memory=64,
     )
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
@@ -117,13 +117,15 @@ async def test_get_pod():
 
     result = await pod.get_pod(
         db,
-        pod.PodFilter(pod_id="e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f",
-        name="test-pod",
-        namespace="default",
-        is_elastic=False,
-        assigned_node_id="a3d5f9b2-4c6e-4f1a-9b2e-7c8d1e5a2f3b",
-        workload_request_id="123e4567-e89b-12d3-a456-426614174000",
-        status="running")
+        pod.PodFilter(
+            pod_id="e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f",
+            name="test-pod",
+            namespace="default",
+            is_elastic=False,
+            assigned_node_id="a3d5f9b2-4c6e-4f1a-9b2e-7c8d1e5a2f3b",
+            workload_request_id="123e4567-e89b-12d3-a456-426614174000",
+            status="running",
+        ),
     )
 
     db.execute.assert_called_once()
@@ -145,7 +147,9 @@ async def test_update_pod():
     db.refresh = AsyncMock()
 
     updates = PodUpdate(status="completed")
-    result = await pod.update_pod(db, pod_id="e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f", updates=updates)
+    result = await pod.update_pod(
+        db, pod_id="e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f", updates=updates
+    )
 
     db.execute.assert_called_once()
     db.commit.assert_called_once()
@@ -172,10 +176,14 @@ async def test_delete_pod():
     db.execute.assert_called_once()
     db.delete.assert_called_once()
     db.commit.assert_called_once()
-    assert result["message"] == "Pod with ID e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f has been deleted"
+    assert (
+        result["message"]
+        == "Pod with ID e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f has been deleted"
+    )
 
 
 # ========================= Tests for pod routes =========================
+
 
 @pytest.mark.asyncio
 @patch("app.repositories.pod.create_pod", new_callable=AsyncMock)
@@ -248,7 +256,9 @@ async def test_update_pod_route(mock_update):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.put("/db_pod/e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f", json=request_data)
+        response = await ac.put(
+            "/db_pod/e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f", json=request_data
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
