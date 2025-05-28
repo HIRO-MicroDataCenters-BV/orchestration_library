@@ -4,8 +4,10 @@ This module provides functions to create, read, update, and delete nodes.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
+from sqlalchemy.exc import SQLAlchemyError
 from app.models.node import Node
 from app.schemas.node import NodeCreate
+from app.utils.exceptions import DBEntryCreationException
 
 
 async def create_node(db: AsyncSession, data: NodeCreate):
@@ -18,12 +20,28 @@ async def create_node(db: AsyncSession, data: NodeCreate):
 
     Returns:
         Node: The created node object after committing to the database.
+
+    Raises:
+        DBEntryCreationException: If there is an error during node creation.
     """
-    node = Node(**data.dict())
-    db.add(node)
-    await db.commit()
-    await db.refresh(node)
-    return node
+    try:
+        node = Node(**data.dict())
+        db.add(node)
+        await db.commit()
+        await db.refresh(node)
+        return node
+    except SQLAlchemyError as e:
+        await db.rollback()
+        raise DBEntryCreationException(
+            message=f"Failed to create node: {str(e)}",
+            details={"error_type": "database_error", "original_error": str(e)}
+        )
+    except Exception as e:
+        await db.rollback()
+        raise DBEntryCreationException(
+            message=f"Unexpected error while creating node: {str(e)}",
+            details={"error_type": "unexpected_error", "original_error": str(e)}
+        )
 
 
 async def get_nodes(db: AsyncSession, node_id: int = None):

@@ -7,15 +7,17 @@ in the application, particularly for tuning parameters.
 
 from typing import Any, Dict, Optional
 
+from starlette import status
+
 
 class DataBaseException(Exception):
     """Base exception class for DB related errors."""
 
     def __init__(
-        self,
-        message: str,
-        status_code: int = 500,
-        details: Optional[Dict[str, Any]] = None,
+            self,
+            message: str,
+            status_code: int = 500,
+            details: Optional[Dict[str, Any]] = None,
     ):
         self.message = message
         self.status_code = status_code
@@ -32,7 +34,7 @@ class DatabaseEntryNotFoundException(DataBaseException):
             message = f"DB entry with ID {db_id} not found"
         super().__init__(
             message=message,
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             details=(
                 {"id": db_id} if db_id is not None else None
             ),
@@ -43,4 +45,17 @@ class DatabaseConnectionException(DataBaseException):
     """Exception raised when there's a database error related to DB connection."""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
-        super().__init__(message=message, status_code=500, details=details)
+        super().__init__(message=message,
+                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                         details=details)
+
+
+class DBEntryCreationException(DataBaseException):
+    """Exception raised when there's an error creating a DB Entry."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            details=details
+        )
