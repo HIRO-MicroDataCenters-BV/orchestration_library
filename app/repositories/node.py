@@ -3,14 +3,14 @@ CRUD operations for managing nodes in the database.
 This module provides functions to create, read, update, and delete nodes.
 """
 import logging
-from typing import List, Optional, Union
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, and_
+from sqlalchemy import select, update, delete
 from app.models.node import Node
-from app.schemas.node import NodeCreate, NodeUpdate
+from app.schemas.node import NodeCreate
 from app.utils.exceptions import (
     DBEntryCreationException,
     DataBaseException,
@@ -53,7 +53,7 @@ async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
                 "error_type": "database_integrity_error",
                 "error": str(e)
             }
-        )
+        ) from e
     except OperationalError as e:
         await db.rollback()
         logger.error("Database operational error while creating node %s: %s", data.name, str(e))
@@ -63,7 +63,7 @@ async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
                 "error_type": "database_connection_error",
                 "error": str(e)
             }
-        )
+        ) from e
     except SQLAlchemyError as e:
         await db.rollback()
         logger.error("Database error while creating node %s: %s", data.name, str(e))
@@ -73,7 +73,7 @@ async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
                 "error_type": "database_error",
                 "error": str(e)
             }
-        )
+        ) from e
 
 
 async def get_nodes(
@@ -122,7 +122,7 @@ async def get_nodes(
                 "error_type": "database_connection_error",
                 "error": str(e)
             }
-        )
+        ) from e
     except SQLAlchemyError as e:
         logger.error("Database error while retrieving nodes: %s", str(e))
         raise DataBaseException(
@@ -131,7 +131,7 @@ async def get_nodes(
                 "error_type": "database_error",
                 "error": str(e)
             }
-        )
+        ) from e
 
 
 async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
@@ -185,7 +185,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
     except OperationalError as e:
         await db.rollback()
         logger.error("Database operational error while updating node %s: %s", node_id, str(e))
@@ -196,7 +196,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
     except SQLAlchemyError as e:
         await db.rollback()
         logger.error("Database error while updating node %s: %s", node_id, str(e))
@@ -207,7 +207,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
 
 
 async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
@@ -255,7 +255,7 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
     except OperationalError as e:
         await db.rollback()
         logger.error("Database operational error while deleting node %s: %s", node_id, str(e))
@@ -266,7 +266,7 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
     except SQLAlchemyError as e:
         await db.rollback()
         logger.error("Database error while deleting node %s: %s", node_id, str(e))
@@ -277,7 +277,7 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
 
 
 async def get_node_by_id(db: AsyncSession, node_id: UUID):
@@ -321,7 +321,7 @@ async def get_node_by_id(db: AsyncSession, node_id: UUID):
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e
     except SQLAlchemyError as e:
         logger.error("Database error while retrieving node %s: %s", node_id, str(e))
         raise DataBaseException(
@@ -331,4 +331,4 @@ async def get_node_by_id(db: AsyncSession, node_id: UUID):
                 "error": str(e),
                 "node_id": str(node_id)
             }
-        )
+        ) from e

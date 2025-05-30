@@ -140,6 +140,7 @@ async def get_latest_tuning_parameters(
 
     Raises:
         DatabaseConnectionException: If there's a database error
+        DBEntryNotFoundException: If no tuning parameters are found
     """
     try:
         logger.debug("Retrieving latest %d tuning parameters", limit)
@@ -153,7 +154,10 @@ async def get_latest_tuning_parameters(
 
         if not tuning_parameters:
             logger.warning("No tuning parameters found")
-            raise DBEntryNotFoundException()
+            raise DBEntryNotFoundException(
+                message="No tuning parameters found in the database",
+                details={"error_type": "not_found_error"}
+            )
 
         logger.info("Retrieved %d latest tuning parameters", len(tuning_parameters))
         return tuning_parameters
