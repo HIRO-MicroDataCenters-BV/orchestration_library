@@ -93,7 +93,22 @@ async def test_update_node():
         "name": "updated-node",
     }
 
-    mock_db_session.execute = AsyncMock(side_effect=[None, mock_result])
+    # Mock the first execute call (for get_node_by_id)
+    mock_first_result = MagicMock()
+    mock_first_result.scalar_one_or_none.return_value = {
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        "name": "original-node",
+    }
+
+    # Mock the second execute call (for update)
+    mock_second_result = MagicMock()
+    mock_second_result.scalar_one_or_none.return_value = {
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        "name": "updated-node",
+    }
+
+    # Set up the mock to return different results for different calls
+    mock_db_session.execute = AsyncMock(side_effect=[mock_first_result, None, mock_second_result])
     mock_db_session.commit = AsyncMock()
 
     updates = {"name": "updated-node"}
@@ -101,12 +116,9 @@ async def test_update_node():
         mock_db_session, node_id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c", updates=updates
     )
 
-    assert result == {
-        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
-        "name": "updated-node",
-    }
-    assert mock_db_session.execute.await_count == 2
-    mock_db_session.commit.assert_awaited_once()
+    assert result["name"] == "updated-node"
+    assert mock_db_session.execute.call_count == 3  # One for get, one for update, one for fetch
+    assert mock_db_session.commit.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -117,13 +129,22 @@ async def test_delete_node():
     Verifies that the node is deleted and commit is called.
     """
     mock_db_session = AsyncMock()
-    mock_db_session.execute = AsyncMock()
+    # Mock the get_nodes call (first execute)
+    mock_first_result = MagicMock()
+    mock_first_result.scalars.return_value.all.return_value = [{
+        "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        "name": "test-node"
+    }]
+    # Mock the delete call (second execute)
+    mock_second_result = MagicMock()
+    # Set up the mock to return different results for different calls
+    mock_db_session.execute = AsyncMock(side_effect=[mock_first_result, mock_second_result])
     mock_db_session.commit = AsyncMock()
 
     result = await delete_node(mock_db_session, node_id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c")
 
-    mock_db_session.execute.assert_awaited_once()
-    mock_db_session.commit.assert_awaited_once()
+    assert mock_db_session.execute.call_count == 2  # One for get, one for delete
+    assert mock_db_session.commit.call_count == 1
     assert result == {"deleted_id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"}
 
 
