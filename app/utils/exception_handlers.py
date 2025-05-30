@@ -1,133 +1,78 @@
 """
 Exception handlers for the application.
+
 This module provides global exception handlers for handling various types of errors
-that may occur during request processing.
+that may occur during request processing. It includes handlers for:
+- General exceptions (unexpected errors)
+- Database-related exceptions (DataBaseException and its subclasses)
+
+The handlers ensure consistent error responses and proper logging across the application.
 """
 
 import logging
 from fastapi import Request, FastAPI, HTTPException
 from starlette import status
 
-from app.utils.exceptions import DatabaseEntryNotFoundException, DatabaseConnectionException, DBEntryCreationException, \
-    DBEntryNotFoundException, DataBaseException
+from app.utils.exceptions import DataBaseException
 
 # Configure logger
 logger = logging.getLogger("uvicorn.error")
 
 
 def init_exception_handlers(app: FastAPI):
-    """Register global exception handlers"""
+    """
+    Register global exception handlers for the FastAPI application.
+    
+    This function sets up exception handlers that will catch and process various types
+    of exceptions that may occur during request processing. The handlers ensure:
+    - Consistent error response format
+    - Proper error logging
+    - Appropriate HTTP status codes
+    """
 
     @app.exception_handler(Exception)
     async def global_exception_handler(_: Request, exc: Exception):
-        """Handles all unexpected exceptions
+        """
+        Handle all unexpected exceptions that aren't caught by more specific handlers.
+
+        This handler catches any unhandled exceptions and returns a generic error response.
+        It ensures that no unexpected errors are exposed to the client while maintaining
+        proper logging for debugging purposes.
 
         Args:
-            _: The FastAPI request object (unused)
+            _: The FastAPI request object
             exc: The exception that was raised
 
         Returns:
-            JSONResponse with a 500 status code and error message
+            HTTPException with a 400 status code and a generic error message
         """
         logger.error("Unhandled exception: %s", exc, exc_info=False)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                "details": "Internal Server Error. Please try again later."
+                "message": "Internal Server Error. Please try again later."
             }
         )
 
     @app.exception_handler(DataBaseException)
-    async def db__exception_handler(_: Request, exc: DataBaseException):
-        """Handles database entry creation exceptions
+    async def db_exception_handler(_: Request, exc: DataBaseException):
+        """
+        Handle database-related exceptions.
+
+        This handler processes all database-related exceptions (DataBaseException and its
+        subclasses). It ensures that database errors are properly logged and returned
+        to the client with appropriate status codes and error messages.
 
         Args:
-            _: The FastAPI request object (unused)
+            _: The FastAPI request object
             exc: The DataBaseException that was raised
 
         Returns:
-            HTTPException with appropriate status code and error details
+            HTTPException with the status code and error message from the database exception
         """
         raise HTTPException(
             status_code=exc.status_code,
             detail={
-                "message": exc.message,
-                "details": exc.details
-            }
-        )
-
-    @app.exception_handler(DatabaseEntryNotFoundException)
-    async def db_entry_not_found_error_handler(_: Request, exc: DatabaseEntryNotFoundException):
-        """Handles database entry not found exceptions
-
-        Args:
-            _: The FastAPI request object (unused)
-            exc: The DatabaseEntryNotFoundException that was raised
-
-        Returns:
-            JSONResponse with a 400 status code and the exception message
-        """
-        raise HTTPException(
-            status_code=exc.status_code,
-            detail={
-                "message": exc.message,
-                "details": exc.details
-            }
-        )
-
-    @app.exception_handler(DatabaseConnectionException)
-    async def db_connection_error_handler(_: Request, exc: DatabaseConnectionException):
-        """Handles database connection exceptions
-
-        Args:
-            _: The FastAPI request object (unused)
-            exc: The DatabaseConnectionException that was raised
-
-        Returns:
-            JSONResponse with a 400 status code and the exception message
-        """
-        raise HTTPException(
-            status_code=exc.status_code,
-            detail={
-                "message": exc.message,
-                "details": exc.details
-            }
-        )
-
-    @app.exception_handler(DBEntryCreationException)
-    async def db_entry_creation_exception_handler(_: Request, exc: DBEntryCreationException):
-        """Handles database entry creation exceptions
-
-        Args:
-            _: The FastAPI request object (unused)
-            exc: The DBEntryCreationException that was raised
-
-        Returns:
-            HTTPException with appropriate status code and error details
-        """
-        raise HTTPException(
-            status_code=exc.status_code,
-            detail={
-                "message": exc.message,
-                "details": exc.details
-            }
-        )
-
-    @app.exception_handler(DBEntryNotFoundException)
-    async def db_entry_not_found_exception_handler(_: Request, exc: DBEntryNotFoundException):
-        """Handles database entry creation exceptions
-
-        Args:
-            _: The FastAPI request object (unused)
-            exc: The DBEntryNotFoundException that was raised
-
-        Returns:
-            HTTPException with appropriate status code and error details
-        """
-        raise HTTPException(
-            status_code=exc.status_code,
-            detail={
-                "message": exc.message,
-                "details": exc.details
+                "message": exc.message
             }
         )

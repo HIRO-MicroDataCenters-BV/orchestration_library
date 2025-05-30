@@ -13,8 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.models.tuning_parameter import TuningParameter
 from app.schemas.tuning_parameter_schema import TuningParameterCreate
 from app.utils.exceptions import (
-    DatabaseConnectionException,
-    DatabaseEntryNotFoundException
+    DatabaseConnectionException, DBEntryNotFoundException
 )
 
 logger = logging.getLogger(__name__)
@@ -154,7 +153,7 @@ async def get_latest_tuning_parameters(
 
         if not tuning_parameters:
             logger.warning("No tuning parameters found")
-            raise DatabaseEntryNotFoundException()
+            raise DBEntryNotFoundException()
 
         logger.info("Retrieved %d latest tuning parameters", len(tuning_parameters))
         return tuning_parameters
