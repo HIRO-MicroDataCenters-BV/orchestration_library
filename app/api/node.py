@@ -4,20 +4,19 @@ This module defines the API endpoints for managing nodes in the database.
 It includes routes for creating, retrieving, updating, and deleting nodes.
 """
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_db
 from app.schemas.node import NodeCreate, NodeUpdate, NodeResponse
 from app.repositories import node
 
-
 router = APIRouter(prefix="/db_node")
 
 
 @router.post("/", response_model=NodeResponse)
 async def create_node(
-    data: NodeCreate, db: AsyncSession = Depends(get_async_db)
+        data: NodeCreate, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Create a new node.
@@ -48,7 +47,7 @@ async def get_nodes(db: AsyncSession = Depends(get_async_db)):
 
 @router.put("/{node_id}", response_model=NodeResponse)
 async def update_node(
-    node_id: UUID, data: NodeUpdate, db: AsyncSession = Depends(get_async_db)
+        node_id: UUID, data: NodeUpdate, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Update an existing node by ID.
@@ -91,12 +90,6 @@ async def get_node_by_id(node_id: UUID, db: AsyncSession = Depends(get_async_db)
 
         Returns:
             schemas.NodeResponse: The node with the given ID.
-
-        Raises:
-            HTTPException: If the node with the given ID does not exist.
     """
 
-    node_ = await node.get_node_by_id(db, node_id)
-    if not node_:
-        raise HTTPException(status_code=404, detail="Node not found")
-    return node_
+    return await node.get_node_by_id(db, node_id)
