@@ -10,7 +10,8 @@ The handlers ensure consistent error responses and proper logging across the app
 """
 
 import logging
-from fastapi import Request, FastAPI, HTTPException
+from fastapi import Request, FastAPI
+from fastapi.responses import JSONResponse
 from starlette import status
 
 from app.utils.exceptions import DataBaseException
@@ -44,12 +45,12 @@ def init_exception_handlers(app: FastAPI):
             exc: The exception that was raised
 
         Returns:
-            HTTPException with a 400 status code and a generic error message
+            JSONResponse with a 500 status code and a generic error message
         """
-        logger.error("Unhandled exception: %s", exc, exc_info=False)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
+        logger.error("Unhandled exception: %s", exc, exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
                 "message": "Internal Server Error. Please try again later."
             }
         )
@@ -68,11 +69,12 @@ def init_exception_handlers(app: FastAPI):
             exc: The DataBaseException that was raised
 
         Returns:
-            HTTPException with the status code and error message from the database exception
+            JSONResponse with the status code and error message from the database exception
         """
-        raise HTTPException(
+        logger.error("DataBase exception: %s", exc, exc_info=False)
+        return JSONResponse(
             status_code=exc.status_code,
-            detail={
+            content={
                 "message": exc.message
             }
         )
