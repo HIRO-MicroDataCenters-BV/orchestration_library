@@ -3,8 +3,8 @@ DB pod routes.
 This module defines the API endpoints for managing pods in the database.
 It includes routes for creating, retrieving, updating, and deleting pod records.
 """
-from typing import Optional
-from fastapi import APIRouter, Depends, Query
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
