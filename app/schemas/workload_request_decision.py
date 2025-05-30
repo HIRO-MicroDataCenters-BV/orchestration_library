@@ -12,7 +12,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     Schema for creating a workload request decision.
     """
 
-    workload_request_id: UUID
+    pod_id: UUID
     node_name: str
     queue_name: str
     status: Optional[str] = "pending"

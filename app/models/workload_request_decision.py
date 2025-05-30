@@ -21,9 +21,9 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     """
     __tablename__ = "workload_request_decision"
 
-    workload_request_id = Column(
+    pod_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("workload_request.id"),
+        ForeignKey("pod.id"),
         primary_key=True,
         nullable=False
     )
