@@ -3,21 +3,27 @@ CRUD operations for managing nodes in the database.
 This module provides functions to create, read, update, and delete nodes.
 """
 import logging
+from typing import List, Optional, Union
 from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, and_
 from app.models.node import Node
-from app.schemas.node import NodeCreate
-from app.utils.exceptions import DBEntryCreationException, DataBaseException, DBEntryUpdateException, \
-    DBEntryDeletionException, DBEntryNotFoundException
+from app.schemas.node import NodeCreate, NodeUpdate
+from app.utils.exceptions import (
+    DBEntryCreationException,
+    DataBaseException,
+    DBEntryUpdateException,
+    DBEntryDeletionException,
+    DBEntryNotFoundException
+)
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
-async def create_node(db: AsyncSession, data: NodeCreate):
+async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
     """
     Create a new node entry in the database.
 
@@ -36,13 +42,13 @@ async def create_node(db: AsyncSession, data: NodeCreate):
         db.add(node)
         await db.commit()
         await db.refresh(node)
-        logger.debug(f"Successfully created node: {data.name}")
+        logger.info(f"Successfully created node: {data.name}")
         return node
     except IntegrityError as e:
         await db.rollback()
         logger.error(f"Integrity error while creating node {data.name}: {str(e)}")
         raise DBEntryCreationException(
-            message=f"Failed to create node with node name '{data.name}': Data constraint violation",
+            message=f"Failed to create node with name '{data.name}': Data constraint violation",
             details={
                 "error_type": "database_integrity_error",
                 "error": str(e)
@@ -62,7 +68,7 @@ async def create_node(db: AsyncSession, data: NodeCreate):
         await db.rollback()
         logger.error(f"Database error while creating node {data.name}: {str(e)}")
         raise DBEntryCreationException(
-            message=f"Failed to create node with name : '{data.name}': Database error",
+            message=f"Failed to create node with name '{data.name}': Database error",
             details={
                 "error_type": "database_error",
                 "error": str(e)
@@ -70,17 +76,19 @@ async def create_node(db: AsyncSession, data: NodeCreate):
         )
 
 
-async def get_nodes(db: AsyncSession, node_id: UUID = None):
+async def get_nodes(
+    db: AsyncSession,
+    node_id: Optional[UUID] = None
+):
     """
-    Retrieve one or all nodes from the database.
+    Retrieve nodes from the database with optional filtering.
 
     Args:
         db (AsyncSession): The database session.
         node_id (UUID, optional): If provided, fetches the node with this ID.
-                                 If not, returns all nodes.
 
     Returns:
-        list[Node]: A list of node objects, or a single-node list if node_id is given.
+        Union[List[Node], Node]: A list of node objects, or a single node if node_id is given.
 
     Raises:
         DBEntryNotFoundException: If the specified node is not found.
@@ -202,7 +210,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
         )
 
 
-async def delete_node(db: AsyncSession, node_id: UUID):
+async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
     """
     Delete a node from the database.
 
@@ -219,14 +227,23 @@ async def delete_node(db: AsyncSession, node_id: UUID):
     """
     try:
         # First check if node exists
-        existing_node = await get_node_by_id(db, node_id)
-        if existing_node:
-            # Perform the deletion
-            await db.execute(delete(Node).where(Node.id == node_id))
-            await db.commit()
+        existing_node = await get_nodes(db, node_id=node_id)
+        if not existing_node:
+            logger.warning(f"Node with ID {node_id} not found for deletion")
+            raise DBEntryNotFoundException(
+                message=f"Node with ID {node_id} not found",
+                details={
+                    "error_type": "not_found_error",
+                    "node_id": str(node_id)
+                }
+            )
 
-            logger.info(f"Successfully deleted node with ID {node_id}")
-            return {"deleted_id": node_id}
+        # Perform the deletion
+        await db.execute(delete(Node).where(Node.id == node_id))
+        await db.commit()
+
+        logger.info(f"Successfully deleted node with ID {node_id}")
+        return {"deleted_id": node_id}
 
     except IntegrityError as e:
         await db.rollback()
