@@ -108,3 +108,15 @@ async def delete_pod(db: AsyncSession, pod_id: UUID):
     await db.delete(pod)
     await db.commit()
     return {"message": f"Pod with ID {pod_id} has been deleted"}
+
+async def workload_request_ids_per_node(
+    db: AsyncSession,
+    node_id: UUID
+):
+    """
+    Retrieve all workload requests associated with a specific node.
+    """
+    query = select(Pod.workload_request_id).where(Pod.assigned_node_id == node_id)
+    result = await db.execute(query)
+    workload_request_ids = result.scalars().all()
+    return workload_request_ids
