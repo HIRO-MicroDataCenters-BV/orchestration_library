@@ -2,6 +2,7 @@
 Schemas for the API requests and responses.
 """
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -10,7 +11,7 @@ class NodeCreate(BaseModel):
     """
     Schema for creating a node.
     """
-
+    id: UUID
     name: str
     status: Optional[str] = "active"
     cpu_capacity: float
@@ -45,7 +46,7 @@ class NodeResponse(BaseModel):
     Response schema for a node object, typically used in API responses.
     """
 
-    id: int
+    id: UUID
     name: str
     status: Optional[str]
     cpu_capacity: float

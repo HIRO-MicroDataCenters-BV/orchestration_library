@@ -3,11 +3,42 @@
 # Exit on any error
 set -e
 
-CLUSTER_NAME=${1:-sample}
+# Usage: ./db_migrate.sh [PORT] [CLUSTER_NAME] [--local]
+DATABASE_PORT=5432
+CLUSTER_NAME="sample"
+LOCAL_MODE=0
 
-if [ -z "$CLUSTER_NAME" ]; then
-  echo "Usage: $0 <cluster-name>"
-  exit 1
+# Parse arguments
+for arg in "$@"; do
+  case $arg in
+    --local|-l)
+      LOCAL_MODE=1
+      shift
+      ;;
+    *)
+      if [[ -z "$DATABASE_PORT_SET" ]]; then
+        DATABASE_PORT="$arg"
+        DATABASE_PORT_SET=1
+      elif [[ -z "$CLUSTER_NAME_SET" ]]; then
+        CLUSTER_NAME="$arg"
+        CLUSTER_NAME_SET=1
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ "$LOCAL_MODE" -eq 0 ]; then
+  echo "Remove the port-forwarding on the database service"
+  if pgrep -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME" > /dev/null; then
+    pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+  fi
+
+  echo "Port-forwarding the database service to localhost:$DATABASE_PORT"
+  kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
+
+  echo "Wait for port-forwarding to be ready"
+  sleep 3
 fi
 
 # Check if alembic is installed
@@ -15,26 +46,6 @@ if ! command -v alembic &> /dev/null; then
   echo "Alembic not found. Please install it with 'pip install alembic'."
   exit 1
 fi
-
-# Read database local Port from arguments which is port-forwarded to the database service
-# If not provided, default to 35432
-if [ -z "$2" ]; then
-  export DATABASE_PORT=35432
-else
-  export DATABASE_PORT="$2"
-fi
-
-echo "Remove the port-forwarding on the database service"
-if pgrep -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME" > /dev/null; then
-  pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
-fi
-
-echo "Port-forwarding the database service to localhost:$DATABASE_PORT"
-kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
-
-echo "Wait for port-forwarding to be ready"
-sleep 3
-
 
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then
@@ -107,7 +118,9 @@ case $choice in
     ;;
 esac
 
-echo "Remove the port-forwarding on the database service"
-pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+if [ "$LOCAL_MODE" -eq 0 ]; then
+  echo "Remove the port-forwarding on the database service"
+  pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+fi
 
 echo "Done."

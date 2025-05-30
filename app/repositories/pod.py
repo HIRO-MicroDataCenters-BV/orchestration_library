@@ -4,8 +4,12 @@ This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
 from dataclasses import dataclass
+<<<<<<< HEAD
 import logging
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+=======
+from uuid import UUID
+>>>>>>> e02b3da4a743e58b22fe2dafb07d6ad4ef1bf08d
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.pod import Pod
@@ -34,12 +38,12 @@ class PodFilter:
         status (str, optional): Filter by pod status.
     """
 
-    pod_id: int = None
+    pod_id: UUID = None
     name: str = None
     namespace: str = None
     is_elastic: bool = None
-    assigned_node_id: int = None
-    workload_request_id: int = None
+    assigned_node_id: UUID = None
+    workload_request_id: UUID = None
     status: str = None
 
 
@@ -137,7 +141,7 @@ async def get_pod(db: AsyncSession, pfilter: PodFilter):
         ) from e
 
 
-async def get_pod_by_id(db: AsyncSession, pod_id: int):
+async def get_pod_by_id(db: AsyncSession, pod_id: UUID):
     """
     Retrieve a pod by its ID.
 
@@ -173,7 +177,7 @@ async def get_pod_by_id(db: AsyncSession, pod_id: int):
         ) from e
 
 
-async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
+async def update_pod(db: AsyncSession, pod_id: UUID, updates: PodUpdate):
     """
     Update an existing pod in the database.
 
@@ -190,7 +194,7 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
         DatabaseConnectionException: On update failure.
     """
     try:
-        if not isinstance(pod_id, int):
+        if not isinstance(pod_id, UUID):
             raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         pod = await get_pod_by_id(db, pod_id)
         if not pod:
@@ -219,7 +223,7 @@ async def update_pod(db: AsyncSession, pod_id: int, updates: PodUpdate):
         ) from e
 
 
-async def delete_pod(db: AsyncSession, pod_id: int):
+async def delete_pod(db: AsyncSession, pod_id: UUID):
     """
     Delete a pod by its ID.
 
@@ -235,11 +239,12 @@ async def delete_pod(db: AsyncSession, pod_id: int):
         DatabaseConnectionException: On delete failure.
     """
     try:
-        if not isinstance(pod_id, int):
+        if not isinstance(pod_id, UUID):
             raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         pod = await get_pod_by_id(db, pod_id)
         if not pod:
             raise DatabaseEntryNotFoundException()
+
         await db.delete(pod)
         await db.commit()
         return {"message": f"Pod with ID {pod_id} has been deleted"}

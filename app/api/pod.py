@@ -4,29 +4,46 @@ This module defines the API endpoints for managing pods in the database.
 It includes routes for creating, retrieving, updating, and deleting pod records.
 """
 
-from fastapi import APIRouter, Depends
+
+from typing import Optional
+from uuid import UUID
+
 from sqlalchemy.exc import SQLAlchemyError
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
-from app.schemas.pod import PodFilterQuery
 from app.schemas.pod import PodCreate, PodUpdate
 from app.repositories import pod
 from app.utils.exceptions import DatabaseConnectionException
 
 router = APIRouter(prefix="/db_pod")
 
-# pylint: disable=too-many-arguments, disable=invalid-name
-"""# pylint: disable=too-many-positional-arguments"""
 
-
-def pod_filter_from_query(filter_query: PodFilterQuery):
+# pylint: disable=too-many-arguments,too-many-positional-arguments, disable=invalid-name
+# This is a filter function, and it can have many parameters.
+def pod_filter_from_query(
+    pod_id: Optional[UUID] = Query(None),
+    name: Optional[str] = Query(None),
+    namespace: Optional[str] = Query(None),
+    is_elastic: Optional[bool] = Query(None),
+    assigned_node_id: Optional[UUID] = Query(None),
+    workload_request_id: Optional[UUID] = Query(None),
+    status: Optional[str] = Query(None),
+):
     """
     Create a PodFilter object from query parameters.
     This function is used to filter pods based on various criteria.
     """
+    return pod.PodFilter(
+        pod_id=pod_id,
+        name=name,
+        namespace=namespace,
+        is_elastic=is_elastic,
+        assigned_node_id=assigned_node_id,
+        workload_request_id=workload_request_id,
+        status=status,
+    )
 
-    filter_dict = filter_query.dict(exclude_none=True)
-    return pod.PodFilter(**filter_dict)
 
 
 @router.post("/")
@@ -34,6 +51,7 @@ async def create(data: PodCreate, db: AsyncSession = Depends(get_async_db)):
     """
     Create a new pod.
     """
+
     try:
         return await pod.create_pod(db, data)
     except SQLAlchemyError as e:
@@ -60,10 +78,11 @@ async def get(
 
 
 @router.get("/{pod_id}")
-async def get_by_id(pod_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_by_id(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Retrieve a pod by its ID.
     """
+
     try:
         return await pod.get_pod(db, pod_id)
     except SQLAlchemyError as e:
@@ -74,7 +93,7 @@ async def get_by_id(pod_id: int, db: AsyncSession = Depends(get_async_db)):
 
 @router.put("/{pod_id}")
 async def update(
-    pod_id: int, data: PodUpdate, db: AsyncSession = Depends(get_async_db)
+    pod_id: UUID, data: PodUpdate, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Update a pod by its ID.
@@ -88,7 +107,7 @@ async def update(
 
 
 @router.delete("/{pod_id}")
-async def delete(pod_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Delete a pod by its ID.
     """

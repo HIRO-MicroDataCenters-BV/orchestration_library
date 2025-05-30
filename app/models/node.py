@@ -13,9 +13,10 @@ from sqlalchemy import (
 )
 
 from app.db.database import Base
+from app.models.base_dict_mixin import BaseDictMixin
 
 
-class Node(Base):
+class Node(Base, BaseDictMixin):
     """
     Model representing a node in the cluster.
     """
@@ -34,47 +35,3 @@ class Node(Base):
     updated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     ip_address = Column(String)
     location = Column(String)
-
-    def to_dict(self):
-        """
-        Convert the model instance to a dictionary.
-        """
-        return {
-            "id": self.id,
-            "name": self.name,
-            "status": self.status,
-            "cpu_capacity": self.cpu_capacity,
-            "memory_capacity": self.memory_capacity,
-            "current_cpu_assignment": self.current_cpu_assignment,
-            "current_memory_assignment": self.current_memory_assignment,
-            "current_cpu_utilization": self.current_cpu_utilization,
-            "current_memory_utilization": self.current_memory_utilization,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-            "ip_address": self.ip_address,
-            "location": self.location,
-        }
-
-    @classmethod
-    def from_dict(cls, data):
-        """
-        Create a model instance from a dictionary.
-
-        Args:
-            data (dict): Dictionary containing model data.
-
-        Returns:
-            Node: A new instance of the model.
-        """
-        return cls(
-            name=data.get("name"),
-            status=data.get("status", "active"),
-            cpu_capacity=data.get("cpu_capacity"),
-            memory_capacity=data.get("memory_capacity"),
-            current_cpu_assignment=data.get("current_cpu_assignment"),
-            current_memory_assignment=data.get("current_memory_assignment"),
-            current_cpu_utilization=data.get("current_cpu_utilization"),
-            current_memory_utilization=data.get("current_memory_utilization"),
-            ip_address=data.get("ip_address"),
-            location=data.get("location"),
-        )
