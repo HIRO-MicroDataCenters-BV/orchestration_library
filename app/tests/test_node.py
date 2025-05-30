@@ -129,17 +129,14 @@ async def test_delete_node():
     Verifies that the node is deleted and commit is called.
     """
     mock_db_session = AsyncMock()
-    
     # Mock the get_nodes call (first execute)
     mock_first_result = MagicMock()
     mock_first_result.scalars.return_value.all.return_value = [{
         "id": "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
         "name": "test-node"
     }]
-    
     # Mock the delete call (second execute)
     mock_second_result = MagicMock()
-    
     # Set up the mock to return different results for different calls
     mock_db_session.execute = AsyncMock(side_effect=[mock_first_result, mock_second_result])
     mock_db_session.commit = AsyncMock()
