@@ -1,29 +1,37 @@
-import pytest
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+"""
+# app/models/base_dict_mixin.py
+Test cases for BaseDictMixin
+"""
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import declarative_base
 from app.models.base_dict_mixin import BaseDictMixin
 
 Base = declarative_base()
 
 class DummyModel(Base, BaseDictMixin):
+    """
+    A dummy model for testing BaseDictMixin.
+    This model is used to test the functionality of the BaseDictMixin methods.
+    """
     __tablename__ = "dummy"
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
 
-@pytest.fixture(scope="module")
-def session():
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    return Session()
+def test_to_dict():
+    """
+    Test the to_dict method of BaseDictMixin.
+    This test checks if the model instance can be converted to a dictionary correctly.
+    """
 
-def test_to_dict(session):
     obj = DummyModel(id=1, name="test")
-    session.add(obj)
-    session.commit()
+    # No need to add/commit for to_dict test
     assert obj.to_dict() == {"id": 1, "name": "test"}
 
 def test_from_dict():
+    """
+    Test the from_dict method of BaseDictMixin.
+    This test checks if a model instance can be created from a dictionary.
+    """
     data = {"id": 2, "name": "example", "extra": "ignored"}
     obj = DummyModel.from_dict(data)
     assert isinstance(obj, DummyModel)
