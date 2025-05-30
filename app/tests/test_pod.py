@@ -342,4 +342,3 @@ async def test_delete_pod_route(mock_delete):
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == response_data
-
