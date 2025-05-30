@@ -24,7 +24,7 @@ async def test_create_workload_request_decision():
     """
     db = AsyncMock()
     decision_data = WorkloadRequestDecisionCreate(
-        workload_request_id="123e4567-e89b-12d3-a456-426614174000",
+        pod_id="123e4567-e89b-12d3-a456-426614174000",
         node_name="node-1",
         queue_name="queue-1",
         status="pending",
@@ -54,7 +54,7 @@ async def test_update_workload_request_decision():
 
     updates = {"status": "approved"}
     result = await wrd.update_workload_request_decision(
-        db, workload_request_id="123e4567-e89b-12d3-a456-426614174000", updates=updates
+        db, pod_id="123e4567-e89b-12d3-a456-426614174000", updates=updates
     )
 
     db.execute.assert_called_once()
@@ -80,7 +80,7 @@ async def test_delete_workload_request_decision():
     db.commit = AsyncMock()
 
     result = await wrd.delete_workload_request_decision(
-        db, workload_request_id="123e4567-e89b-12d3-a456-426614174000"
+        db, pod_id="123e4567-e89b-12d3-a456-426614174000"
     )
 
     db.execute.assert_called_once()
@@ -99,7 +99,7 @@ async def test_get_workload_request_decision():
     """
     # Mock data
     mock_decision = MagicMock(spec=WorkloadRequestDecision)
-    mock_decision.workload_request_id = "123e4567-e89b-12d3-a456-426614174000"
+    mock_decision.pod_id = "123e4567-e89b-12d3-a456-426614174000"
     mock_decision.node_name = "node-1"
     mock_decision.queue_name = "queue-1"
     mock_decision.status = "pending"
@@ -117,7 +117,7 @@ async def test_get_workload_request_decision():
     # Call the function
     result = await wrd.get_workload_request_decision(
         db,
-        workload_request_id="123e4567-e89b-12d3-a456-426614174000",
+        pod_id="123e4567-e89b-12d3-a456-426614174000",
         node_name="node-1",
         queue_name="queue-1",
         status="pending",
@@ -127,7 +127,7 @@ async def test_get_workload_request_decision():
     db.execute.assert_called_once()
     assert isinstance(result, list)
     assert len(result) == 1
-    assert result[0].workload_request_id == "123e4567-e89b-12d3-a456-426614174000"
+    assert result[0].pod_id == "123e4567-e89b-12d3-a456-426614174000"
     assert result[0].status == "pending"
 
 
@@ -148,13 +148,13 @@ async def test_create_workload_request_decision_route(mock_create):
     """
 
     request_data = {
-        "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
+        "pod_id": "123e4567-e89b-12d3-a456-426614174000",
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "pending",
     }
     response_data = {
-        "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
+        "pod_id": "123e4567-e89b-12d3-a456-426614174000",
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "pending",
@@ -185,7 +185,7 @@ async def test_update_workload_request_decision_route(mock_update):
     """
     request_data = {"status": "approved"}
     response_data = {
-        "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
+        "pod_id": "123e4567-e89b-12d3-a456-426614174000",
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "approved",
@@ -245,7 +245,7 @@ async def test_get_workload_request_decision_route(mock_get):
     response_data = [
         {
             "id": "550e8400-e29b-41d4-a716-446655440000",
-            "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
+            "pod_id": "123e4567-e89b-12d3-a456-426614174000",
             "node_name": "node-1",
             "queue_name": "queue-1",
             "status": "pending",
@@ -276,7 +276,7 @@ async def test_get_workload_request_decision_by_id_route(mock_get):
     Asserts that the GET request returns a 200 status and correct JSON response.
     """
     response_data = {
-        "workload_request_id": "123e4567-e89b-12d3-a456-426614174000",
+        "pod_id": "123e4567-e89b-12d3-a456-426614174000",
         "node_name": "node-1",
         "queue_name": "queue-1",
         "status": "pending",

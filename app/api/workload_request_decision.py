@@ -15,11 +15,6 @@ from app.schemas.workload_request_decision import (
 
 router = APIRouter(prefix="/workload_request_decision")
 
-# @router.post("/")
-# def create(data: schemas.WorkloadRequestDecisionCreate, db: Session = Depends(get_db)):
-#     return crud.create_workload_request_decision(db, data)
-
-
 @router.post("/")
 async def create(
     data: WorkloadRequestDecisionCreate,
@@ -33,7 +28,7 @@ async def create(
 
 @router.get("/")
 async def read(
-    workload_request_id: UUID = None,
+    pod_id: UUID = None,
     node_name: str = None,
     queue_name: str = None,
     status: str = None,
@@ -45,7 +40,7 @@ async def read(
     """
     decisions = await wrd.get_workload_request_decision(
         db,
-        workload_request_id=workload_request_id,
+        pod_id=pod_id,
         node_name=node_name,
         queue_name=queue_name,
         status=status,
@@ -55,38 +50,38 @@ async def read(
     return decisions
 
 
-@router.get("/{workload_request_id}")
+@router.get("/{pod_id}")
 async def read_by_id(
-    workload_request_id: UUID, db: AsyncSession = Depends(get_async_db)
+    pod_id: UUID, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Retrieve a workload request decision by its ID.
     """
     decision = await wrd.get_workload_request_decision(
-        db, workload_request_id=workload_request_id
+        db, pod_id=pod_id
     )
     if not decision:
         return {"error": "Decision not found"}
     return decision
 
 
-@router.put("/{workload_request_id}")
+@router.put("/{pod_id}")
 async def update(
-    workload_request_id: UUID,
+    pod_id: UUID,
     data: WorkloadRequestDecisionUpdate,
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Update a workload request decision by its ID.
     """
-    return await wrd.update_workload_request_decision(db, workload_request_id, data)
+    return await wrd.update_workload_request_decision(db, pod_id, data)
 
 
-@router.delete("/{workload_request_id}")
-async def delete(workload_request_id: UUID, db: AsyncSession = Depends(get_async_db)):
+@router.delete("/{pod_id}")
+async def delete(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Delete a workload request decision by its ID.
     """
     return await wrd.delete_workload_request_decision(
-        db, workload_request_id=workload_request_id
+        db, pod_id=pod_id
     )

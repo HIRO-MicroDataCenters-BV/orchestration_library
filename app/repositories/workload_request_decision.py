@@ -23,14 +23,14 @@ async def create_workload_request_decision(
 
 
 async def update_workload_request_decision(
-    db: AsyncSession, workload_request_id: UUID, updates: dict
+    db: AsyncSession, pod_id: UUID, updates: dict
 ):
     """
-    Update a workload request decision by its workload_request_id.
+    Update a workload request decision by its pod_id.
     """
     result = await db.execute(
         select(WorkloadRequestDecision).where(
-            WorkloadRequestDecision.workload_request_id == workload_request_id
+            WorkloadRequestDecision.pod_id == pod_id
         )
     )
     decision = result.scalar_one_or_none()
@@ -49,7 +49,7 @@ async def update_workload_request_decision(
 
 async def get_workload_request_decision(
     db: AsyncSession,
-    workload_request_id: UUID = None,
+    pod_id: UUID = None,
     node_name: str = None,
     queue_name: str = None,
     status: str = None,
@@ -58,9 +58,9 @@ async def get_workload_request_decision(
     Get workload request decisions based on various filters.
     """
     filters = []
-    if workload_request_id:
+    if pod_id:
         filters.append(
-            WorkloadRequestDecision.workload_request_id == workload_request_id
+            WorkloadRequestDecision.pod_id == pod_id
         )
     if node_name:
         filters.append(WorkloadRequestDecision.node_name == node_name)
@@ -78,12 +78,12 @@ async def get_workload_request_decision(
     return decision
 
 
-async def delete_workload_request_decision(db: AsyncSession, workload_request_id: UUID):
+async def delete_workload_request_decision(db: AsyncSession, pod_id: UUID):
     """
-    Delete a workload request decision by its workload_request_id.
+    Delete a workload request decision by its pod_id.
     """
     decision = await get_workload_request_decision(
-        db, workload_request_id=workload_request_id
+        db, pod_id=pod_id
     )
     print(f"Decision: {decision}")
     if not decision:
@@ -95,4 +95,4 @@ async def delete_workload_request_decision(db: AsyncSession, workload_request_id
     else:
         await db.delete(decision)
     await db.commit()
-    return {"message": f"Decision with ID {workload_request_id} has been deleted"}
+    return {"message": f"Decision with ID {pod_id} has been deleted"}
