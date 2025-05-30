@@ -4,12 +4,11 @@ This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
 from dataclasses import dataclass
-<<<<<<< HEAD
+
 import logging
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-=======
 from uuid import UUID
->>>>>>> e02b3da4a743e58b22fe2dafb07d6ad4ef1bf08d
+
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.pod import Pod
