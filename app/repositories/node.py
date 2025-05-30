@@ -42,11 +42,11 @@ async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
         db.add(node)
         await db.commit()
         await db.refresh(node)
-        logger.info(f"Successfully created node: {data.name}")
+        logger.info("Successfully created node: %s", data.name)
         return node
     except IntegrityError as e:
         await db.rollback()
-        logger.error(f"Integrity error while creating node {data.name}: {str(e)}")
+        logger.error("Integrity error while creating node %s: %s", data.name, str(e))
         raise DBEntryCreationException(
             message=f"Failed to create node with name '{data.name}': Data constraint violation",
             details={
@@ -56,7 +56,7 @@ async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
         )
     except OperationalError as e:
         await db.rollback()
-        logger.error(f"Database operational error while creating node {data.name}: {str(e)}")
+        logger.error("Database operational error while creating node %s: %s", data.name, str(e))
         raise DBEntryCreationException(
             message=f"Failed to create node with name '{data.name}': Database connection error",
             details={
@@ -66,7 +66,7 @@ async def create_node(db: AsyncSession, data: NodeCreate) -> Node:
         )
     except SQLAlchemyError as e:
         await db.rollback()
-        logger.error(f"Database error while creating node {data.name}: {str(e)}")
+        logger.error("Database error while creating node %s: %s", data.name, str(e))
         raise DBEntryCreationException(
             message=f"Failed to create node with name '{data.name}': Database error",
             details={
@@ -103,7 +103,7 @@ async def get_nodes(
         nodes = result.scalars().all()
 
         if node_id and not nodes:
-            logger.warning(f"Node with ID {node_id} not found")
+            logger.warning("Node with ID %s not found", node_id)
             raise DBEntryNotFoundException(
                 message=f"Node with ID {node_id} not found",
                 details={
@@ -112,10 +112,10 @@ async def get_nodes(
                 }
             )
 
-        logger.info(f"Successfully retrieved {'node' if node_id else 'all nodes'}")
+        logger.info("Successfully retrieved %s", 'node' if node_id else 'all nodes')
         return nodes
     except OperationalError as e:
-        logger.error(f"Database operational error while retrieving nodes: {str(e)}")
+        logger.error("Database operational error while retrieving nodes: %s", str(e))
         raise DataBaseException(
             message="Failed to retrieve nodes: Database connection error",
             details={
@@ -124,7 +124,7 @@ async def get_nodes(
             }
         )
     except SQLAlchemyError as e:
-        logger.error(f"Database error while retrieving nodes: {str(e)}")
+        logger.error("Database error while retrieving nodes: %s", str(e))
         raise DataBaseException(
             message="Failed to retrieve nodes: Database error",
             details={
@@ -154,7 +154,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
         # First check if node exists
         existing_node = await get_node_by_id(db, node_id)
         if not existing_node:
-            logger.warning(f"Node with ID {node_id} not found for update")
+            logger.warning("Node with ID %s not found for update", node_id)
             raise DBEntryNotFoundException(
                 message=f"Node with ID {node_id} not found",
                 details={
@@ -172,12 +172,12 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
         result = await db.execute(query)
         updated_node = result.scalar_one_or_none()
 
-        logger.info(f"Successfully updated node with ID {node_id}")
+        logger.info("Successfully updated node with ID %s", node_id)
         return updated_node
 
     except IntegrityError as e:
         await db.rollback()
-        logger.error(f"Integrity error while updating node {node_id}: {str(e)}")
+        logger.error("Integrity error while updating node %s: %s", node_id, str(e))
         raise DBEntryUpdateException(
             message=f"Failed to update node {node_id}: Data constraint violation",
             details={
@@ -188,7 +188,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
         )
     except OperationalError as e:
         await db.rollback()
-        logger.error(f"Database operational error while updating node {node_id}: {str(e)}")
+        logger.error("Database operational error while updating node %s: %s", node_id, str(e))
         raise DBEntryUpdateException(
             message=f"Failed to update node {node_id}: Database connection error",
             details={
@@ -199,7 +199,7 @@ async def update_node(db: AsyncSession, node_id: UUID, updates: dict):
         )
     except SQLAlchemyError as e:
         await db.rollback()
-        logger.error(f"Database error while updating node {node_id}: {str(e)}")
+        logger.error("Database error while updating node %s: %s", node_id, str(e))
         raise DBEntryUpdateException(
             message=f"Failed to update node {node_id}: Database error",
             details={
@@ -229,7 +229,7 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
         # First check if node exists
         existing_node = await get_nodes(db, node_id=node_id)
         if not existing_node:
-            logger.warning(f"Node with ID {node_id} not found for deletion")
+            logger.warning("Node with ID %s not found for deletion", node_id)
             raise DBEntryNotFoundException(
                 message=f"Node with ID {node_id} not found",
                 details={
@@ -242,12 +242,12 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
         await db.execute(delete(Node).where(Node.id == node_id))
         await db.commit()
 
-        logger.info(f"Successfully deleted node with ID {node_id}")
+        logger.info("Successfully deleted node with ID %s", node_id)
         return {"deleted_id": node_id}
 
     except IntegrityError as e:
         await db.rollback()
-        logger.error(f"Integrity error while deleting node {node_id}: {str(e)}")
+        logger.error("Integrity error while deleting node %s: %s", node_id, str(e))
         raise DBEntryDeletionException(
             message=f"Failed to delete node {node_id}: Data constraint violation",
             details={
@@ -258,7 +258,7 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
         )
     except OperationalError as e:
         await db.rollback()
-        logger.error(f"Database operational error while deleting node {node_id}: {str(e)}")
+        logger.error("Database operational error while deleting node %s: %s", node_id, str(e))
         raise DBEntryDeletionException(
             message=f"Failed to delete node {node_id}: Database connection error",
             details={
@@ -269,7 +269,7 @@ async def delete_node(db: AsyncSession, node_id: UUID) -> dict:
         )
     except SQLAlchemyError as e:
         await db.rollback()
-        logger.error(f"Database error while deleting node {node_id}: {str(e)}")
+        logger.error("Database error while deleting node %s: %s", node_id, str(e))
         raise DBEntryDeletionException(
             message=f"Failed to delete node {node_id}: Database error",
             details={
@@ -300,7 +300,7 @@ async def get_node_by_id(db: AsyncSession, node_id: UUID):
         node = result.scalar_one_or_none()
 
         if not node:
-            logger.warning(f"Node with ID {node_id} not found")
+            logger.warning("Node with ID %s not found", node_id)
             raise DBEntryNotFoundException(
                 message=f"Node with ID {node_id} not found",
                 details={
@@ -309,11 +309,11 @@ async def get_node_by_id(db: AsyncSession, node_id: UUID):
                 }
             )
 
-        logger.info(f"Successfully retrieved node with ID {node_id}")
+        logger.info("Successfully retrieved node with ID %s", node_id)
         return node
 
     except OperationalError as e:
-        logger.error(f"Database operational error while retrieving node {node_id}: {str(e)}")
+        logger.error("Database operational error while retrieving node %s: %s", node_id, str(e))
         raise DataBaseException(
             message=f"Failed to retrieve node {node_id}: Database connection error",
             details={
@@ -323,7 +323,7 @@ async def get_node_by_id(db: AsyncSession, node_id: UUID):
             }
         )
     except SQLAlchemyError as e:
-        logger.error(f"Database error while retrieving node {node_id}: {str(e)}")
+        logger.error("Database error while retrieving node %s: %s", node_id, str(e))
         raise DataBaseException(
             message=f"Failed to retrieve node {node_id}: Database error",
             details={
