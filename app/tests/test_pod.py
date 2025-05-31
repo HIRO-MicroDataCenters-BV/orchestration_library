@@ -224,7 +224,7 @@ async def test_get_pod_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.pod.get_pod_by_id", new_callable=AsyncMock)
+@patch("app.api.pod.pod.get_pod", new_callable=AsyncMock)
 async def test_get_pod_by_id_route(mock_get):
     """
     Test the get_pod_by_id route
