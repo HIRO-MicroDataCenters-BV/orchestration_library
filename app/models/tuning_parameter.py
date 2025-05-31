@@ -12,9 +12,10 @@ from sqlalchemy import (
 )
 
 from app.db.database import Base
+from app.models.base_dict_mixin import BaseDictMixin
 
 
-class TuningParameter(Base):
+class TuningParameter(Base, BaseDictMixin):
     """
     Model representing tuning parameters for the system.
     """
@@ -28,24 +29,6 @@ class TuningParameter(Base):
     beta = Column(Float, nullable=False)
     gamma = Column(Float, nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
-
-    def to_dict(self):
-        """
-        Convert the model instance to a dictionary.
-
-        Returns:
-            dict: Dictionary representation of the model
-        """
-        return {
-            "id": self.id,
-            "output_1": self.output_1,
-            "output_2": self.output_2,
-            "output_3": self.output_3,
-            "alpha": self.alpha,
-            "beta": self.beta,
-            "gamma": self.gamma,
-            "created_at": self.created_at
-        }
 
     def get_parameters(self):
         """
