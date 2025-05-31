@@ -67,16 +67,16 @@ def get_cluster_info():
         cluster_id = None
         print(f"Error fetching cluster ID: {e}")
 
-    # # Get cluster name
-    # try:
-    #     config.load_incluster_config()
-    #     contexts, active_context = config.list_kube_config_contexts()
-    #     print(f"Contexts: {contexts}")
-    #     print(f"Active context: {active_context}")
-    #     cluster_name = active_context['context']['cluster']
-    # except config.ConfigException as e:
-    #     cluster_name = None
-    #     print(f"Error fetching cluster name: {e}")
+    # Get cluster name
+    try:
+        config.load_incluster_config()
+        contexts, active_context = config.list_kube_config_contexts()
+        print(f"Contexts: {contexts}")
+        print(f"Active context: {active_context}")
+        cluster_name = active_context['context']['cluster']
+    except config.ConfigException as e:
+        cluster_name = None
+        print(f"Error fetching cluster name: {e}")
 
 
     cluster_info = {
