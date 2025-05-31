@@ -8,14 +8,17 @@ from dataclasses import dataclass
 import logging
 from uuid import UUID
 
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
 from app.utils.exceptions import (
+    DBEntryNotFoundException,
+    DBEntryCreationException,
+    DBEntryUpdateException,
+    DBEntryDeletionException,
     DatabaseConnectionException,
-    DatabaseEntryNotFoundException,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,25 +71,12 @@ async def create_pod(db: AsyncSession, pod_data: PodCreate):
         await db.refresh(pod)
         logger.debug("Added pod to session")
         return pod
-    except IntegrityError as e:
-        logger.error("Integrity error while creating pod: %s", str(e))
-        await db.rollback()
-        raise DatabaseConnectionException(
-            "Invalid pod data", details={"error": str(e)}
-        ) from e
     except SQLAlchemyError as e:
-        logger.error("Database error while creating pod: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "Failed to create  pod", details={"error": str(e)}
-        ) from e
+        raise DBEntryCreationException("Failed to create pod", details={"error": str(e)})
     except Exception as e:
-        logger.error("Unexpected error while creating  pod: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "An unexpected error occurred while creating pod", details={"error": str(e)}
-        ) from e
-
+        raise DatabaseConnectionException("Unexpected error while creating pod", details={"error": str(e)})
 
 async def get_pod(db: AsyncSession, pfilter: PodFilter):
     """
@@ -127,17 +117,8 @@ async def get_pod(db: AsyncSession, pfilter: PodFilter):
         result = await db.execute(query)
         pods = result.scalars().all()
         return pods
-    except SQLAlchemyError as e:
-        logger.error("Database error while retrieving pods: %s", str(e))
-        raise DatabaseConnectionException(
-            "Failed to retrieve pods", details={"error": str(e)}
-        ) from e
     except Exception as e:
-        logger.error("Unexpected error while retrieving pods: %s", str(e))
-        raise DatabaseConnectionException(
-            "An unexpected error occurred while retrieving pods",
-            details={"error": str(e)},
-        ) from e
+        raise DatabaseConnectionException("Unexpected error while retrieving pods", details={"error": str(e)})
 
 
 async def get_pod_by_id(db: AsyncSession, pod_id: UUID):
@@ -160,20 +141,11 @@ async def get_pod_by_id(db: AsyncSession, pod_id: UUID):
             raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         result = await db.execute(select(Pod).where(Pod.id == pod_id))
         pod = result.scalar_one_or_none()
-        if not pod:
-            raise DatabaseEntryNotFoundException()
         return pod
-    except SQLAlchemyError as e:
-        logger.error("Database error while retrieving pod by ID: %s", str(e))
-        raise DatabaseConnectionException(
-            "Failed to retrieve pod by ID", details={"error": str(e)}
-        ) from e
+    except DBEntryNotFoundException as e:
+        raise
     except Exception as e:
-        logger.error("Unexpected error while retrieving pod by ID: %s", str(e))
-        raise DatabaseConnectionException(
-            "An unexpected error occurred while retrieving pod by ID",
-            details={"error": str(e)},
-        ) from e
+        raise DatabaseConnectionException("Unexpected error while retrieving pod", details={"error": str(e)})
 
 
 async def update_pod(db: AsyncSession, pod_id: UUID, updates: PodUpdate):
@@ -196,8 +168,6 @@ async def update_pod(db: AsyncSession, pod_id: UUID, updates: PodUpdate):
         if not isinstance(pod_id, UUID):
             raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         pod = await get_pod_by_id(db, pod_id)
-        if not pod:
-            raise DatabaseEntryNotFoundException()
 
         for key, value in updates.model_dump(exclude_unset=True).items():
             if not hasattr(pod, key):
@@ -208,18 +178,14 @@ async def update_pod(db: AsyncSession, pod_id: UUID, updates: PodUpdate):
         await db.commit()
         await db.refresh(pod)
         return pod
+    except DBEntryNotFoundException:
+        raise
     except SQLAlchemyError as e:
-        logger.error("Database error while updating pod: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "Failed to update pod", details={"error": str(e)}
-        ) from e
+        raise DBEntryUpdateException("Failed to update pod", details={"error": str(e)})
     except Exception as e:
-        logger.error("Unexpected error while updating pod: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "An unexpected error occurred while updating pod", details={"error": str(e)}
-        ) from e
+        raise DatabaseConnectionException("Unexpected error while updating pod", details={"error": str(e)})
 
 
 async def delete_pod(db: AsyncSession, pod_id: UUID):
@@ -241,21 +207,15 @@ async def delete_pod(db: AsyncSession, pod_id: UUID):
         if not isinstance(pod_id, UUID):
             raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         pod = await get_pod_by_id(db, pod_id)
-        if not pod:
-            raise DatabaseEntryNotFoundException()
 
         await db.delete(pod)
         await db.commit()
         return {"message": f"Pod with ID {pod_id} has been deleted"}
+    except DBEntryNotFoundException:
+        raise
     except SQLAlchemyError as e:
-        logger.error("Database error while deleting pod: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "Failed to delete pod", details={"error": str(e)}
-        ) from e
+        raise DBEntryDeletionException("Failed to delete pod", details={"error": str(e)})
     except Exception as e:
-        logger.error("Unexpected error while deleting pod: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "An unexpected error occurred while deleting pod", details={"error": str(e)}
-        ) from e
+        raise DatabaseConnectionException("Unexpected error while deleting pod", details={"error": str(e)})

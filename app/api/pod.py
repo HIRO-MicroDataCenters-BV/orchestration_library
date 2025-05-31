@@ -14,7 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.schemas.pod import PodCreate, PodUpdate
 from app.repositories import pod
-from app.utils.exceptions import DatabaseConnectionException
+from app.utils.exceptions import (
+    DatabaseConnectionException,
+    DBEntryNotFoundException,
+    DBEntryCreationException,
+    DBEntryUpdateException,
+    DBEntryDeletionException,
+)
 
 router = APIRouter(prefix="/db_pod")
 
@@ -55,10 +61,13 @@ async def create(data: PodCreate, db: AsyncSession = Depends(get_async_db)):
     try:
         return await pod.create_pod(db, data)
     except SQLAlchemyError as e:
-        raise DatabaseConnectionException(
+        raise DBEntryCreationException(
             "Failed to create pod", details={"error": str(e)}
         ) from e
-
+    except Exception as e:
+        raise DatabaseConnectionException(
+            "Unexpected error during pod creation", details={"error": str(e)}
+        ) from e
 
 @router.get("/")
 async def get(
@@ -84,10 +93,15 @@ async def get_by_id(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
 
     try:
-        return await pod.get_pod(db, pod_id)
+        result = await pod.get_pod(db, pod_id)
+        if not result:
+            raise DBEntryNotFoundException(
+                f"Pod with ID {pod_id} not found", details={"pod_id": str(pod_id)}
+            )
+        return result
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
-            f"Failed to retrieve pod with ID {pod_id}", details={"error": str(e)}
+            f"Failed to update pod with ID {pod_id}", details={"error": str(e)}
         ) from e
 
 
@@ -99,7 +113,14 @@ async def update(
     Update a pod by its ID.
     """
     try:
-        return await pod.update_pod(db, pod_id, data)
+        result = await pod.update_pod(db, pod_id, data)
+        if not result:
+            raise DBEntryUpdateException(
+                f"Pod with ID {pod_id} not found or update failed",
+                details={"pod_id": str(pod_id)},
+            )
+
+        return result
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
             f"Failed to update pod with ID {pod_id}", details={"error": str(e)}
@@ -112,8 +133,14 @@ async def delete(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     Delete a pod by its ID.
     """
     try:
-        return await pod.delete_pod(db, pod_id)
+        result = await pod.delete_pod(db, pod_id)
+        if "error" in result:
+            raise DBEntryDeletionException(
+                f"Pod with ID {pod_id} not found or deletion failed",
+                details={"pod_id": str(pod_id)},
+            )
+        return result
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
-            f"Failed to delete pod with ID {pod_id}", details={"error": str(e)}
-        ) from e
+                f"Failed to delete pod with ID {pod_id}", details={"error": str(e)}
+            ) from e
