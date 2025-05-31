@@ -137,8 +137,6 @@ async def get_pod_by_id(db: AsyncSession, pod_id: UUID):
         DatabaseConnectionException: If a database error occurs.
     """
     try:
-        if not isinstance(pod_id, int):
-            raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         result = await db.execute(select(Pod).where(Pod.id == pod_id))
         pod = result.scalar_one_or_none()
         return pod
@@ -165,8 +163,6 @@ async def update_pod(db: AsyncSession, pod_id: UUID, updates: PodUpdate):
         DatabaseConnectionException: On update failure.
     """
     try:
-        if not isinstance(pod_id, UUID):
-            raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         pod = await get_pod_by_id(db, pod_id)
 
         for key, value in updates.model_dump(exclude_unset=True).items():
@@ -204,8 +200,6 @@ async def delete_pod(db: AsyncSession, pod_id: UUID):
         DatabaseConnectionException: On delete failure.
     """
     try:
-        if not isinstance(pod_id, UUID):
-            raise ValueError(f"Expected pod_id to be int, got {type(pod_id).__name__}")
         pod = await get_pod_by_id(db, pod_id)
 
         await db.delete(pod)
