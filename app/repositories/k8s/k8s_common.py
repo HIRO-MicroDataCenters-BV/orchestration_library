@@ -4,8 +4,7 @@ This module provides functions to create, read, update, and delete pod records.
 It uses SQLAlchemy ORM for database interactions.
 """
 
-import kubernetes.client
-from kubernetes import config
+from kubernetes import config, client
 
 K8S_IN_USE_NAMESPACE_REGEX = "^kube-.*$|^default$"
 
@@ -26,32 +25,32 @@ def get_k8s_core_v1_client():
     Get the Kubernetes CoreV1 API client.
     """
     load_kube_config()
-    return kubernetes.client.CoreV1Api()
+    return client.CoreV1Api()
 
 def get_k8s_custom_objects_client():
     """
     Get the Kubernetes Custom Objects API client.
     """
     load_kube_config()
-    return kubernetes.client.CustomObjectsApi()
+    return client.CustomObjectsApi()
 
 def get_k8s_version_api_client():
     """
     Get the Kubernetes Version API client.
     """
     load_kube_config()
-    return kubernetes.client.VersionApi()
+    return client.VersionApi()
 
 def get_k8s_apps_v1_client():
     """
     Get the Kubernetes AppsV1 API client.
     """
     load_kube_config()
-    return kubernetes.client.AppsV1Api()
+    return client.AppsV1Api()
 
 def get_k8s_batch_v1_client():
     """
     Get the Kubernetes BatchV1 API client.
     """
     load_kube_config()
-    return kubernetes.client.BatchV1Api()
+    return client.BatchV1Api()
