@@ -159,3 +159,52 @@ def get_pod_basic_info(pod):
             for c in pod.status.container_statuses or []
         ],
     }
+
+def get_deployment_basic_info(dep):
+    """
+    Extracts and returns basic information about a Kubernetes deployment.
+    """
+    return {
+        "name": dep.metadata.name,
+        "namespace": dep.metadata.namespace,
+        "labels": dep.metadata.labels,
+        "replicas": dep.spec.replicas,
+        "available_replicas": getattr(dep.status, "available_replicas", None),
+    }
+
+def get_job_basic_info(job):
+    """
+    Extracts and returns basic information about a Kubernetes job.
+    """
+    return {
+        "name": job.metadata.name,
+        "namespace": job.metadata.namespace,
+        "labels": job.metadata.labels,
+        "active": getattr(job.status, "active", None),
+        "succeeded": getattr(job.status, "succeeded", None),
+        "failed": getattr(job.status, "failed", None),
+    }
+
+def get_statefulset_basic_info(sts):
+    """
+    Extracts and returns basic information about a Kubernetes statefulset.
+    """
+    return {
+        "name": sts.metadata.name,
+        "namespace": sts.metadata.namespace,
+        "labels": sts.metadata.labels,
+        "replicas": sts.spec.replicas,
+        "ready_replicas": getattr(sts.status, "ready_replicas", None),
+    }
+
+def get_daemonset_basic_info(ds):
+    """
+    Extracts and returns basic information about a Kubernetes daemonset.
+    """
+    return {
+        "name": ds.metadata.name,
+        "namespace": ds.metadata.namespace,
+        "labels": ds.metadata.labels,
+        "desired_number_scheduled": getattr(ds.status, "desired_number_scheduled", None),
+        "number_ready": getattr(ds.status, "number_ready", None),
+    }
