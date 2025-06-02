@@ -13,6 +13,7 @@ from app.main import app
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
 
+# pylint: disable=invalid-name
 # ========================= Constants for sample pod data =========================
 
 SAMPLE_POD_OBJECT = Pod(
@@ -134,6 +135,28 @@ async def test_get_pod():
     assert result[0].name == "test-pod"
     assert result[0].status == "running"
 
+@pytest.mark.asyncio
+async def test_get_pod_with_no_filter():
+    """
+    Test the get_pod function with no filters
+    """
+    mock_pod = SAMPLE_POD_OBJECT
+    mock_scalars = MagicMock()
+    mock_scalars.all.return_value = [mock_pod]
+
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = mock_scalars
+
+    db = AsyncMock()
+    db.execute.return_value = mock_result
+
+    result = await pod.get_pod(db, pod.PodFilter())
+
+    db.execute.assert_called_once()
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert result[0].name == "test-pod"
+
 
 @pytest.mark.asyncio
 async def test_update_pod():
@@ -181,6 +204,46 @@ async def test_delete_pod():
         == "Pod with ID e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f has been deleted"
     )
 
+@pytest.mark.asyncio
+async def test_get_pod_by_id():
+    """
+    Test the get_pod_by_id function
+    """
+    db = AsyncMock()
+    mock_pod = SAMPLE_POD_OBJECT
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_pod
+    db.execute = AsyncMock(return_value=mock_result)
+
+    result = await pod.get_pod_by_id(db, pod_id="e2b7c7e6-1a8a-4e3d-9a7e-2f8e2c7b8e1f")
+
+    db.execute.assert_called_once()
+    assert isinstance(result, Pod)
+    assert result.name == "test-pod"
+
+@pytest.mark.asyncio
+async def test_get_workload_request_ids_per_node():
+    """
+    Test the workload_request_ids_per_node function
+    """
+    mock_pod = SAMPLE_POD_OBJECT
+    mock_scalars = MagicMock()
+    mock_scalars.all.return_value = [mock_pod]
+
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = mock_scalars
+    db = AsyncMock()
+    db.execute.return_value = mock_result
+
+    result = await pod.workload_request_ids_per_node(
+        db, node_id="a3d5f9b2-4c6e-4f1a-9b2e-7c8d1e5a2f3b"
+    )
+
+    db.execute.assert_called_once()
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert result[0].name == "test-pod"
+
 
 # ========================= Tests for pod routes =========================
 
@@ -224,7 +287,7 @@ async def test_get_pod_route(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.pod.get_pod_by_id", new_callable=AsyncMock)
+@patch("app.api.pod.pod.get_pod", new_callable=AsyncMock)
 async def test_get_pod_by_id_route(mock_get):
     """
     Test the get_pod_by_id route

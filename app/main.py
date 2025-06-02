@@ -14,6 +14,7 @@ from app.api.k8s import (
     k8s_cluster_info
 )
 from app.api import (
+    common_api,
     pod,
     workload_request,
     workload_request_decision,
@@ -37,8 +38,9 @@ app.include_router(workload_request.router, tags=["DB Workload Request"])
 app.include_router(workload_request_decision.router, tags=["DB Workload Request Decision"])
 app.include_router(pod.router, tags=["DB Pod"])
 app.include_router(node.router, tags=["DB Node"])
-
 app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
+
+app.include_router(common_api.router, tags=["Common API"])
 
 
 init_exception_handlers(app)
