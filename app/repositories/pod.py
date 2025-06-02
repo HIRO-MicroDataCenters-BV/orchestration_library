@@ -229,3 +229,29 @@ async def delete_pod(db: AsyncSession, pod_id: UUID):
         raise DatabaseConnectionException(
             "Unexpected error while deleting pod", details={"error": str(e)}
         ) from e
+
+async def workload_request_ids_per_node(
+    db: AsyncSession,
+    node_id: UUID
+):
+    """
+    Retrieve all workload requests associated with a specific node.
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        node_id (UUID): The ID of the node.
+    Returns:
+        list[UUID]: A list of workload request IDs associated with the node.
+    Raises:
+    """
+    try:
+        query = select(Pod.workload_request_id).where(Pod.assigned_node_id == node_id)
+        result = await db.execute(query)
+        workload_request_ids = result.scalars().all()
+        return workload_request_ids
+    except DBEntryNotFoundException:
+        raise
+    except Exception as e:
+        raise DatabaseConnectionException(
+            "Unexpected error while retrieving workload request IDs from node id",
+            details={"error": str(e)}
+        ) from e
