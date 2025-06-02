@@ -110,11 +110,6 @@ async def get_workload_request_decision(
             "Database error occurred while fetching workload request decision(s)",
             details={"error": str(e)},
         ) from e
-    except Exception as e:
-        raise DatabaseConnectionException(
-            "Unexpected error while fetching workload request decision(s)",
-            details={"error": str(e)},
-        ) from e
 
 
 async def delete_workload_request_decision(db: AsyncSession, pod_id: UUID):
