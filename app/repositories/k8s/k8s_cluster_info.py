@@ -92,7 +92,11 @@ def get_cluster_info():
         print(f"Error fetching cluster name: {e}")
 
     # Get all namespaces (if you want to search cluster-wide)
-    namespaces = [ns.metadata.name for ns in core_v1.list_namespace().items]
+    try: 
+        namespaces = [ns.metadata.name for ns in core_v1.list_namespace().items]
+    except ApiException as e:
+        namespaces = []
+        print(f"Error fetching namespaces: {e}")
 
     pods = []
     deployments = []
