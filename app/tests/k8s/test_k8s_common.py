@@ -14,7 +14,7 @@ def test_get_k8s_core_v1_client_incluster(monkeypatch):
 
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
-    monkeypatch.setattr(k8s_common.kubernetes.client, "CoreV1Api", lambda: core_v1_api)
+    monkeypatch.setattr(k8s_common.client, "CoreV1Api", lambda: core_v1_api)
 
     # Simulate in-cluster config works (no exception)
     client = k8s_common.get_k8s_core_v1_client()
@@ -35,7 +35,7 @@ def test_get_k8s_core_v1_client_kubeconfig(monkeypatch):
 
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
-    monkeypatch.setattr(k8s_common.kubernetes.client, "CoreV1Api", lambda: core_v1_api)
+    monkeypatch.setattr(k8s_common.client, "CoreV1Api", lambda: core_v1_api)
 
     client = k8s_common.get_k8s_core_v1_client()
     load_incluster.assert_called_once()
@@ -52,7 +52,7 @@ def test_get_k8s_custom_objects_client_incluster(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "CustomObjectsApi", lambda: custom_objects_api
+        k8s_common.client, "CustomObjectsApi", lambda: custom_objects_api
     )
 
     # Simulate in-cluster config works (no exception)
@@ -75,7 +75,7 @@ def test_get_k8s_custom_objects_client_kubeconfig(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "CustomObjectsApi", lambda: custom_objects_api
+        k8s_common.client, "CustomObjectsApi", lambda: custom_objects_api
     )
 
     client = k8s_common.get_k8s_custom_objects_client()
@@ -92,7 +92,7 @@ def test_get_k8s_version_api_client_incluster(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "VersionApi", lambda: version_api
+        k8s_common.client, "VersionApi", lambda: version_api
     )
 
     # Simulate in-cluster config works (no exception)
@@ -114,7 +114,7 @@ def test_get_k8s_version_api_client_kubeconfig(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "VersionApi", lambda: version_api
+        k8s_common.client, "VersionApi", lambda: version_api
     )
 
     client = k8s_common.get_k8s_version_api_client()
@@ -131,7 +131,7 @@ def test_get_k8s_apps_v1_client_incluster(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "AppsV1Api", lambda: apps_v1_api
+        k8s_common.client, "AppsV1Api", lambda: apps_v1_api
     )
 
     # Simulate in-cluster config works (no exception)
@@ -153,7 +153,7 @@ def test_get_k8s_apps_v1_client_kubeconfig(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "AppsV1Api", lambda: apps_v1_api
+        k8s_common.client, "AppsV1Api", lambda: apps_v1_api
     )
 
     client = k8s_common.get_k8s_apps_v1_client()
@@ -170,7 +170,7 @@ def test_get_k8s_batch_v1_client_incluster(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "BatchV1Api", lambda: batch_v1_api
+        k8s_common.client, "BatchV1Api", lambda: batch_v1_api
     )
 
     # Simulate in-cluster config works (no exception)
@@ -192,7 +192,7 @@ def test_get_k8s_batch_v1_client_kubeconfig(monkeypatch):
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
-        k8s_common.kubernetes.client, "BatchV1Api", lambda: batch_v1_api
+        k8s_common.client, "BatchV1Api", lambda: batch_v1_api
     )
 
     client = k8s_common.get_k8s_batch_v1_client()
