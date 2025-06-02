@@ -35,7 +35,7 @@ def pod_filter_from_query(
     assigned_node_id: Optional[UUID] = Query(None),
     workload_request_id: Optional[UUID] = Query(None),
     status: Optional[str] = Query(None),
-):  # pylint: too-many-positional-arguments
+):  # pylint: disable=too-many-positional-arguments
     """
     Create a PodFilter object from query parameters.
     This function is used to filter pods based on various criteria.
