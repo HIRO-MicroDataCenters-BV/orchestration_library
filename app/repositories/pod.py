@@ -243,7 +243,7 @@ async def workload_request_ids_per_node(
         list[UUID]: A list of workload request IDs associated with the node.
     Raises:
     """
-    try: 
+    try:
         query = select(Pod.workload_request_id).where(Pod.assigned_node_id == node_id)
         result = await db.execute(query)
         workload_request_ids = result.scalars().all()
