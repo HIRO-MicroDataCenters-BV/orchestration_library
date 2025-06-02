@@ -8,8 +8,8 @@ It includes routes for creating, retrieving, updating, and deleting pod records.
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy.exc import SQLAlchemyError
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.schemas.pod import PodCreate, PodUpdate
@@ -25,7 +25,7 @@ from app.utils.exceptions import (
 router = APIRouter(prefix="/db_pod")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments, disable=invalid-name
+# pylint: disable=too-many-arguments, disable=invalid-name
 # This is a filter function, and it can have many parameters.
 def pod_filter_from_query(
     pod_id: Optional[UUID] = Query(None),
@@ -35,7 +35,7 @@ def pod_filter_from_query(
     assigned_node_id: Optional[UUID] = Query(None),
     workload_request_id: Optional[UUID] = Query(None),
     status: Optional[str] = Query(None),
-):
+):  # pylint: disable=too-many-arguments
     """
     Create a PodFilter object from query parameters.
     This function is used to filter pods based on various criteria.
@@ -49,7 +49,6 @@ def pod_filter_from_query(
         workload_request_id=workload_request_id,
         status=status,
     )
-
 
 
 @router.post("/")
@@ -68,6 +67,7 @@ async def create(data: PodCreate, db: AsyncSession = Depends(get_async_db)):
         raise DatabaseConnectionException(
             "Unexpected error during pod creation", details={"error": str(e)}
         ) from e
+
 
 @router.get("/")
 async def get(
@@ -142,5 +142,5 @@ async def delete(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
         return result
     except SQLAlchemyError as e:
         raise DatabaseConnectionException(
-                f"Failed to delete pod with ID {pod_id}", details={"error": str(e)}
-            ) from e
+            f"Failed to delete pod with ID {pod_id}", details={"error": str(e)}
+        ) from e
