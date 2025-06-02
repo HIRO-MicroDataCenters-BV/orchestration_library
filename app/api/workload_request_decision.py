@@ -22,7 +22,7 @@ from app.utils.exceptions import (
 
 router = APIRouter(prefix="/workload_request_decision")
 
-
+# pylint: disable=invalid-name
 @router.post("/")
 async def create(
     data: WorkloadRequestDecisionCreate,
