@@ -73,6 +73,7 @@ def test_get_cluster_info_success():
     mocks["mock_batch"].return_value = mock_batch
 
     # Mock config context
+    mocks["mock_config"].load_kube_config.return_value = None
     mocks["mock_config"].load_incluster_config.return_value = None
     mocks["mock_config"].list_kube_config_contexts.return_value = (
         [{"context": {"cluster": "test-cluster"}}],
@@ -121,6 +122,7 @@ def test_get_cluster_info_handles_exceptions():
         "context error"
     )
     mocks["mock_config"].ConfigException = ConfigException
+    mocks["mock_config"].load_kube_config.return_value = None
 
     result = k8s_cluster_info.get_cluster_info()
     assert not result["nodes"]
