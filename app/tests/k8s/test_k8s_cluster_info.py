@@ -1,6 +1,7 @@
 """
 Tests for the k8s_cluster_info module.
 """
+
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 from kubernetes.config.config_exception import ConfigException
@@ -11,27 +12,42 @@ from app.tests.utils.mock_objects import (
     mock_node,
     mock_component,
     mock_pod,
-    mock_custom_api,
 )
 
-@patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_apps_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_batch_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.config", autospec=True)
-def test_get_cluster_info_success(
-    mock_config,
-    mock_get_batch,
-    mock_get_apps,
-    mock_get_version,
-    mock_get_core,
-    mock_get_custom,
-    mock_get_k8s_core,
-):
+
+def k8s_cluster_info_mocks():
+    """
+    Fixture to mock Kubernetes API clients and configuration.
+    This fixture provides mocked clients for core, apps, batch, and version APIs,
+    as well as the configuration loading functions.
+    It allows tests to simulate various scenarios without needing a real Kubernetes cluster.
+    """
+    mock_node_core = patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client").start()
+    mock_core = patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client").start()
+    mock_version = patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client").start()
+    mock_apps = patch("app.repositories.k8s.k8s_cluster_info.get_k8s_apps_v1_client").start()
+    mock_batch = patch("app.repositories.k8s.k8s_cluster_info.get_k8s_batch_v1_client").start()
+    mock_config = patch("app.repositories.k8s.k8s_cluster_info.config").start()
+
+    return {
+        "mock_node_core": mock_node_core,
+        "mock_core": mock_core,
+        "mock_version": mock_version,
+        "mock_apps": mock_apps,
+        "mock_batch": mock_batch,
+        "mock_config": mock_config,
+    }
+
+
+def test_get_cluster_info_success():
+    """
+    Test the get_cluster_info function with mocked Kubernetes API responses.
+    This test checks if the function correctly aggregates information about nodes,
+    components, pods, and other resources in the cluster.
+    """
+    mocks = k8s_cluster_info_mocks()
     # Mock version API
-    mock_get_version.return_value.get_code.return_value = mock_version_info()
+    mocks["mock_version"].return_value.get_code.return_value = mock_version_info()
 
     # Mock core_v1 client
     mock_core = MagicMock()
@@ -42,23 +58,23 @@ def test_get_cluster_info_success(
     mock_namespace = MagicMock()
     mock_namespace.metadata.name = "default"
     mock_core.list_namespace.return_value.items = [mock_namespace]
-    mock_get_core.return_value = mock_core
-    mock_get_k8s_core.return_value = mock_core
+    mocks["mock_core"].return_value = mock_core
+    mocks["mock_node_core"].return_value = mock_core
 
     # Mock apps_v1 and batch_v1 clients
     mock_apps = MagicMock()
     mock_apps.list_namespaced_deployment.return_value.items = []
     mock_apps.list_namespaced_stateful_set.return_value.items = []
     mock_apps.list_namespaced_daemon_set.return_value.items = []
-    mock_get_apps.return_value = mock_apps
+    mocks["mock_apps"].return_value = mock_apps
 
     mock_batch = MagicMock()
     mock_batch.list_namespaced_job.return_value.items = []
-    mock_get_batch.return_value = mock_batch
+    mocks["mock_batch"].return_value = mock_batch
 
     # Mock config context
-    mock_config.load_incluster_config.return_value = None
-    mock_config.list_kube_config_contexts.return_value = (
+    mocks["mock_config"].load_incluster_config.return_value = None
+    mocks["mock_config"].list_kube_config_contexts.return_value = (
         [{"context": {"cluster": "test-cluster"}}],
         {"context": {"cluster": "test-cluster"}},
     )
@@ -78,42 +94,38 @@ def test_get_cluster_info_success(
     assert result["statefulsets"] == []
     assert result["daemonsets"] == []
 
-@patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_core_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_version_api_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_apps_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.get_k8s_batch_v1_client", autospec=True)
-@patch("app.repositories.k8s.k8s_cluster_info.config", autospec=True)
-def test_get_cluster_info_handles_exceptions(
-    mock_config,
-    mock_get_batch,
-    mock_get_apps,
-    mock_get_version,
-    mock_get_core,
-    mock_get_custom,
-    mock_get_k8s_core,
-):
-    mock_get_version.return_value.get_code.return_value = mock_version_info()
+
+def test_get_cluster_info_handles_exceptions():
+    """
+    Test the get_cluster_info function when various Kubernetes API calls raise exceptions.
+    This test checks if the function gracefully handles errors and returns empty lists
+    or None where appropriate.
+    """
+    mocks = k8s_cluster_info_mocks()
+    mocks["mock_version"].return_value.get_code.return_value = mock_version_info()
     mock_core = MagicMock()
     mock_core.list_node.side_effect = ApiException("nodes error")
     mock_core.list_component_status.side_effect = ApiException("components error")
     mock_core.list_namespaced_pod.side_effect = ApiException("pods error")
     mock_core.read_namespace.side_effect = ApiException("namespace error")
     mock_core.list_namespace.side_effect = ApiException("namespace list error")
-    mock_get_core.return_value = mock_core
-    mock_get_k8s_core.return_value = mock_core
+    mocks["mock_core"].return_value = mock_core
+    mocks["mock_node_core"].return_value = mock_core
 
-    mock_get_apps.return_value = MagicMock()
-    mock_get_batch.return_value = MagicMock()
-    mock_config.load_incluster_config.side_effect = ConfigException("config error")
-    mock_config.list_kube_config_contexts.side_effect = ConfigException("context error")
-    mock_config.ConfigException = ConfigException
+    mocks["mock_apps"].return_value = MagicMock()
+    mocks["mock_batch"].return_value = MagicMock()
+    mocks["mock_config"].load_incluster_config.side_effect = ConfigException(
+        "config error"
+    )
+    mocks["mock_config"].list_kube_config_contexts.side_effect = ConfigException(
+        "context error"
+    )
+    mocks["mock_config"].ConfigException = ConfigException
 
     result = k8s_cluster_info.get_cluster_info()
-    assert result["nodes"] == []
-    assert result["components"] == []
-    assert result["kube_system_pods"] == []
+    assert not result["nodes"]
+    assert not result["components"]
+    assert not result["kube_system_pods"]
     assert result["cluster_id"] is None
     assert result["cluster_name"] is None
-    assert result["namespaces"] == []
+    assert not result["namespaces"]
