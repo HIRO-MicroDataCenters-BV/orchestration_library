@@ -1,6 +1,7 @@
 """
 CRUD operations for managing workload requests in the database.
 """
+
 import logging
 from dataclasses import dataclass
 from math import log
@@ -10,9 +11,16 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy import select
 from app.models.workload_request import WorkloadRequest
 from app.schemas.workload_request import WorkloadRequestCreate
-from app.utils.exceptions import DBEntryCreationException, DBEntryDeletionException, DBEntryNotFoundException, DBEntryUpdateException, DataBaseException, DatabaseConnectionException
+from app.utils.exceptions import (
+    DBEntryCreationException,
+    DBEntryDeletionException,
+    DBEntryNotFoundException,
+    DBEntryUpdateException,
+    DataBaseException,
+)
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class WorkloadRequestFilter:
@@ -20,6 +28,7 @@ class WorkloadRequestFilter:
     Data class for filtering workload requests.
     This class can be extended with additional filter fields as needed.
     """
+
     workload_request_id: UUID = None
     name: str = None
     namespace: str = None
@@ -27,6 +36,7 @@ class WorkloadRequestFilter:
     kind: str = None
     status: str = None
     current_scale: int = None
+
 
 async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     """
@@ -44,17 +54,19 @@ async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
             "Integrity error while creating workload request %s: %s", req.name, str(e)
         )
         raise DBEntryCreationException(
-            message=f"Failed to create workload request '{req.name}' : {str(e.orig)}",
-            details={"error": str(e.orig), "request_data": req.model_dump()},
+            message=f"Failed to create workload request '{req.name}' : {str(e)}",
+            details={"error": str(e), "request_data": req.model_dump()},
         ) from e
     except OperationalError as e:
         await db.rollback()
         logger.error(
-            "Database operational error while creating workload request %s: %s", req.name, str(e)
+            "Database operational error while creating workload request %s: %s",
+            req.name,
+            str(e),
         )
         raise DBEntryCreationException(
             message=f"Database connection error while creating workload request '{req.name}'",
-            details={"error": str(e.orig), "request_data": req.model_dump()},
+            details={"error": str(e), "request_data": req.model_dump()},
         ) from e
     except SQLAlchemyError as e:
         await db.rollback()
@@ -63,13 +75,11 @@ async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
         )
         raise DBEntryCreationException(
             message=f"Failed to create workload request '{req.name}'",
-            details={"error": str(e.orig), "request_data": req.model_dump()},
+            details={"error": str(e), "request_data": req.model_dump()},
         ) from e
 
 
-async def get_workload_requests(
-    db: AsyncSession, wrfilter: WorkloadRequestFilter
-):
+async def get_workload_requests(db: AsyncSession, wrfilter: WorkloadRequestFilter):
     """
     Get workload requests based on various optional filters.
     """
@@ -91,13 +101,17 @@ async def get_workload_requests(
             filters.append(WorkloadRequest.current_scale == wrfilter.current_scale)
 
         query = (
-            select(WorkloadRequest).where(*filters) if filters else select(WorkloadRequest)
+            select(WorkloadRequest).where(*filters)
+            if filters
+            else select(WorkloadRequest)
         )
         result = await db.execute(query)
 
         workload_requests = result.scalars().all()
         if not workload_requests:
-            logger.warning("No workload requests found with the provided filters: %s", wrfilter)
+            logger.warning(
+                "No workload requests found with the provided filters: %s", wrfilter
+            )
             raise DBEntryNotFoundException(
                 "No workload requests found",
                 details={"filters": wrfilter.model_dump()},
@@ -134,7 +148,10 @@ async def update_workload_request(
             )
             raise DBEntryNotFoundException(
                 f"WorkloadRequest with ID {workload_request_id} not found",
-                details={"error": "NotFoundError", "workload_request_id": str(workload_request_id)},
+                details={
+                    "error": "NotFoundError",
+                    "workload_request_id": str(workload_request_id),
+                },
             )
 
         for key, value in updates.items():
@@ -155,7 +172,10 @@ async def update_workload_request(
         )
         raise DBEntryUpdateException(
             "Failed to update workload request",
-            details={"error": str(e.orig), "workload_request_id": str(workload_request_id)},
+            details={
+                "error": str(e),
+                "workload_request_id": str(workload_request_id),
+            },
         ) from e
     except OperationalError as e:
         await db.rollback()
@@ -166,7 +186,10 @@ async def update_workload_request(
         )
         raise DBEntryUpdateException(
             "Database connection error during workload request update",
-            details={"error": str(e.orig), "workload_request_id": str(workload_request_id)},
+            details={
+                "error": str(e),
+                "workload_request_id": str(workload_request_id),
+            },
         ) from e
     except SQLAlchemyError as e:
         await db.rollback()
@@ -177,9 +200,11 @@ async def update_workload_request(
         )
         raise DBEntryUpdateException(
             "Failed to update workload request",
-            details={"error": str(e.orig), "workload_request_id": str(workload_request_id)},
+            details={
+                "error": str(e),
+                "workload_request_id": str(workload_request_id),
+            },
         ) from e
-    
 
 
 async def delete_workload_request(db: AsyncSession, workload_request_id: UUID):
@@ -206,7 +231,10 @@ async def delete_workload_request(db: AsyncSession, workload_request_id: UUID):
             )
             raise DBEntryNotFoundException(
                 f"WorkloadRequest with ID {workload_request_id} not found",
-                details={"error": "NotFoundError", "workload_request_id": str(workload_request_id)},
+                details={
+                    "error": "NotFoundError",
+                    "workload_request_id": str(workload_request_id),
+                },
             )
         logger.info("Deleting WorkloadRequest with ID %s", workload_request_id)
 
@@ -225,7 +253,10 @@ async def delete_workload_request(db: AsyncSession, workload_request_id: UUID):
         )
         raise DBEntryDeletionException(
             "Failed to delete workload request",
-            details={"error": str(e.orig), "workload_request_id": str(workload_request_id)},
+            details={
+                "error": str(e),
+                "workload_request_id": str(workload_request_id),
+            },
         ) from e
     except OperationalError as e:
         await db.rollback()
@@ -236,7 +267,10 @@ async def delete_workload_request(db: AsyncSession, workload_request_id: UUID):
         )
         raise DBEntryDeletionException(
             "Database connection error during workload request deletion",
-            details={"error": str(e.orig), "workload_request_id": str(workload_request_id)},
+            details={
+                "error": str(e),
+                "workload_request_id": str(workload_request_id),
+            },
         ) from e
     except SQLAlchemyError as e:
         await db.rollback()
