@@ -4,7 +4,7 @@ CRUD operations for managing workload request decission in the database.
 
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy import select
 from app.models.workload_request_decision import WorkloadRequestDecision
 from app.schemas.workload_request_decision import WorkloadRequestDecisionCreate
@@ -30,11 +30,18 @@ async def create_workload_request_decision(
         await db.commit()
         await db.refresh(obj)
         return obj
+    except (IntegrityError, OperationalError) as e:
+        await db.rollback()
+        raise DBEntryCreationException(
+            "Integrity or operational error during creation", details={"error": str(e)}
+        ) from e
     except SQLAlchemyError as e:
+        await db.rollback()
         raise DBEntryCreationException(
             "Failed to create workload request decision", details={"error": str(e)}
         ) from e
     except Exception as e:
+        await db.rollback()
         raise DatabaseConnectionException(
             "Unexpected error during workload request decision creation",
             details={"error": str(e)},
@@ -67,11 +74,18 @@ async def update_workload_request_decision(
         await db.commit()
         await db.refresh(decision)
         return decision
+    except (IntegrityError, OperationalError) as e:
+        await db.rollback()
+        raise DBEntryUpdateException(
+            "Integrity or operational error during update", details={"error": str(e)}
+        ) from e
     except SQLAlchemyError as e:
+        await db.rollback()
         raise DBEntryUpdateException(
             "Failed to update workload request decision", details={"error": str(e)}
         ) from e
     except Exception as e:
+        await db.rollback()
         raise DatabaseConnectionException(
             "Unexpected error during workload request decision update",
             details={"error": str(e)},
@@ -132,11 +146,18 @@ async def delete_workload_request_decision(db: AsyncSession, pod_id: UUID):
             await db.delete(decision)
         await db.commit()
         return {"message": f"Decision with ID {pod_id} has been deleted"}
+    except (IntegrityError, OperationalError) as e:
+        await db.rollback()
+        raise DBEntryDeletionException(
+            "Integrity or operational error during deletion", details={"error": str(e)}
+        ) from e
     except SQLAlchemyError as e:
+        await db.rollback()
         raise DBEntryDeletionException(
             "Failed to delete workload request decision", details={"error": str(e)}
         ) from e
     except Exception as e:
+        await db.rollback()
         raise DatabaseConnectionException(
             "Unexpected error during workload request decision deletion",
             details={"error": str(e)},
