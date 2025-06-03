@@ -122,8 +122,8 @@ def get_cluster_name(core_v1):
         # If kubeadm config is not available, fallback to kubeconfig context
         config.load_incluster_config()
         contexts, active_context = config.list_kube_config_contexts()
-        logger.info("Contexts: %s", {contexts})
-        logger.info("Active context: %s", {active_context})
+        logger.info("Contexts: %s", contexts)
+        logger.info("Active context: %s", active_context)
         cluster_name = active_context["context"]["cluster"]
     except config.ConfigException as e:
         cluster_name = None
