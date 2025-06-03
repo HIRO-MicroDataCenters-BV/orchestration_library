@@ -4,7 +4,6 @@ CRUD operations for managing workload requests in the database.
 
 import logging
 from dataclasses import dataclass
-from math import log
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError

@@ -289,7 +289,7 @@ async def test_delete_workload_request_not_found():
 
     # Act
     with pytest.raises(DBEntryNotFoundException) as exc_info:
-        result = await delete_workload_request(db, None)
+        await delete_workload_request(db, None)
 
     # Assertion
     db.execute.assert_awaited_once()
@@ -298,6 +298,9 @@ async def test_delete_workload_request_not_found():
 
 @pytest.mark.asyncio
 async def test_create_workload_request_integrity_error():
+    """
+    Test creating a workload request with an integrity error.
+    """
     db = AsyncMock()
     db.commit.side_effect = IntegrityError("Integrity", None, None)
     req = SAMPLE_WORKLOAD_REQUEST_CREATE
@@ -308,6 +311,9 @@ async def test_create_workload_request_integrity_error():
 
 @pytest.mark.asyncio
 async def test_create_workload_request_operational_error():
+    """
+    Test creating a workload request with an operational error.
+    """
     db = AsyncMock()
     db.commit.side_effect = OperationalError("Operational", None, None)
     req = SAMPLE_WORKLOAD_REQUEST_CREATE
@@ -318,6 +324,9 @@ async def test_create_workload_request_operational_error():
 
 @pytest.mark.asyncio
 async def test_create_workload_request_sqlalchemy_error():
+    """
+    Test creating a workload request with a SQLAlchemy error.
+    """
     db = AsyncMock()
     db.commit.side_effect = SQLAlchemyError("SQLAlchemy")
     req = SAMPLE_WORKLOAD_REQUEST_CREATE
@@ -328,6 +337,9 @@ async def test_create_workload_request_sqlalchemy_error():
 
 @pytest.mark.asyncio
 async def test_update_workload_request_integrity_error():
+    """
+    Test updating a workload request with an integrity error.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -343,6 +355,9 @@ async def test_update_workload_request_integrity_error():
 
 @pytest.mark.asyncio
 async def test_update_workload_request_operational_error():
+    """
+    Test updating a workload request with an operational error.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -358,6 +373,9 @@ async def test_update_workload_request_operational_error():
 
 @pytest.mark.asyncio
 async def test_update_workload_request_sqlalchemy_error():
+    """
+    Test updating a workload request with a SQLAlchemy error.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -373,6 +391,9 @@ async def test_update_workload_request_sqlalchemy_error():
 
 @pytest.mark.asyncio
 async def test_delete_workload_request_integrity_error():
+    """
+    Test deleting a workload request with an integrity error.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -386,6 +407,9 @@ async def test_delete_workload_request_integrity_error():
 
 @pytest.mark.asyncio
 async def test_delete_workload_request_operational_error():
+    """
+    Test deleting a workload request with an operational error.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -399,6 +423,9 @@ async def test_delete_workload_request_operational_error():
 
 @pytest.mark.asyncio
 async def test_delete_workload_request_sqlalchemy_error():
+    """
+    Test deleting a workload request with a SQLAlchemy error.
+    """
     db = AsyncMock()
     mock_result = MagicMock()
     mock_workload_request = MagicMock()
@@ -411,6 +438,9 @@ async def test_delete_workload_request_sqlalchemy_error():
 
 @pytest.mark.asyncio
 async def test_get_workload_requests_operational_error():
+    """
+    Test retrieving workload requests when there is an operational error.
+    """
     db = AsyncMock()
     db.execute.side_effect = OperationalError("Operational", None, None)
     with pytest.raises(DataBaseException) as exc_info:
@@ -419,6 +449,9 @@ async def test_get_workload_requests_operational_error():
 
 @pytest.mark.asyncio
 async def test_get_workload_requests_sqlalchemy_error():
+    """
+    Test retrieving workload requests when there is a SQLAlchemy error.
+    """
     db = AsyncMock()
     db.execute.side_effect = SQLAlchemyError("SQLAlchemy")
     with pytest.raises(DataBaseException) as exc_info:
