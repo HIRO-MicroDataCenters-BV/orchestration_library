@@ -19,6 +19,7 @@ from app.repositories.workload_request import (
 from app.main import app
 from app.models.workload_request import WorkloadRequest
 from app.schemas.workload_request import WorkloadRequestCreate
+from app.utils.exceptions import DBEntryNotFoundException
 
 # ===========================================================================
 # ================ Tests for workload_request CRUD functions ================
@@ -204,13 +205,14 @@ async def test_update_workload_request_not_found():
     mock_result.scalar_one_or_none.return_value = None
     db.execute.return_value = mock_result
 
-    result = await update_workload_request(db, 999, {"name": "new-name"})
+    with pytest.raises(DBEntryNotFoundException) as exc_info:
+        await update_workload_request(db, 999, {"name": "new-name"})
 
     db.execute.assert_awaited_once()
-    assert result is None
     db.add.assert_not_called()
     db.commit.assert_not_called()
     db.refresh.assert_not_called()
+    assert "999" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -251,13 +253,12 @@ async def test_delete_workload_request_not_found():
     mock_result.scalar_one_or_none.return_value = None
 
     # Act
-
-    result = await delete_workload_request(db, None)
+    with pytest.raises(DBEntryNotFoundException) as exc_info:
+        result = await delete_workload_request(db, None)
 
     # Assertion
-
     db.execute.assert_awaited_once()
-    assert result == {"error": "WorkloadRequest not found"}
+    assert "None" in str(exc_info.value)
 
 
 # =====================================================================================
