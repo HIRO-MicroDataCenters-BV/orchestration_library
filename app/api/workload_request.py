@@ -59,8 +59,6 @@ async def read_workload_requests(
     workloads = await wr.get_workload_requests(
         db, workload_request_filter
     )
-    if not workloads:
-        return {"error": "No workload requests found"}
     return workloads
 
 
@@ -99,6 +97,4 @@ async def read_workload_request_by_id(
     requested_id = await wr.get_workload_requests(
         db, wr.WorkloadRequestFilter(workload_request_id=workload_request_id)
     )
-    if not requested_id:
-        return {"error": "ID not found"}
     return requested_id
