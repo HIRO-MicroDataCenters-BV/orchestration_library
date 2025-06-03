@@ -92,6 +92,7 @@ def test_get_cluster_info_success():
             [{"context": {"cluster": "test-cluster"}}],
             {"context": {"cluster": "test-cluster"}},
         )
+        mocks["mock_config"].ConfigException = ConfigException
 
         mock_custom_api = MagicMock()
         mock_custom_api.list_cluster_custom_object.return_value = {"items": []}
