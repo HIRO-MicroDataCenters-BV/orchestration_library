@@ -15,6 +15,8 @@ from app.schemas.workload_request_decision import (
 
 router = APIRouter(prefix="/workload_request_decision")
 
+
+# pylint: disable=invalid-name
 @router.post("/")
 async def create(
     data: WorkloadRequestDecisionCreate,
@@ -51,15 +53,11 @@ async def read(
 
 
 @router.get("/{pod_id}")
-async def read_by_id(
-    pod_id: UUID, db: AsyncSession = Depends(get_async_db)
-):
+async def read_by_id(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Retrieve a workload request decision by its ID.
     """
-    decision = await wrd.get_workload_request_decision(
-        db, pod_id=pod_id
-    )
+    decision = await wrd.get_workload_request_decision(db, pod_id=pod_id)
     if not decision:
         return {"error": "Decision not found"}
     return decision
@@ -82,6 +80,4 @@ async def delete(pod_id: UUID, db: AsyncSession = Depends(get_async_db)):
     """
     Delete a workload request decision by its ID.
     """
-    return await wrd.delete_workload_request_decision(
-        db, pod_id=pod_id
-    )
+    return await wrd.delete_workload_request_decision(db, pod_id=pod_id)

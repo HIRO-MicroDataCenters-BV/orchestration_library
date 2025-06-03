@@ -16,6 +16,7 @@ from app.utils.exceptions import (
     DatabaseConnectionException,
 )
 
+
 # pylint: disable=invalid-name
 async def create_workload_request_decision(
     db: AsyncSession, decision: WorkloadRequestDecisionCreate
