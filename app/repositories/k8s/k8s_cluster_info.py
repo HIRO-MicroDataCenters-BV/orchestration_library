@@ -36,10 +36,10 @@ def get_nodes():
     """
     try:
         nodes = get_k8s_nodes()
-        logger.info(f"Fetched {nodes}")
+        logger.info("Fetched %s", nodes)
     except ApiException as e:
         nodes = []
-        logger.error(f"Error fetching nodes: {e}")
+        logger.error("Error fetching nodes: %s", {e})
     return nodes
 
 
@@ -51,7 +51,7 @@ def get_component_status(core_v1):
         components = core_v1.list_component_status().items
     except ApiException as e:
         components = []
-        logger.error(f"Error fetching components: {e}")
+        logger.error("Error fetching components: %s", {e})
 
     component_status = []
     for comp in components:
@@ -75,14 +75,14 @@ def get_kube_system_pods_info(core_v1):
         kube_system_pods = core_v1.list_namespaced_pod(namespace="kube-system").items
     except ApiException as e:
         kube_system_pods = []
-        logger.error(f"Error fetching kube-system pods: {e}")
+        logger.error("Error fetching kube-system pods: %s", {e})
 
     kube_system_pods_info = []
     for pod in kube_system_pods:
         kube_system_pods_info.append(get_pod_basic_info(pod))
     return kube_system_pods_info
 
-# This below function imolimented as the cluster ID is the UID of the kube-system namespace. 
+# This below function imolimented as the cluster ID is the UID of the kube-system namespace.
 # This is a common practice in Kubernetes to uniquely identify clusters.
 def get_cluster_id(core_v1):
     """
@@ -92,10 +92,11 @@ def get_cluster_id(core_v1):
         cluster_id = core_v1.read_namespace(name="kube-system").metadata.uid
     except ApiException as e:
         cluster_id = None
-        logger.error(f"Error fetching cluster ID: {e}")
+        logger.error("Error fetching cluster ID: %s", {e})
     return cluster_id
 
-# This function implimented assuming that the cluster is created with kubeadm and cluster details are in kubeadm-config configmap in kube-system namespace.
+# This function implimented assuming that the cluster is created with kubeadm and
+# cluster details are in kubeadm-config configmap in kube-system namespace.
 def get_kubeadm_config(core_v1):
     """
     Fetches and returns the kubeadm configuration from the kube-system namespace.
@@ -107,7 +108,7 @@ def get_kubeadm_config(core_v1):
         kubeadm_config = config_map.data.get("ClusterConfiguration", {})
     except ApiException as e:
         kubeadm_config = {}
-        logger.error(f"Error fetching kubeadm config: {e}")
+        logger.error("Error fetching kubeadm config: %s", {e})
     return kubeadm_config
 
 def get_cluster_name(core_v1):
@@ -121,12 +122,12 @@ def get_cluster_name(core_v1):
         # If kubeadm config is not available, fallback to kubeconfig context
         config.load_incluster_config()
         contexts, active_context = config.list_kube_config_contexts()
-        logger.info(f"Contexts: {contexts}")
-        logger.info(f"Active context: {active_context}")
+        logger.info("Contexts: %s", {contexts})
+        logger.info("Active context: %s", {active_context})
         cluster_name = active_context["context"]["cluster"]
     except config.ConfigException as e:
         cluster_name = None
-        logger.error(f"Error fetching cluster name: {e}")
+        logger.error("Error fetching cluster name: %s", {e})
     return cluster_name
 
 
@@ -138,7 +139,7 @@ def get_namespaces(core_v1):
         namespaces = [ns.metadata.name for ns in core_v1.list_namespace().items]
     except ApiException as e:
         namespaces = []
-        logger.error(f"Error fetching namespaces: {e}")
+        logger.error("Error fetching namespaces: %s", {e})
     return namespaces
 
 
