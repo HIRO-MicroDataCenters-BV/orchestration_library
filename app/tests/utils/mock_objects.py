@@ -21,6 +21,40 @@ def mock_component():
     comp.conditions = [cond]
     return comp
 
+def mock_configmap():
+    """
+    Mock a Kubernetes ConfigMap object.
+    """
+    configmap = MagicMock()
+    configmap.metadata.name = "kubeadm-config"
+    configmap.metadata.namespace = "kube-system"
+    configmap.data = {
+        "ClusterConfiguration": """apiServer:
+  certSANs:
+  - 35.35.35.35
+  extraArgs:
+    authorization-mode: Node,RBAC
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: test-cluster
+controllerManager: {}
+dns: {}
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: registry.k8s.io
+kind: ClusterConfiguration
+kubernetesVersion: v1.29.4
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 10.42.0.0/16
+  serviceSubnet: 10.43.0.0/16
+scheduler: {}
+"""
+    }
+    return configmap
+
 # @pytest.fixture
 def mock_pod():
     """

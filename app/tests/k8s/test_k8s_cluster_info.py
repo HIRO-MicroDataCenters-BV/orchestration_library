@@ -9,6 +9,7 @@ from kubernetes.config.config_exception import ConfigException
 
 from app.repositories.k8s import k8s_cluster_info
 from app.tests.utils.mock_objects import (
+    mock_configmap,
     mock_version_info,
     mock_node,
     mock_component,
@@ -65,6 +66,7 @@ def test_get_cluster_info_success():
         # Mock core_v1 client
         mock_core = MagicMock()
         mock_core.list_node.return_value.items = [mock_node()]
+        mock_core.read_namespaced_config_map.return_value = mock_configmap()
         mock_core.list_component_status.return_value.items = [mock_component()]
         mock_core.list_namespaced_pod.return_value.items = [mock_pod()]
         mock_core.read_namespace.return_value.metadata.uid = "abcdef123456"
@@ -130,6 +132,7 @@ def test_get_cluster_info_handles_exceptions():
         mock_core.list_namespaced_pod.side_effect = ApiException("pods error")
         mock_core.read_namespace.side_effect = ApiException("namespace error")
         mock_core.list_namespace.side_effect = ApiException("namespace list error")
+        mock_core.read_namespaced_config_map.side_effect = ApiException("configmap error")
         mocks["mock_core"].return_value = mock_core
         mocks["mock_node_core"].return_value = mock_core
 
