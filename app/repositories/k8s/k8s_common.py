@@ -8,8 +8,6 @@ from kubernetes import config, client
 
 K8S_IN_USE_NAMESPACE_REGEX = "^kube-.*$|^default$"
 
-# IS_KUBE_CONFIG_LOADED = False
-
 def load_kube_config():
     """
     Load the kubeconfig file for local development.
