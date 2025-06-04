@@ -12,7 +12,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 rules:
 - apiGroups: [""]
-  resources: ["pods", "nodes", "componentstatuses", "namespaces"]
+  resources: ["pods", "nodes", "componentstatuses", "namespaces", "configmaps"]
   verbs: ["list", "get"]
 - apiGroups: ["apps"]
   resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
