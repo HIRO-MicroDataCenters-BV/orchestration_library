@@ -8,7 +8,6 @@ from fastapi import status
 from httpx._transports.asgi import ASGITransport
 from httpx import AsyncClient
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
-from uuid import UUID
 
 from app.repositories.node import create_node, delete_node, get_nodes, update_node
 from app.main import app
@@ -117,7 +116,9 @@ async def test_update_node():
     }
 
     # Set up the mock to return different results for different calls
-    mock_db_session.execute = AsyncMock(side_effect=[mock_first_result, None, mock_second_result])
+    mock_db_session.execute = AsyncMock(
+        side_effect=[mock_first_result, None, mock_second_result]
+    )
     mock_db_session.commit = AsyncMock()
 
     updates = {"name": "updated-node"}
@@ -170,7 +171,6 @@ async def test_create_node_api(mock_create_node):
 
     Mocks the `create_node` call and verifies response matches the schema.
     """
-
     request_data = NodeCreate(
         id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",  # Example UUID
         name="test-node",
@@ -203,7 +203,8 @@ async def test_create_node_api(mock_create_node):
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
-            "/db_node/", json=json.loads(request_data.model_dump_json())
+            "/db_node/", 
+            json=json.loads(request_data.model_dump_json())
         )
 
     # Assertions
@@ -327,8 +328,7 @@ async def test_delete_node_api(mock_delete_node):
 @pytest.mark.asyncio
 async def test_get_node_by_id_api(mock_get_node_by_id):
     """
-    Test
-    GET / node / {node_id} endpoint.
+    Test GET /node/{node_id} endpoint.
 
     Verifies correct response for existing and non-existing node IDs.
     """
@@ -378,7 +378,8 @@ async def test_create_node_integrity_error():
     with pytest.raises(DBEntryCreationException) as exc_info:
         await create_node(mock_db_session, data)
 
-    assert "Failed to create node with name 'test-node': Data constraint violation" in str(exc_info.value)
+    assert ("Failed to create node with name 'test-node': "
+            "Data constraint violation") in str(exc_info.value)
     assert mock_db_session.rollback.called
 
 
@@ -407,7 +408,8 @@ async def test_create_node_operational_error():
     with pytest.raises(DBEntryCreationException) as exc_info:
         await create_node(mock_db_session, data)
 
-    assert "Failed to create node with name 'test-node': Database connection error" in str(exc_info.value)
+    assert ("Failed to create node with name 'test-node': "
+            "Database connection error") in str(exc_info.value)
     assert mock_db_session.rollback.called
 
 
@@ -436,7 +438,7 @@ async def test_create_node_sqlalchemy_error():
     with pytest.raises(DBEntryCreationException) as exc_info:
         await create_node(mock_db_session, data)
 
-    assert "Failed to create node" in str(exc_info.value)
+    assert "Failed to create node with name 'test-node': Database error" in str(exc_info.value)
     assert mock_db_session.rollback.called
 
 
@@ -567,6 +569,5 @@ async def test_delete_node_sqlalchemy_error():
     with pytest.raises(DBEntryDeletionException) as exc_info:
         await delete_node(mock_db_session, node_id)
 
-    assert "Failed to delete node" in str(exc_info.value)
+    assert f"Failed to delete node {node_id}" in str(exc_info.value)
     assert mock_db_session.rollback.called
-
