@@ -408,8 +408,7 @@ async def test_create_node_operational_error():
     with pytest.raises(DBEntryCreationException) as exc_info:
         await create_node(mock_db_session, data)
 
-    assert ("Failed to create node with name 'test-node': "
-            "Database connection error") in str(exc_info.value)
+    assert "Failed to create node with name 'test-node': Database connection error" in str(exc_info.value)
     assert mock_db_session.rollback.called
 
 
@@ -571,3 +570,4 @@ async def test_delete_node_sqlalchemy_error():
 
     assert f"Failed to delete node {node_id}" in str(exc_info.value)
     assert mock_db_session.rollback.called
+
