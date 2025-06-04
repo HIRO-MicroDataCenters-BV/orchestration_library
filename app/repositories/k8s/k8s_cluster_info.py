@@ -5,6 +5,7 @@ Get cluster information from Kubernetes.
 import logging
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
+import yaml
 
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
@@ -105,7 +106,11 @@ def get_kubeadm_config(core_v1):
         config_map = core_v1.read_namespaced_config_map(
             name="kubeadm-config", namespace="kube-system"
         )
-        kubeadm_config = config_map.data.get("ClusterConfiguration", {})
+        raw_config = config_map.data.get("ClusterConfiguration", None)
+        if raw_config:
+            kubeadm_config = yaml.safe_load(raw_config)
+        else:
+            kubeadm_config = {}
     except ApiException as e:
         kubeadm_config = {}
         logger.error("Error fetching kubeadm config: %s", {e})
