@@ -7,10 +7,19 @@ import pytest
 from fastapi import status
 from httpx._transports.asgi import ASGITransport
 from httpx import AsyncClient
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
+from uuid import UUID
 
 from app.repositories.node import create_node, delete_node, get_nodes, update_node
 from app.main import app
 from app.schemas.node import NodeCreate, NodeResponse
+from app.utils.exceptions import (
+    DBEntryCreationException,
+    DBEntryUpdateException,
+    DBEntryNotFoundException,
+    DBEntryDeletionException,
+    DataBaseException
+)
 
 
 # ===========================================================================
@@ -342,3 +351,222 @@ async def test_get_node_by_id_api(mock_get_node_by_id):
 
     assert response.status_code == 200
     assert response.json()["id"] == "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+
+
+@pytest.mark.asyncio
+async def test_create_node_integrity_error():
+    """Test handling of integrity error during node creation."""
+    mock_db_session = AsyncMock()
+    mock_db_session.add = MagicMock()
+    mock_db_session.commit = AsyncMock(side_effect=IntegrityError("", "", ""))
+    mock_db_session.rollback = AsyncMock()
+
+    data = NodeCreate(
+        id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        name="test-node",
+        status="active",
+        cpu_capacity=4.0,
+        memory_capacity=8192.0,
+        current_cpu_assignment=1.0,
+        current_memory_assignment=1024.0,
+        current_cpu_utilization=0.5,
+        current_memory_utilization=512.0,
+        ip_address="192.168.1.1",
+        location="datacenter-1"
+    )
+
+    with pytest.raises(DBEntryCreationException) as exc_info:
+        await create_node(mock_db_session, data)
+
+    assert "Failed to create node with name 'test-node': Data constraint violation" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
+
+@pytest.mark.asyncio
+async def test_create_node_operational_error():
+    """Test handling of operational error during node creation."""
+    mock_db_session = AsyncMock()
+    mock_db_session.add = MagicMock()
+    mock_db_session.commit = AsyncMock(side_effect=OperationalError("", "", ""))
+    mock_db_session.rollback = AsyncMock()
+
+    data = NodeCreate(
+        id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        name="test-node",
+        status="active",
+        cpu_capacity=4.0,
+        memory_capacity=8192.0,
+        current_cpu_assignment=1.0,
+        current_memory_assignment=1024.0,
+        current_cpu_utilization=0.5,
+        current_memory_utilization=512.0,
+        ip_address="192.168.1.1",
+        location="datacenter-1"
+    )
+
+    with pytest.raises(DBEntryCreationException) as exc_info:
+        await create_node(mock_db_session, data)
+
+    assert "Failed to create node with name 'test-node': Database connection error" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
+
+@pytest.mark.asyncio
+async def test_create_node_sqlalchemy_error():
+    """Test handling of general SQLAlchemy error during node creation."""
+    mock_db_session = AsyncMock()
+    mock_db_session.add = MagicMock()
+    mock_db_session.commit = AsyncMock(side_effect=SQLAlchemyError())
+    mock_db_session.rollback = AsyncMock()
+
+    data = NodeCreate(
+        id="c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c",
+        name="test-node",
+        status="active",
+        cpu_capacity=4.0,
+        memory_capacity=8192.0,
+        current_cpu_assignment=1.0,
+        current_memory_assignment=1024.0,
+        current_cpu_utilization=0.5,
+        current_memory_utilization=512.0,
+        ip_address="192.168.1.1",
+        location="datacenter-1"
+    )
+
+    with pytest.raises(DBEntryCreationException) as exc_info:
+        await create_node(mock_db_session, data)
+
+    assert "Failed to create node" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
+
+@pytest.mark.asyncio
+async def test_update_node_not_found():
+    """Test handling of not found error during node update."""
+    mock_db_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+    node_id = "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+    updates = {
+        "status": "inactive",
+        "cpu_capacity": 8.0,
+        "memory_capacity": 16384.0
+    }
+
+    with pytest.raises(DBEntryNotFoundException) as exc_info:
+        await update_node(mock_db_session, node_id, updates)
+
+    assert f"Node with ID {node_id} not found" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_update_node_integrity_error():
+    """Test handling of integrity error during node update."""
+    mock_db_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = MagicMock()
+    mock_db_session.execute = AsyncMock(return_value=mock_result)
+    mock_db_session.commit = AsyncMock(side_effect=IntegrityError("", "", ""))
+    mock_db_session.rollback = AsyncMock()
+
+    node_id = "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+    updates = {
+        "status": "inactive",
+        "cpu_capacity": 8.0,
+        "memory_capacity": 16384.0
+    }
+
+    with pytest.raises(DBEntryUpdateException) as exc_info:
+        await update_node(mock_db_session, node_id, updates)
+
+    assert f"Failed to update node {node_id}" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
+
+@pytest.mark.asyncio
+async def test_get_node_database_error():
+    """Test handling of database error during node retrieval."""
+    mock_db_session = AsyncMock()
+    mock_db_session.execute = AsyncMock(side_effect=SQLAlchemyError())
+
+    with pytest.raises(DataBaseException) as exc_info:
+        await get_nodes(mock_db_session)
+
+    assert "Failed to retrieve nodes: Database error" in str(exc_info.value)
+    assert exc_info.value.details["error_type"] == "database_error"
+
+
+@pytest.mark.asyncio
+async def test_delete_node_not_found():
+    """Test handling of not found error during node deletion."""
+    mock_db_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = []
+    mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+    node_id = "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+
+    with pytest.raises(DBEntryNotFoundException) as exc_info:
+        await delete_node(mock_db_session, node_id)
+
+    assert f"Node with ID {node_id} not found" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_delete_node_integrity_error():
+    """Test handling of integrity error during node deletion."""
+    mock_db_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [MagicMock()]
+    mock_db_session.execute = AsyncMock(return_value=mock_result)
+    mock_db_session.commit = AsyncMock(side_effect=IntegrityError("", "", ""))
+    mock_db_session.rollback = AsyncMock()
+
+    node_id = "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+
+    with pytest.raises(DBEntryDeletionException) as exc_info:
+        await delete_node(mock_db_session, node_id)
+
+    assert f"Failed to delete node {node_id}" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
+
+@pytest.mark.asyncio
+async def test_delete_node_operational_error():
+    """Test handling of operational error during node deletion."""
+    mock_db_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [MagicMock()]
+    mock_db_session.execute = AsyncMock(return_value=mock_result)
+    mock_db_session.commit = AsyncMock(side_effect=OperationalError("", "", ""))
+    mock_db_session.rollback = AsyncMock()
+
+    node_id = "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+
+    with pytest.raises(DBEntryDeletionException) as exc_info:
+        await delete_node(mock_db_session, node_id)
+
+    assert f"Failed to delete node {node_id}" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
+
+@pytest.mark.asyncio
+async def test_delete_node_sqlalchemy_error():
+    """Test handling of general SQLAlchemy error during node deletion."""
+    mock_db_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [MagicMock()]
+    mock_db_session.execute = AsyncMock(return_value=mock_result)
+    mock_db_session.commit = AsyncMock(side_effect=SQLAlchemyError())
+    mock_db_session.rollback = AsyncMock()
+
+    node_id = "c7e1f2a3-8b4d-4e2a-9c7b-1f5e3d2a8b6c"
+
+    with pytest.raises(DBEntryDeletionException) as exc_info:
+        await delete_node(mock_db_session, node_id)
+
+    assert "Failed to delete node" in str(exc_info.value)
+    assert mock_db_session.rollback.called
+
