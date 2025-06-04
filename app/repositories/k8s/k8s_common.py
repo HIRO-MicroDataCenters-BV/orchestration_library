@@ -26,22 +26,6 @@ def load_kube_config():
             config.load_kube_config()
         load_kube_config.IS_KUBECONFIG_LOADED = True
 
-# def load_kube_config():
-#     """
-#     Load the kubeconfig file for local development.
-#     This function attempts to load the in-cluster configuration first.
-#     If it fails, it falls back to loading the kubeconfig file for local development.
-#     Only loads once per process.
-#     """
-#     global _kube_config_loaded
-#     if not _kube_config_loaded:
-#         try:
-#             config.load_incluster_config()
-#         except config.ConfigException:
-#             print("Falling back to load_kube_config for local development.")
-#             config.load_kube_config()
-#         _kube_config_loaded = True
-
 def get_k8s_core_v1_client():
     """
     Get the Kubernetes CoreV1 API client.
