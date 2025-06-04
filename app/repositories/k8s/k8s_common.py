@@ -13,12 +13,16 @@ def load_kube_config():
     Load the kubeconfig file for local development.
     This function attempts to load the in-cluster configuration first.
     If it fails, it falls back to loading the kubeconfig file for local development.
+    Only loads once per process.
     """
-    try:
-        config.load_incluster_config()
-    except config.ConfigException:
-        print("Falling back to load_kube_config for local development.")
-        config.load_kube_config()
+    if not getattr(load_kube_config, "IS_KUBECONFIG_LOADED", False):
+        print("Loading kubeconfig...")
+        try:
+            config.load_incluster_config()
+        except config.ConfigException:
+            print("Falling back to load_kube_config for local development.")
+            config.load_kube_config()
+        load_kube_config.IS_KUBECONFIG_LOADED = True
 
 def get_k8s_core_v1_client():
     """

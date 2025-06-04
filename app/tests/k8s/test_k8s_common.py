@@ -29,6 +29,9 @@ def test_get_k8s_core_v1_client_kubeconfig(monkeypatch):
     def raise_config_exception():
         raise k8s_common.config.ConfigException
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     load_incluster = MagicMock(side_effect=raise_config_exception)
     load_kube = MagicMock()
     core_v1_api = MagicMock()
@@ -49,6 +52,9 @@ def test_get_k8s_custom_objects_client_incluster(monkeypatch):
     load_kube = MagicMock()
     custom_objects_api = MagicMock()
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
@@ -68,6 +74,9 @@ def test_get_k8s_custom_objects_client_kubeconfig(monkeypatch):
     def raise_config_exception():
         raise k8s_common.config.ConfigException
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     load_incluster = MagicMock(side_effect=raise_config_exception)
     load_kube = MagicMock()
     custom_objects_api = MagicMock()
@@ -89,6 +98,9 @@ def test_get_k8s_version_api_client_incluster(monkeypatch):
     load_kube = MagicMock()
     version_api = MagicMock()
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
@@ -111,6 +123,9 @@ def test_get_k8s_version_api_client_kubeconfig(monkeypatch):
     load_kube = MagicMock()
     version_api = MagicMock()
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
@@ -128,6 +143,9 @@ def test_get_k8s_apps_v1_client_incluster(monkeypatch):
     load_kube = MagicMock()
     apps_v1_api = MagicMock()
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
@@ -146,6 +164,9 @@ def test_get_k8s_apps_v1_client_kubeconfig(monkeypatch):
     def raise_config_exception():
         raise k8s_common.config.ConfigException
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     load_incluster = MagicMock(side_effect=raise_config_exception)
     load_kube = MagicMock()
     apps_v1_api = MagicMock()
@@ -167,6 +188,9 @@ def test_get_k8s_batch_v1_client_incluster(monkeypatch):
     load_kube = MagicMock()
     batch_v1_api = MagicMock()
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     monkeypatch.setattr(k8s_common.config, "load_incluster_config", load_incluster)
     monkeypatch.setattr(k8s_common.config, "load_kube_config", load_kube)
     monkeypatch.setattr(
@@ -185,6 +209,9 @@ def test_get_k8s_batch_v1_client_kubeconfig(monkeypatch):
     def raise_config_exception():
         raise k8s_common.config.ConfigException
 
+    # Reset the config loaded flag before the test
+    if hasattr(k8s_common.load_kube_config, "IS_KUBECONFIG_LOADED"):
+        del k8s_common.load_kube_config.IS_KUBECONFIG_LOADED
     load_incluster = MagicMock(side_effect=raise_config_exception)
     load_kube = MagicMock()
     batch_v1_api = MagicMock()
