@@ -24,7 +24,6 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=invalid-name
 @dataclass
 class PodFilter:
     """

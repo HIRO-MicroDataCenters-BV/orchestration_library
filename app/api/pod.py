@@ -25,7 +25,7 @@ from app.utils.exceptions import (
 router = APIRouter(prefix="/db_pod")
 
 
-# pylint: disable=too-many-arguments, disable=invalid-name
+# pylint: disable=too-many-arguments,
 # This is a filter function, and it can have many parameters.
 def pod_filter_from_query(
     pod_id: Optional[UUID] = Query(None),
