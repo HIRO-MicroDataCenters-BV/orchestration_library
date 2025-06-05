@@ -203,7 +203,7 @@ async def test_create_node_api(mock_create_node):
     # Set up the test client
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
-            "/db_node/", 
+            "/db_node/",
             json=json.loads(request_data.model_dump_json())
         )
 
@@ -408,7 +408,8 @@ async def test_create_node_operational_error():
     with pytest.raises(DBEntryCreationException) as exc_info:
         await create_node(mock_db_session, data)
 
-    assert "Failed to create node with name 'test-node': Database connection error" in str(exc_info.value)
+    assert ("Failed to create node with name 'test-node':"
+            " Database connection error") in str(exc_info.value)
     assert mock_db_session.rollback.called
 
 
@@ -570,4 +571,3 @@ async def test_delete_node_sqlalchemy_error():
 
     assert f"Failed to delete node {node_id}" in str(exc_info.value)
     assert mock_db_session.rollback.called
-
