@@ -40,6 +40,14 @@ class WorkloadRequestFilter:
 async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
     """
     Create a new workload request.
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        req (WorkloadRequestCreate): Data for the new workload request.
+    Returns:
+        WorkloadRequest: The created workload request object.
+    Raises:
+        DBEntryCreationException: If there is an error creating the workload request.
+        DataBaseException: On database connection or query execution errors.
     """
     try:
         obj = WorkloadRequest(**req.model_dump())
@@ -81,6 +89,14 @@ async def create_workload_request(db: AsyncSession, req: WorkloadRequestCreate):
 async def get_workload_requests(db: AsyncSession, wrfilter: WorkloadRequestFilter):
     """
     Get workload requests based on various optional filters.
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        wrfilter (WorkloadRequestFilter): Filter conditions for workload requests.
+    Returns:
+        List[WorkloadRequest]: List of workload requests matching the filters.
+    Raises:
+        DBEntryNotFoundException: If no workload requests match the filters.
+        DataBaseException: On database connection or query execution errors.
     """
     try:
         filters = []
@@ -134,6 +150,15 @@ async def update_workload_request(
 ):
     """
     Update a WorkloadRequest based on its ID.
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        workload_request_id (UUID): ID of the workload request to update.
+        updates (dict): Dictionary of fields to update.
+    Returns:
+        WorkloadRequest: Updated workload request object.
+    Raises:
+        DBEntryNotFoundException: If the workload request does not exist.
+        DBEntryUpdateException: On update failure.
     """
     try:
         result = await db.execute(
