@@ -13,7 +13,7 @@ from app.main import app
 from app.models.pod import Pod
 from app.schemas.pod import PodCreate, PodUpdate
 
-# pylint: disable=invalid-name
+
 # ========================= Constants for sample pod data =========================
 
 SAMPLE_POD_OBJECT = Pod(
