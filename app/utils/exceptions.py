@@ -150,3 +150,27 @@ class DatabaseConnectionException(DataBaseException):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             details=details
         )
+
+
+class K8sAPIException(Exception):
+    """
+    Exception raised when Kubernetes API interaction fails.
+
+    This exception wraps Kubernetes-related errors to provide
+    consistent error responses.
+    """
+
+    def __init__(self, message: str, status_code: int = status.HTTP_502_BAD_GATEWAY,
+                 details: Optional[Dict[str, Any]] = None):
+        """
+        Initialize the Kubernetes API exception.
+
+        Args:
+            message (str): Human-readable error message.
+            status_code (int): HTTP status code to return. Default is 502.
+            details (Optional[Dict[str, Any]]): Additional error context.
+        """
+        self.message = message
+        self.status_code = status_code
+        self.details = details or {}
+        super().__init__(self.message)

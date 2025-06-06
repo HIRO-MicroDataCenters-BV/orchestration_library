@@ -13,6 +13,7 @@ import logging
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from starlette import status
+from app.utils.exceptions import K8sAPIException
 
 from app.utils.exceptions import DataBaseException
 
@@ -77,4 +78,15 @@ def init_exception_handlers(app: FastAPI):
             content={
                 "message": exc.message
             }
+        )
+
+    @app.exception_handler(K8sAPIException)
+    async def k8s_api_exception_handler(_: Request, exc: K8sAPIException):
+        """
+        Handle exceptions raised while interacting with Kubernetes API.
+        """
+        logger.error("Kubernetes API exception: %s", exc.message, exc_info=False)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"message": exc.message, "details": exc.details}
         )
