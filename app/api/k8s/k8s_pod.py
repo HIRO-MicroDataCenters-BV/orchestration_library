@@ -10,7 +10,7 @@ from app.utils.exceptions import K8sAPIException
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/k8s_pod")
 
-# pylint: disable=invalid-name
+
 @router.get("/")
 def list_all_pods(
     namespace: str = None, name: str = None, pod_id: str = None, status: str = None
@@ -23,16 +23,16 @@ def list_all_pods(
         return k8s_pod.list_k8s_pods(
             namespace=namespace, name=name, pod_id=pod_id, status=status
         )
-    except ApiException as e:
-        logger.error("Kubernetes API error: %s", str(e), exc_info=True)
+    except ApiException as exc:
+        logger.error("Kubernetes API error: %s", str(exc), exc_info=True)
         raise K8sAPIException(
             message="Failed to list Kubernetes pods due to API error.",
-            status_code=e.status or 502,
-            details={"error": e.reason}
-        ) from e
-    except Exception as e:
-        logger.error("Unexpected error listing pods: %s", str(e), exc_info=True)
+            status_code=exc.status or 502,
+            details={"error": exc.reason}
+        ) from exc
+    except Exception as exc:
+        logger.error("Unexpected error listing pods: %s", str(exc), exc_info=True)
         raise K8sAPIException(
             message="Unexpected error occurred while retrieving pods.",
-            details={"error": str(e)}
-        ) from e
+            details={"error": str(exc)}
+        ) from exc
