@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy import select
 from app.models.workload_request_decision import WorkloadRequestDecision
 from app.schemas.workload_request_decision import WorkloadRequestDecisionCreate
+from app.utils.db_utils import save_and_refresh
 from app.utils.exceptions import (
     DBEntryCreationException,
     DBEntryUpdateException,
@@ -16,7 +17,6 @@ from app.utils.exceptions import (
     DBEntryDeletionException,
     DatabaseConnectionException,
 )
-
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -31,10 +31,7 @@ async def create_workload_request_decision(
     """
     try:
         obj = WorkloadRequestDecision(**decision.model_dump())
-        db.add(obj)
-        await db.commit()
-        await db.refresh(obj)
-        return obj
+        return await save_and_refresh(db, obj)
     except IntegrityError as e:
         await db.rollback()
         logger.error(
