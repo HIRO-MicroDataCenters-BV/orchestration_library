@@ -4,6 +4,7 @@ FastAPI application entry point.
 
 import logging
 
+import uvicorn
 from fastapi import FastAPI
 from app.api.k8s import (
     cluster_ui,
@@ -19,13 +20,17 @@ from app.api import (
     workload_request,
     workload_request_decision,
     node,
-    tuning_parameters_api
+    tuning_parameters_api,
+    alerts_api
 )
+
 from app.utils.exception_handlers import init_exception_handlers
 
 app = FastAPI()
 
 logging.basicConfig(level=logging.DEBUG)
+
+app.include_router(alerts_api.router, tags=["Alerts API"])
 
 app.include_router(k8s_pod.router, tags=["K8s Pod"])
 app.include_router(k8s_pod_parent.router, tags=["K8s Pod Parent"])
@@ -44,3 +49,7 @@ app.include_router(common_api.router, tags=["Common API"])
 
 
 init_exception_handlers(app)
+
+if __name__ == "__main__":
+    print("starting main....")
+    uvicorn.run(app, port=8083, host="0.0.0.0")

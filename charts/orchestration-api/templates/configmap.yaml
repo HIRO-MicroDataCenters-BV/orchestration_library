@@ -118,7 +118,7 @@ data:
           alert_description TEXT,
           pod_id VARCHAR(100),
           node_id VARCHAR(100),
-          datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     END IF;
     RAISE NOTICE 'Table alerts created or already exists.';
