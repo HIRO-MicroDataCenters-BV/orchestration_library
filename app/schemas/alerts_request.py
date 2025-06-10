@@ -3,18 +3,12 @@ from typing import Literal
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import (
-    Column,
-    TIMESTAMP,
-    text,
-)
-
 
 class AlertType(str, Enum):
     """Enumeration for alert types matching database constraints."""
-    ABNORMAL = "abnormal"
-    NETWORK_ATTACK = "network-attack"
-    OTHER = "other"
+    ABNORMAL = "Abnormal"
+    NETWORK_ATTACK = "Network-Attack"
+    OTHER = "Other"
 
 
 class AlertCreateRequest(BaseModel):
@@ -59,6 +53,7 @@ class AlertResponse(BaseModel):
 
     class Config:
         """Pydantic configuration."""
+        orm_mode: Literal[True] = True
         from_attributes = True  # For SQLAlchemy ORM compatibility
         json_encoders = {
             datetime: lambda v: v.isoformat()

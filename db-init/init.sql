@@ -97,11 +97,11 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'alerts') THEN
         CREATE TABLE alerts (
              id SERIAL PRIMARY KEY,
-             alert_type VARCHAR(50) CHECK (alert_type IN ('abnormal', 'network-attack', 'other')),
+             alert_type VARCHAR(50) CHECK (alert_type IN ('Abnormal', 'Network-Attack', 'Other')),
              alert_description TEXT,
              pod_id VARCHAR(100),
              node_id VARCHAR(100),
-             datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     END IF;
     RAISE NOTICE 'Table alerts created or already exists.';
