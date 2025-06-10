@@ -1,18 +1,17 @@
 """
-CRUD operations for managing tuning parameters in the database.
+CRUD operations for managing alerts in the database.
 """
 
 import logging
 
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.models.alerts import Alert
-from app.models.tuning_parameter import TuningParameter
 from app.schemas.alerts_request import AlertCreateRequest
-from app.schemas.tuning_parameter_schema import TuningParameterCreate
 from app.utils.exceptions import (
-    DatabaseConnectionException
+    DatabaseConnectionException,
+    DBEntryCreationException
 )
 
 logger = logging.getLogger(__name__)
@@ -22,45 +21,53 @@ async def create_alert(
         db: AsyncSession, alert: AlertCreateRequest
 ) -> Alert:
     """
-    Create a new tuning parameter in the database.
+    Create a new alert in the database.
 
     Args:
         db (AsyncSession): Database session
-        tuning_parameter (TuningParameterCreate): The tuning parameter data to create
+        alert (AlertCreateRequest): The alert data to create
 
     Returns:
-        TuningParameter: The created tuning parameter object
+        Alert: The created alert object
 
     Raises:
-        DatabaseConnectionException: If there's a database error
+        DBEntryCreationException: If there's an error creating the alert
+        DatabaseConnectionException: If there's a database connection error
     """
     try:
-        logger.debug("Creating tuning parameter with data: %s", alert.dict())
-        alert_model = Alert(**alert.dict())
+        logger.info("Creating alert with data: %s", alert.model_dump())
+        alert_model = Alert(**alert.model_dump())
         db.add(alert_model)
         await db.commit()
         await db.refresh(alert_model)
-        logger.debug("Added tuning parameter to session")
+        logger.info("Successfully created alert with ID: %d", alert_model.id)
         return alert_model
 
     except IntegrityError as e:
-        logger.error("Integrity error while creating tuning parameter: %s", str(e))
+        logger.error("Integrity error while creating alert: %s", str(e))
+        await db.rollback()
+        raise DBEntryCreationException(
+            "Invalid alert data",
+            details={"error": str(e)}
+        ) from e
+    except OperationalError as e:
+        logger.error("Database connection error while creating alert: %s", str(e))
         await db.rollback()
         raise DatabaseConnectionException(
-            "Invalid tuning parameter data",
+            "Database connection error",
             details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
-        logger.error("Database error while creating tuning parameter: %s", str(e))
+        logger.error("Database error while creating alert: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "Failed to create tuning parameter",
+        raise DBEntryCreationException(
+            "Failed to create alert",
             details={"error": str(e)}
         ) from e
     except Exception as e:
-        logger.error("Unexpected error while creating tuning parameter: %s", str(e))
+        logger.error("Unexpected error while creating alert: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "An unexpected error occurred while creating tuning parameter",
+        raise DBEntryCreationException(
+            "An unexpected error occurred while creating alert",
             details={"error": str(e)}
         ) from e
