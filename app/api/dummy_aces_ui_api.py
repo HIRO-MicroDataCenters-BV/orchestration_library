@@ -34,24 +34,24 @@ async def k8s_get_token():
 
 @router.get("/", response_class=HTMLResponse)
 async def root():
-    html_content = """
+    html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <title>K8s Token Fetcher</title>
         <script>
-            async function getTokenAndOpenUrl() {
-            try {
+            async function getTokenAndOpenUrl() {{
+            try {{
                 const response = await fetch('/dummy_aces_ui/dummy_get_token');
                 const data = await response.json();
                 const token = data.token;
                 const dashboardUrl = '{K8S_DASHBOARD_PROXY_URL}/#/login?token=' + encodeURIComponent(token);
                 window.open(dashboardUrl, '_blank');
-            } catch (err) {
+            }} catch (err) {{
                 console.error("Failed to fetch token or open dashboard:", err);
                 alert("Error occurred: " + err.message);
-            }
-        }
+            }}
+        }}
         </script>
     </head>
     <body>
