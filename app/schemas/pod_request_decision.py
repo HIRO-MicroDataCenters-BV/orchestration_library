@@ -2,10 +2,10 @@
 Schemas for the API requests and responses.
 """
 
-from pydantic import BaseModel
 from uuid import UUID
 from typing import Optional
 from datetime import datetime
+from pydantic import BaseModel
 
 
 class PodRequestDecisionSchema(BaseModel):
