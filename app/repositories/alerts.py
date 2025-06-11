@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.alerts import Alert
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.utils.exceptions import (
-    DatabaseConnectionException,
     DBEntryCreationException
 )
 
@@ -53,8 +52,8 @@ async def create_alert(
     except OperationalError as e:
         logger.error("Database connection error while creating alert: %s", str(e))
         await db.rollback()
-        raise DatabaseConnectionException(
-            "Database connection error",
+        raise DBEntryCreationException(
+            "Database operational error while creating alert ",
             details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
@@ -67,7 +66,4 @@ async def create_alert(
     except Exception as e:
         logger.error("Unexpected error while creating alert: %s", str(e))
         await db.rollback()
-        raise DBEntryCreationException(
-            "An unexpected error occurred while creating alert",
-            details={"error": str(e)}
-        ) from e
+        raise e
