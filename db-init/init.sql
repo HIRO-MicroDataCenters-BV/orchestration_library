@@ -91,3 +91,28 @@ BEGIN
     END IF;
     RAISE NOTICE 'Table tuning_parameters created or already exists.';
 END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'pod_request_decision') THEN
+        CREATE TABLE pod_request_decision (
+            id UUID PRIMARY KEY,
+            pod_id UUID NOT NULL,
+            pod_name VARCHAR(255) NOT NULL,
+            namespace VARCHAR(255) NOT NULL,
+            node_id UUID NOT NULL,
+            is_elastic BOOLEAN NOT NULL,
+            queue_name VARCHAR(255) NOT NULL,
+            demand_cpu FLOAT NOT NULL,
+            demand_memory FLOAT NOT NULL,
+            demand_slack_cpu FLOAT,
+            demand_slack_memory FLOAT,
+            is_decision_status BOOLEAN NOT NULL,
+            pod_parent_id UUID NOT NULL,
+            pod_parent_kind VARCHAR(100) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    END IF;
+    RAISE NOTICE 'Table pod_request_decision created or already exists.';
+END $$;
