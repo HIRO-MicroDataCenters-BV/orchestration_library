@@ -38,13 +38,22 @@ async def root():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>K8s Token Fetcher</title>
+        <h3>K8s Dashboard Auto Login</h3>
+        <button onclick="getTokenAndOpenUrl()">Open Dashboard</button>
         <script>
             async function getTokenAndOpenUrl() {{
             try {{
                 const response = await fetch('/dummy_aces_ui/dummy_get_token');
+                if (!response.ok) {{
+                    alert("Failed to fetch token: " + response.statusText);
+                    return;
+                }}
                 const data = await response.json();
                 const token = data.token;
+                if (!token) {{
+                    alert("No token received.");
+                    return;
+                }}
                 const dashboardUrl = '{K8S_DASHBOARD_PROXY_URL}/#/login?token=' + encodeURIComponent(token);
                 window.open(dashboardUrl, '_blank');
             }} catch (err) {{
