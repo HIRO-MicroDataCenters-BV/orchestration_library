@@ -23,6 +23,9 @@ rules:
 - apiGroups: ["metrics.k8s.io"]
   resources: ["nodes"]
   verbs: ["list", "get"]
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  verbs: ["create"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -70,3 +73,11 @@ spec:
               configMapKeyRef:
                 name: {{ .Values.configmap.databaseURLConfig }}
                 key: databaseURL
+          - name: KUBERNETES_DASHBOARD_NAMESPACE
+            value: {{ .Values.dashboard.namespace }}
+          - name: KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME
+            value: {{ .Values.dashboard.serviceAccountName }}
+          - name: KUBERNETES_DASHBOARD_PROXY_SERVICE_NAME
+            value: {{ .Values.dashboard.proxyServiceName }}
+          - name: KUBERNETES_DASHBOARD_PROXY_SERVICE_PORT
+            value: "{{ .Values.dashboard.proxyServicePort }}"

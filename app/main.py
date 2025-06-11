@@ -7,6 +7,7 @@ import logging
 from fastapi import FastAPI
 from app.api.k8s import (
     cluster_ui,
+    k8s_get_token_api,
     k8s_pod,
     k8s_node,
     k8s_pod_parent,
@@ -15,6 +16,7 @@ from app.api.k8s import (
 )
 from app.api import (
     common_api,
+    dummy_aces_ui_api,
     pod,
     workload_request,
     workload_request_decision,
@@ -33,6 +35,8 @@ app.include_router(k8s_user_pod.router, tags=["K8s User Pod"])
 app.include_router(k8s_node.router, tags=["K8s Node"])
 app.include_router(k8s_cluster_info.router, tags=["K8s Cluster Info"])
 app.include_router(cluster_ui.router, tags=["K8s Cluster UI"])
+app.include_router(k8s_get_token_api.router, tags=["K8s Get Token API"])
+app.include_router(dummy_aces_ui_api.router, tags=["Dummy ACES UI API"])
 
 app.include_router(workload_request.router, tags=["DB Workload Request"])
 app.include_router(workload_request_decision.router, tags=["DB Workload Request Decision"])

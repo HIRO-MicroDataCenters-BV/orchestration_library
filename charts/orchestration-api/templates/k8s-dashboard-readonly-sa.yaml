@@ -1,0 +1,50 @@
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.dashboard.serviceAccountName }}
+  namespace: {{ .Values.dashboard.namespace }}
+---
+# ClusterRoleBinding to built-in "view" ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: readonly-user-view-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.dashboard.serviceAccountName }}
+  namespace: {{ .Values.dashboard.namespace }}
+---
+# Custom ClusterRole to allow listing Nodes (view role does not include nodes!)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: readonly-nodes-view
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["nodes/proxy"]
+  verbs: ["get", "list"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list", "watch"]
+---
+# ClusterRoleBinding for the custom ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: readonly-nodes-view-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: readonly-nodes-view
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.dashboard.serviceAccountName }}
+  namespace: {{ .Values.dashboard.namespace }}
