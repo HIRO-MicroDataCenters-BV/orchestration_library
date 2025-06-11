@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
 
 from app.db.database import get_async_db
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.repositories import alerts as alerts_repo
-from app.utils.exceptions import DatabaseConnectionException
 
 router = APIRouter(prefix="/alerts")
 
@@ -34,9 +32,4 @@ async def create(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
-    try:
-        return await alerts_repo.create_alert(db, data)
-    except SQLAlchemyError as e:
-        raise DatabaseConnectionException(
-            "Failed to create alert", details={"error": str(e)}
-        ) from e
+    return await alerts_repo.create_alert(db, data)
