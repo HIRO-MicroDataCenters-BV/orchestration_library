@@ -38,8 +38,7 @@ async def root():
     <!DOCTYPE html>
     <html>
     <head>
-        <h3>K8s Dashboard Auto Login</h3>
-        <button onclick="getTokenAndOpenUrl()">Open Dashboard</button>
+        <title>K8s Dashboard Auto Login</title>
         <script>
             async function getTokenAndOpenUrl() {{
             try {{
@@ -64,8 +63,8 @@ async def root():
         </script>
     </head>
     <body>
-        <h1>Get K8s Token</h1>
-        <button onclick="getTokenAndOpenUrl()">Get Token and Open URL</button>
+        <h3>K8s Dashboard Auto Login</h3>
+        <button onclick="getTokenAndOpenUrl()">Open Dashboard</button>
     </body>
     </html>
     """
