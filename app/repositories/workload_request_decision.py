@@ -38,7 +38,8 @@ async def create_workload_request_decision(
         )
         raise DBEntryCreationException(
             message="Failed to create workload request decision: Data constraint violation",
-            details={"error_type": "workload_request_decision_database_integrity_error", "error": str(exc)},
+            details={"error_type": "workload_request_decision_database_integrity_error",
+                     "error": str(exc)},
         ) from exc
     except OperationalError as exc:
         await db_session.rollback()
@@ -47,7 +48,8 @@ async def create_workload_request_decision(
         )
         raise DBEntryCreationException(
             message="Failed to create workload request decision: Database operational error",
-            details={"error_type": "workload_request_decision_database_connection_error", "error": str(exc)},
+            details={"error_type": "workload_request_decision_database_connection_error",
+                     "error": str(exc)},
         ) from exc
     except SQLAlchemyError as exc:
         await db_session.rollback()

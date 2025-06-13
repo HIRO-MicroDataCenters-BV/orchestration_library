@@ -56,7 +56,8 @@ async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecision
         raise DBEntryCreationException(
             message=f"Failed to create pod decision with name "
                     f"'{data.pod_name}': Data constraint violation",
-            details={"error_type": "pod_request_decision_database_integrity_error", "error": str(exc)},
+            details={"error_type": "pod_request_decision_database_integrity_error",
+                     "error": str(exc)},
         ) from exc
     except OperationalError as exc:
         await db_session.rollback()
@@ -68,7 +69,8 @@ async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecision
         raise DBEntryCreationException(
             message=f"Failed to create pod_decision with name"
                     f" '{data.pod_name}': Database connection error",
-            details={"error_type": "pod_request_decision_database_connection_error", "error": str(exc)},
+            details={"error_type": "pod_request_decision_database_connection_error",
+                     "error": str(exc)},
         ) from exc
     except SQLAlchemyError as exc:
         await db_session.rollback()
