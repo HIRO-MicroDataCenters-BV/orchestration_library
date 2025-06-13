@@ -25,6 +25,19 @@ logger = logging.getLogger(__name__)
 
 
 async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecisionSchema):
+    """
+        Create a new PodRequestDecision record in the database.
+
+        Args:
+            db_session (AsyncSession): The async SQLAlchemy database session.
+            data (PodRequestDecisionSchema): The data for the new pod decision.
+
+        Returns:
+            PodRequestDecision: The created pod decision ORM object.
+
+        Raises:
+            DBEntryCreationException: If creation fails due to integrity or DB errors.
+    """
     try:
         db_obj = PodRequestDecision(**data.dict())
         db_session.add(db_obj)
@@ -66,6 +79,20 @@ async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecision
 
 
 async def get_pod_decision(db_session: AsyncSession, pod_decision_id: UUID):
+    """
+        Retrieve a specific PodRequestDecision by its ID.
+
+        Args:
+            db_session (AsyncSession): The async SQLAlchemy database session.
+            pod_decision_id (UUID): The ID of the pod decision to retrieve.
+
+        Returns:
+            PodRequestDecision: The pod decision ORM object if found.
+
+        Raises:
+            DBEntryNotFoundException: If the pod decision is not found.
+            DataBaseException: For database-related errors.
+    """
     try:
         result = await db_session.execute(
             select(PodRequestDecision).where(PodRequestDecision.id == pod_decision_id)
@@ -97,6 +124,20 @@ async def get_pod_decision(db_session: AsyncSession, pod_decision_id: UUID):
 async def get_all_pod_decisions(
     db_session: AsyncSession, skip: int = 0, limit: int = 100
 ):
+    """
+        Retrieve all PodRequestDecision records with pagination.
+
+        Args:
+            db_session (AsyncSession): The async SQLAlchemy database session.
+            skip (int): Number of records to skip.
+            limit (int): Maximum number of records to retrieve.
+
+        Returns:
+            List[PodRequestDecision]: A list of pod decision ORM objects.
+
+        Raises:
+            DataBaseException: If a database error occurs during retrieval.
+    """
     try:
         result = await db_session.execute(
             select(PodRequestDecision).offset(skip).limit(limit)
@@ -113,6 +154,21 @@ async def get_all_pod_decisions(
 async def update_pod_decision(
     db_session: AsyncSession, pod_decision_id: UUID, data: PodRequestDecisionUpdate
 ):
+    """
+        Update an existing PodRequestDecision record by its ID.
+
+        Args:
+            db_session (AsyncSession): The async SQLAlchemy database session.
+            pod_decision_id (UUID): The ID of the pod decision to update.
+            data (PodRequestDecisionUpdate): Fields to update in the record.
+
+        Returns:
+            PodRequestDecision: The updated pod decision ORM object.
+
+        Raises:
+            DBEntryNotFoundException: If the pod decision is not found.
+            DBEntryUpdateException: If update fails due to integrity or DB errors.
+    """
     try:
         result = await db_session.execute(
             select(PodRequestDecision).where(PodRequestDecision.id == pod_decision_id)
@@ -170,6 +226,20 @@ async def update_pod_decision(
 
 
 async def delete_pod_decision(db_session: AsyncSession, pod_decision_id: UUID):
+    """
+        Delete a PodRequestDecision record by its ID.
+
+        Args:
+            db_session (AsyncSession): The async SQLAlchemy database session.
+            pod_decision_id (UUID): The ID of the pod decision to delete.
+
+        Returns:
+            bool: True if deletion is successful.
+
+        Raises:
+            DBEntryNotFoundException: If the pod decision is not found.
+            DBEntryDeletionException: If deletion fails due to DB errors.
+    """
     try:
         result = await db_session.execute(
             select(PodRequestDecision).where(PodRequestDecision.id == pod_decision_id)
