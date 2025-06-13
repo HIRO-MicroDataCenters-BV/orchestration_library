@@ -1,3 +1,6 @@
+"""
+CRUD operations for pod request decision in the database.
+"""
 import logging
 
 from uuid import UUID
@@ -9,7 +12,7 @@ from sqlalchemy import select
 from app.models.pod_request_decision import PodRequestDecision
 from app.schemas.pod_request_decision import (
     PodRequestDecisionUpdate,
-    PodRequestDecisionSchema,
+    PodRequestDecisionCreate
 )
 from app.utils.exceptions import (
     DBEntryCreationException,
@@ -24,13 +27,13 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecisionSchema):
+async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecisionCreate):
     """
         Create a new PodRequestDecision record in the database.
 
         Args:
             db_session (AsyncSession): The async SQLAlchemy database session.
-            data (PodRequestDecisionSchema): The data for the new pod decision.
+            data (PodRequestDecisionCreate): The data for the new pod decision.
 
         Returns:
             PodRequestDecision: The created pod decision ORM object.
@@ -70,7 +73,7 @@ async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecision
     except SQLAlchemyError as exc:
         await db_session.rollback()
         logger.error(
-            "Database error while creating pod_decision %s: %s", data.name, str(exc)
+            "Database error while creating pod_decision %s: %s", data.pod_name, str(exc)
         )
         raise DBEntryCreationException(
             message=f"Failed to create pod_decision with pod '{data.pod_name}': Database error",

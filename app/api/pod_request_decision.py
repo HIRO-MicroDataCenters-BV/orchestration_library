@@ -8,7 +8,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_db
-from app.schemas.pod_request_decision import PodRequestDecisionUpdate, PodRequestDecisionSchema
+from app.schemas.pod_request_decision import (
+    PodRequestDecisionUpdate,
+    PodRequestDecisionSchema,
+    PodRequestDecisionCreate
+)
 from app.repositories.pod_request_decision import (
     create_pod_decision,
     get_all_pod_decisions,
@@ -22,7 +26,7 @@ router = APIRouter(prefix="/pod_request_decision", tags=["Pod Request Decision"]
 
 @router.post(path="/", response_model=PodRequestDecisionSchema)
 async def create_pod_request_decision_route(
-         data: PodRequestDecisionSchema, db_session: AsyncSession = Depends(get_async_db)):
+         data: PodRequestDecisionCreate, db_session: AsyncSession = Depends(get_async_db)):
     """
         Create a new PodRequestDecision entry.
 
@@ -37,7 +41,8 @@ async def create_pod_request_decision_route(
 
 
 @router.get(path="/{pod_decision_id}", response_model= PodRequestDecisionSchema)
-async def get_pod_decision_route(pod_decision_id: UUID, db_session: AsyncSession = Depends(get_async_db)):
+async def get_pod_decision_route(pod_decision_id: UUID,
+                                 db_session: AsyncSession = Depends(get_async_db)):
     """
        Retrieve a single PodRequestDecision by ID.
 
