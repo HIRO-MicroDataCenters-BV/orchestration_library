@@ -1,7 +1,7 @@
 """
 SQLAlchemy models for the orchestration library.
 """
-
+from uuid import uuid4
 from sqlalchemy import Column, String, Boolean, Float, TIMESTAMP, text, UUID
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
@@ -13,7 +13,7 @@ class PodRequestDecision(Base, BaseDictMixin):
     """
     __tablename__ = "pod_request_decision"
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
     pod_id = Column(UUID(as_uuid=True), nullable=False)
     pod_name = Column(String(255), nullable=False)
     namespace = Column(String(255), nullable=False)
