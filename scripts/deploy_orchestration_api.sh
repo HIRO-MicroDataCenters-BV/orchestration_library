@@ -35,7 +35,10 @@ echo "Deploy the Kubernetes Dashboard to the Kind cluster"
 helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME $KUBERNETES_DASHBOARD_REPO_NAME/$KUBERNETES_DASHBOARD_CHART_NAME \
   --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
   --create-namespace \
-  --set protocolHttp=true
+  --set protocolHttp=true \
+  --set kong.admin.tls.enabled=false \
+  --set kong.proxy.http.enabled=true \
+  --set 'api.containers.args={--disable-csrf-protection=true}'
 
 echo "Update Helm dependencies for orchestration-api chart"
 helm dependency build ./charts/orchestration-api
