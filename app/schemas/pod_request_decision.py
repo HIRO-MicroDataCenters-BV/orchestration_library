@@ -46,3 +46,24 @@ class PodRequestDecisionUpdate(BaseModel):
     is_decision_status: Optional[bool] = None
     pod_parent_id: Optional[UUID] = None
     pod_parent_kind: Optional[str] = None
+
+
+class PodRequestDecisionCreate(BaseModel):
+    """
+    ...
+    """
+    pod_id: UUID
+    pod_name: str
+    namespace: str
+    node_id: UUID
+    is_elastic: bool
+    queue_name: str
+    demand_cpu: float
+    demand_memory: float
+    demand_slack_cpu: Optional[float] = None
+    demand_slack_memory: Optional[float] = None
+    is_decision_status: bool
+    pod_parent_id: UUID
+    pod_parent_kind: str
+
+
