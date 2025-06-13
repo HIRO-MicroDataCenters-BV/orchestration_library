@@ -54,7 +54,7 @@ async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecision
             "Integrity error while creating pod decision %s %s", data.pod_name, str(exc)
         )
         raise DBEntryCreationException(
-            message=f"Failed to create pod decision with name "
+            message=f"Failed to create pod decision"
                     f"'{data.pod_name}': Data constraint violation",
             details={"error_type": "pod_request_decision_database_integrity_error",
                      "error": str(exc)},

@@ -54,7 +54,7 @@ async def create_workload_request_decision(
     except SQLAlchemyError as exc:
         await db_session.rollback()
         logger.error(
-            "SQLAlchemy error while creating workload request decision: %s", str(exc)
+            "SQLAlchemy error while creating workload_request_decision: %s", str(exc)
         )
         raise DBEntryCreationException(
             "Failed to create workload request decision", details={"error": str(exc)}
