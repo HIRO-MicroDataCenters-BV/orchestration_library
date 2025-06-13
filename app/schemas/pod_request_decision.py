@@ -65,4 +65,3 @@ class PodRequestDecisionCreate(BaseModel):
     is_decision_status: bool
     pod_parent_id: UUID
     pod_parent_kind: str
-
