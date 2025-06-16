@@ -5,6 +5,7 @@ This module defines the database models used for storing and retrieving Alerts.
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, CheckConstraint, text
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.database import Base
 
@@ -30,11 +31,11 @@ class Alert(Base):
     # Alert Description - TEXT
     alert_description = Column(Text, nullable=False)
 
-    # Pod ID - VARCHAR(100)
-    pod_id = Column(String(100), nullable=False, index=True)  # Index for pod queries
+    # Pod ID - UUID
+    pod_id = Column(UUID, nullable=False, index=True)  # Index for pod queries
 
-    # Node ID - VARCHAR(100)
-    node_id = Column(String(100), nullable=False, index=True)  # Index for node queries
+    # Node ID - UUID
+    node_id = Column(UUID, nullable=False, index=True)  # Index for node queries
 
     # Created At - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
     created_at = Column(

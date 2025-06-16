@@ -5,6 +5,7 @@ This module defines the request and response models for the Alert API.
 
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -52,19 +53,15 @@ class AlertCreateRequest(BaseModel):
         max_length=1000,
         examples=["High CPU usage detected on pod"]
     )
-    pod_id: str = Field(
+    pod_id: UUID = Field(
         ...,
         description="ID of the pod",
-        min_length=1,
-        max_length=100,
-        examples=["pod-123"]
+        examples=["123e4567-e89b-12d3-a456-426614174000"]
     )
-    node_id: str = Field(
+    node_id: UUID = Field(
         ...,
         description="ID of the node",
-        min_length=1,
-        max_length=100,
-        examples=["node-456"]
+        examples=["123e4567-e89b-12d3-a456-426614174000"]
     )
 
     def __repr__(self) -> str:
@@ -99,8 +96,8 @@ class AlertResponse(BaseModel):
     id: int = Field(..., description="Unique identifier for the alert")
     alert_type: AlertType = Field(..., description="Type of alert")
     alert_description: str = Field(..., description="Description of the alert")
-    pod_id: str = Field(..., description="ID of the pod")
-    node_id: str = Field(..., description="ID of the node")
+    pod_id: UUID = Field(..., description="ID of the pod")
+    node_id: UUID = Field(..., description="ID of the node")
     created_at: datetime = Field(..., description="Timestamp when the alert was created")
 
     def __repr__(self) -> str:

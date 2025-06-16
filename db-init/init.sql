@@ -99,8 +99,8 @@ BEGIN
              id SERIAL PRIMARY KEY,
              alert_type VARCHAR(50) CHECK (alert_type IN ('Abnormal', 'Network-Attack', 'Other')),
              alert_description TEXT,
-             pod_id VARCHAR(100),
-             node_id VARCHAR(100),
+             pod_id UUID,
+             node_id UUID,
              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     END IF;
