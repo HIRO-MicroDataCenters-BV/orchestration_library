@@ -116,3 +116,18 @@ BEGIN
     END IF;
     RAISE NOTICE 'Table pod_request_decision created or already exists.';
 END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'alerts') THEN
+        CREATE TABLE alerts (
+             id SERIAL PRIMARY KEY,
+             alert_type VARCHAR(50) CHECK (alert_type IN ('Abnormal', 'Network-Attack', 'Other')),
+             alert_description TEXT,
+             pod_id UUID,
+             node_id UUID,
+             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    END IF;
+    RAISE NOTICE 'Table alerts created or already exists.';
+END $$;

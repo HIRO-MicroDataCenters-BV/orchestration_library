@@ -19,14 +19,18 @@ from app.api import (
     workload_request,
     workload_request_decision,
     node,
+    pod_request_decision,
     tuning_parameters_api,
-    pod_request_decision
+    alerts_api
 )
+
 from app.utils.exception_handlers import init_exception_handlers
 
 app = FastAPI()
 
 logging.basicConfig(level=logging.DEBUG)
+
+app.include_router(alerts_api.router, tags=["Alerts API"])
 
 app.include_router(k8s_pod.router, tags=["K8s Pod"])
 app.include_router(k8s_pod_parent.router, tags=["K8s Pod Parent"])
