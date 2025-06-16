@@ -4,7 +4,6 @@ FastAPI application entry point.
 
 import logging
 
-import uvicorn
 from fastapi import FastAPI
 from app.api.k8s import (
     cluster_ui,
