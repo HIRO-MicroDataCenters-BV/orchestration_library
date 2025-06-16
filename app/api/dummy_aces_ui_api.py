@@ -152,6 +152,27 @@ async def reverse_proxy(request: Request, path: str = ""):
 async def dashboard_ui():
     """Simple UI with button to access dashboard"""
     launch_url = "/dummy_aces_ui/proxy/#/overview?namespace=default"
+    dashboard_entry_url = "/dummy_aces_ui/proxy/"
+    token = await get_dashboard_token()
+    login_js = f"""
+    async function loginToDashboard() {{
+    try {{
+        const response = await fetch("{dashboard_entry_url}", {{
+            method: "GET",
+                headers: {{
+                    "Authorization": "Bearer {token}"
+                }}
+            }});
+            if (!response.ok) {{
+                throw new Error("Failed to validate token");
+            }}
+        }} catch (e) {{
+            document.body.innerHTML = "<h3>Login Failed</h3><p>" + e.message + "</p>";
+            return;
+        }}
+        window.location.href = "{launch_url}";
+    }}
+    """
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -174,10 +195,13 @@ async def dashboard_ui():
         </style>
     </head>
     <body>
+        <script>
+        {login_js}
+        </script>
         <div class="container">
             <h2>Kubernetes Dashboard Auto-Login</h2>
             <p>Click below to automatically authenticate with the dashboard:</p>
-            <button onclick="window.open('{launch_url}', '_blank')">
+            <button onclick="loginToDashboard()">
                 Open Authenticated Dashboard
             </button>
         </div>
