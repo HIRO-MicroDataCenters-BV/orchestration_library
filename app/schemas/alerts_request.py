@@ -17,6 +17,24 @@ class AlertType(str, Enum):
     NETWORK_ATTACK = "network-attack"
     OTHER = "other"
 
+    def __repr__(self) -> str:
+        """
+        String representation of the alert type.
+
+        Returns:
+            str: String representation
+        """
+        return f"<AlertType.{self.name}>"
+
+    def __str__(self) -> str:
+        """
+        Human-readable string representation of the alert type.
+
+        Returns:
+            str: Human-readable string representation
+        """
+        return self.value
+
 
 class AlertCreateRequest(BaseModel):
     """
@@ -49,6 +67,30 @@ class AlertCreateRequest(BaseModel):
         examples=["node-456"]
     )
 
+    def __repr__(self) -> str:
+        """
+        String representation of the alert creation request.
+
+        Returns:
+            str: String representation
+        """
+        return (
+            f"<AlertCreateRequest(type={self.alert_type}, "
+            f"pod={self.pod_id}, node={self.node_id})>"
+        )
+
+    def __str__(self) -> str:
+        """
+        Human-readable string representation of the alert creation request.
+
+        Returns:
+            str: Human-readable string representation
+        """
+        return (
+            f"Create alert: {self.alert_type} on pod {self.pod_id} "
+            f"node {self.node_id}"
+        )
+
 
 class AlertResponse(BaseModel):
     """
@@ -60,6 +102,31 @@ class AlertResponse(BaseModel):
     pod_id: str = Field(..., description="ID of the pod")
     node_id: str = Field(..., description="ID of the node")
     datetime: datetime = Field(..., description="Timestamp of the alert")
+
+    def __repr__(self) -> str:
+        """
+        String representation of the alert response.
+
+        Returns:
+            str: String representation
+        """
+        return (
+            f"<AlertResponse(id={self.id}, type={self.alert_type}, "
+            f"pod={self.pod_id}, node={self.node_id}, "
+            f"datetime={self.datetime})>"
+        )
+
+    def __str__(self) -> str:
+        """
+        Human-readable string representation of the alert response.
+
+        Returns:
+            str: Human-readable string representation
+        """
+        return (
+            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
+            f"node {self.node_id} at {self.datetime}"
+        )
 
     class Config:
         """

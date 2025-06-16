@@ -59,3 +59,15 @@ class Alert(Base):
             f"node={self.node_id}, "
             f"datetime={self.datetime})>"
         )
+
+    def __str__(self) -> str:
+        """
+        Human-readable string representation of the alert.
+
+        Returns:
+            str: Human-readable string representation
+        """
+        return (
+            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
+            f"node {self.node_id} at {self.datetime}"
+        )
