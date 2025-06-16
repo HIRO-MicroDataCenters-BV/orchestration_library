@@ -19,6 +19,7 @@ from app.api import (
     workload_request,
     workload_request_decision,
     node,
+    pod_request_decision,
     tuning_parameters_api,
     alerts_api
 )
@@ -43,6 +44,7 @@ app.include_router(workload_request_decision.router, tags=["DB Workload Request 
 app.include_router(pod.router, tags=["DB Pod"])
 app.include_router(node.router, tags=["DB Node"])
 app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
+app.include_router(pod_request_decision.router, tags=["Pod Request Decision"])
 
 app.include_router(common_api.router, tags=["Common API"])
 
