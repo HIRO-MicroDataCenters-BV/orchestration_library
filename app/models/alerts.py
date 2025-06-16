@@ -41,7 +41,7 @@ class Alert(Base):
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
-        default=func.current_timestamp(),
+        default=func.current_timestamp,
         server_default=text("CURRENT_TIMESTAMP"),
         index=True  # Index for time-based queries
     )
