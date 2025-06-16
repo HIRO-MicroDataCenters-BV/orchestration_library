@@ -91,7 +91,7 @@ async def get_alerts(
     """
     try:
         logger.debug("Retrieving alerts with skip=%d, limit=%d", skip, limit)
-        query = select(Alert).order_by(Alert.datetime.desc())
+        query = select(Alert).order_by(Alert.created_at.desc())
         query = query.offset(skip).limit(limit)
         result = await db.execute(query)
         alerts = result.scalars().all()
