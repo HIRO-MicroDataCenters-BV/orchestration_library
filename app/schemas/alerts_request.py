@@ -136,3 +136,21 @@ class AlertResponse(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+        def __repr__(self) -> str:
+            """
+            String representation of the config.
+
+            Returns:
+                str: String representation
+            """
+            return "<AlertResponse.Config>"
+
+        def __str__(self) -> str:
+            """
+            Human-readable string representation of the config.
+
+            Returns:
+                str: Human-readable string representation
+            """
+            return "AlertResponse configuration"
