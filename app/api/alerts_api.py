@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +32,36 @@ async def create(
         AlertResponse: The created alert
 
     Raises:
-        DatabaseConnectionException: If there's a database error
+        DBEntryCreationException: If there's an error creating the alert
+        DataBaseException: If there's a database error
     """
     return await alerts_repo.create_alert(db, data)
+
+
+@router.get(
+    "/",
+    response_model=List[AlertResponse],
+    responses={
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal Server Error"},
+    },
+)
+async def read_alerts(
+        skip: int = 0,
+        limit: int = 100,
+        db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Get a list of alerts with pagination.
+
+    Args:
+        skip (int): Number of records to skip (default: 0)
+        limit (int): Maximum number of records to return (default: 100)
+        db (AsyncSession): Database session dependency
+
+    Returns:
+        List[AlertResponse]: List of alerts
+
+    Raises:
+        DataBaseException: If there's a database error
+    """
+    return await alerts_repo.get_alerts(db, skip=skip, limit=limit)
