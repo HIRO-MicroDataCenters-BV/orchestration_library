@@ -1,3 +1,8 @@
+"""
+SQLAlchemy models for Alerts.
+This module defines the database models used for storing and retrieving Alerts.
+"""
+
 from sqlalchemy import Column, Integer, String, Text, DateTime, CheckConstraint
 from sqlalchemy.sql import func
 
@@ -35,7 +40,22 @@ class Alert(Base):
     datetime = Column(
         DateTime(timezone=True),
         nullable=False,
-        default=func.current_timestamp(),
-        server_default=func.current_timestamp(),
+        default=func.current_timestamp,
+        server_default=func.current_timestamp,
         index=True  # Index for time-based queries
     )
+
+    def __repr__(self) -> str:
+        """
+        String representation of the alert.
+
+        Returns:
+            str: String representation of the alert
+        """
+        return (
+            f"<Alert(id={self.id}, "
+            f"type={self.alert_type}, "
+            f"pod={self.pod_id}, "
+            f"node={self.node_id}, "
+            f"datetime={self.datetime})>"
+        )

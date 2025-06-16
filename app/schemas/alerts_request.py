@@ -1,60 +1,71 @@
-from pydantic import BaseModel, Field
-from typing import Literal
+"""
+Pydantic models for Alert requests and responses.
+This module defines the request and response models for the Alert API.
+"""
+
 from datetime import datetime
 from enum import Enum
 
+from pydantic import BaseModel, Field
+
 
 class AlertType(str, Enum):
-    """Enumeration for alert types matching database constraints."""
-    ABNORMAL = "Abnormal"
-    NETWORK_ATTACK = "Network-Attack"
-    OTHER = "Other"
+    """
+    Enum for alert types.
+    """
+    ABNORMAL = "abnormal"
+    NETWORK_ATTACK = "network-attack"
+    OTHER = "other"
 
 
 class AlertCreateRequest(BaseModel):
     """
-    Schema for creating an alert request.
-    Matches the PostgreSQL alerts table schema.
+    Pydantic model for creating a new alert.
     """
-
-    # id is SERIAL PRIMARY KEY - excluded from create request (auto-generated)
-    alert_type: Literal["abnormal", "network-attack", "other"] = Field(
+    alert_type: AlertType = Field(
         ...,
-        description="Type of alert (abnormal, network-attack, or other)",
-        max_length=50
+        description="Type of alert",
+        examples=["abnormal", "network-attack", "other"]
     )
     alert_description: str = Field(
         ...,
-        description="Detailed description of the alert (TEXT field)"
+        description="Description of the alert",
+        min_length=1,
+        max_length=1000,
+        examples=["High CPU usage detected on pod"]
     )
     pod_id: str = Field(
         ...,
+        description="ID of the pod",
+        min_length=1,
         max_length=100,
-        description="Kubernetes pod identifier"
+        examples=["pod-123"]
     )
     node_id: str = Field(
         ...,
+        description="ID of the node",
+        min_length=1,
         max_length=100,
-        description="Kubernetes node identifier"
+        examples=["node-456"]
     )
 
 
 class AlertResponse(BaseModel):
     """
-    Schema for alert response after creation.
+    Pydantic model for alert response.
     """
-
-    id: int
-    alert_type: str
-    alert_description: str
-    pod_id: str
-    node_id: str
-    datetime: datetime
+    id: int = Field(..., description="Unique identifier for the alert")
+    alert_type: AlertType = Field(..., description="Type of alert")
+    alert_description: str = Field(..., description="Description of the alert")
+    pod_id: str = Field(..., description="ID of the pod")
+    node_id: str = Field(..., description="ID of the node")
+    datetime: datetime = Field(..., description="Timestamp of the alert")
 
     class Config:
-        """Pydantic configuration."""
-        orm_mode: Literal[True] = True
-        from_attributes = True  # For SQLAlchemy ORM compatibility
+        """
+        Pydantic model configuration.
+        """
+        from_attributes = True
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }

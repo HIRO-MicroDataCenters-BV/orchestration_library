@@ -1,3 +1,9 @@
+"""
+Alert API routes.
+This module defines the API endpoints for managing Alert in the database.
+It includes routes for creating, retrieving Alert records.
+"""
+
 from typing import List
 
 from fastapi import APIRouter, Depends, status
