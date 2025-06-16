@@ -101,7 +101,7 @@ class AlertResponse(BaseModel):
     alert_description: str = Field(..., description="Description of the alert")
     pod_id: str = Field(..., description="ID of the pod")
     node_id: str = Field(..., description="ID of the node")
-    datetime: datetime = Field(..., description="Timestamp of the alert")
+    created_at: datetime = Field(..., description="Timestamp when the alert was created")
 
     def __repr__(self) -> str:
         """
@@ -113,7 +113,7 @@ class AlertResponse(BaseModel):
         return (
             f"<AlertResponse(id={self.id}, type={self.alert_type}, "
             f"pod={self.pod_id}, node={self.node_id}, "
-            f"datetime={self.datetime})>"
+            f"created_at={self.created_at})>"
         )
 
     def __str__(self) -> str:
@@ -125,7 +125,7 @@ class AlertResponse(BaseModel):
         """
         return (
             f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
-            f"node {self.node_id} at {self.datetime}"
+            f"node {self.node_id} at {self.created_at}"
         )
 
     class Config:

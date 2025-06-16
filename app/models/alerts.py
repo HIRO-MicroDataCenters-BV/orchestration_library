@@ -3,7 +3,7 @@ SQLAlchemy models for Alerts.
 This module defines the database models used for storing and retrieving Alerts.
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, CheckConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, CheckConstraint, text
 from sqlalchemy.sql import func
 
 from app.db.database import Base
@@ -36,12 +36,12 @@ class Alert(Base):
     # Node ID - VARCHAR(100)
     node_id = Column(String(100), nullable=False, index=True)  # Index for node queries
 
-    # Datetime - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
-    datetime = Column(
+    # Created At - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
+    created_at = Column(
         DateTime(timezone=True),
         nullable=False,
-        default=func.current_timestamp,
-        server_default=func.current_timestamp,
+        default=func.current_timestamp(),
+        server_default=text("CURRENT_TIMESTAMP"),
         index=True  # Index for time-based queries
     )
 
@@ -57,7 +57,7 @@ class Alert(Base):
             f"type={self.alert_type}, "
             f"pod={self.pod_id}, "
             f"node={self.node_id}, "
-            f"datetime={self.datetime})>"
+            f"created_at={self.created_at})>"
         )
 
     def __str__(self) -> str:
@@ -69,5 +69,5 @@ class Alert(Base):
         """
         return (
             f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
-            f"node {self.node_id} at {self.datetime}"
+            f"node {self.node_id} at {self.created_at}"
         )
