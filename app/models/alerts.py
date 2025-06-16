@@ -4,9 +4,6 @@ from sqlalchemy.sql import func
 from app.db.database import Base
 
 
-
-# Alert Database Model
-
 class Alert(Base):
     """
     SQLAlchemy model for alerts table.
