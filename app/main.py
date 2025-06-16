@@ -49,7 +49,3 @@ app.include_router(common_api.router, tags=["Common API"])
 
 
 init_exception_handlers(app)
-
-if __name__ == "__main__":
-    print("starting main....")
-    uvicorn.run(app, port=8083, host="0.0.0.0")
