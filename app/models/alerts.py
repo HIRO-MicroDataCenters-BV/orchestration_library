@@ -22,7 +22,7 @@ class Alert(Base):
     # Alert Type - VARCHAR(50) with CHECK constraint
     alert_type = Column(
         String(50),
-        CheckConstraint("alert_type IN ('abnormal', 'network-attack', 'other')"),
+        CheckConstraint("alert_type IN ('Abnormal', 'Network-Attack', 'Other')"),
         nullable=False,
         index=True  # Add index for faster queries by type
     )
