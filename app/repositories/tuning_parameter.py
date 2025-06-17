@@ -36,8 +36,8 @@ async def create_tuning_parameter(
         DatabaseConnectionException: If there's a database error
     """
     try:
-        logger.debug("Creating tuning parameter with data: %s", tuning_parameter.dict())
-        db_tuning_parameter = TuningParameter(**tuning_parameter.dict())
+        logger.debug("Creating tuning parameter with data: %s", tuning_parameter.model_dump())
+        db_tuning_parameter = TuningParameter(**tuning_parameter.model_dump())
         db.add(db_tuning_parameter)
         await db.commit()
         await db.refresh(db_tuning_parameter)
