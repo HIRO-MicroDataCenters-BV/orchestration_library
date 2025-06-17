@@ -1,3 +1,4 @@
+import mimetypes
 import os
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -126,6 +127,9 @@ async def reverse_proxy(request: Request, path: str = ""):
                         if k.lower() not in ("content-length", "transfer-encoding")
                     }
                     media_type = response.headers.get("content-type")
+                    if not media_type:
+                        guessed_type, _ = mimetypes.guess_type(target_url)
+                        media_type = guessed_type or "application/octet-stream"
                     # response.aiter_raw(),  # Ensures proper streaming
                     # 2) if it’s a redirect, rewrite Location
                     if 300 <= status_code < 400 and "location" in response_headers:
@@ -151,7 +155,7 @@ async def reverse_proxy(request: Request, path: str = ""):
 @router.get("/", response_class=HTMLResponse)
 async def dashboard_ui():
     """Simple UI with button to access dashboard"""
-    launch_url = "/dummy_aces_ui/proxy/#/overview?namespace=default"
+    launch_url = "/dummy_aces_ui/proxy/#!/overview?namespace=default"
     dashboard_entry_url = "/dummy_aces_ui/proxy/"
     token = await get_dashboard_token()
     login_js = f"""
@@ -201,7 +205,7 @@ async def dashboard_ui():
         <div class="container">
             <h2>Kubernetes Dashboard Auto-Login</h2>
             <p>Click below to automatically authenticate with the dashboard:</p>
-            <button onclick="loginToDashboard()">
+            button onclick="window.open('{launch_url}', '_blank')">
                 Open Authenticated Dashboard
             </button>
         </div>
