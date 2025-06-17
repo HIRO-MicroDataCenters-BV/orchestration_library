@@ -2,7 +2,7 @@
 Tests for tuning_parameter_apis CRUD functions.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch, ANY
 
 import pytest
@@ -20,7 +20,7 @@ SAMPLE_TUNING_PARAM = {
     "alpha": 0.1,
     "beta": 0.2,
     "gamma": 0.3,
-    "created_at": datetime.utcnow().isoformat(),
+    "created_at": datetime.now(timezone.utc).isoformat(),
 }
 
 
@@ -49,7 +49,11 @@ async def test_create_tuning_parameters_success(mock_create):
         response = await ac.post("/tuning_parameters/", json=request_data)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == SAMPLE_TUNING_PARAM
+    actual = response.json()
+    expected = SAMPLE_TUNING_PARAM.copy()
+    actual["created_at"] = actual["created_at"].replace("+00:00", "Z")
+    expected["created_at"] = expected["created_at"].replace("+00:00", "Z")
+    assert actual == expected
     mock_create.assert_called_once()
 
 
@@ -85,7 +89,11 @@ async def test_get_latest_tuning_parameter_success(mock_get_latest):
         response = await ac.get("/tuning_parameters/latest/1")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [SAMPLE_TUNING_PARAM]  # Expecting a list with one item
+    actual = response.json()
+    expected = [SAMPLE_TUNING_PARAM.copy()]
+    actual[0]["created_at"] = actual[0]["created_at"].replace("+00:00", "Z")
+    expected[0]["created_at"] = expected[0]["created_at"].replace("+00:00", "Z")
+    assert actual == expected # Expecting a list with one item
     mock_get_latest.assert_called_once_with(ANY, limit=1)  # ANY for db session
 
 
@@ -113,7 +121,11 @@ async def test_get_all_tuning_parameters_success(mock_get_all):
         response = await ac.get("/tuning_parameters/")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [SAMPLE_TUNING_PARAM]
+    actual = response.json()
+    expected = [SAMPLE_TUNING_PARAM.copy()]
+    actual[0]["created_at"] = actual[0]["created_at"].replace("+00:00", "Z")
+    expected[0]["created_at"] = expected[0]["created_at"].replace("+00:00", "Z")
+    assert actual == expected
     mock_get_all.assert_called_once()
 
 
@@ -132,5 +144,9 @@ async def test_get_tuning_parameters_with_filters(mock_get_all):
         )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [SAMPLE_TUNING_PARAM]
+    actual = response.json()
+    expected = [SAMPLE_TUNING_PARAM.copy()]
+    actual[0]["created_at"] = actual[0]["created_at"].replace("+00:00", "Z")
+    expected[0]["created_at"] = expected[0]["created_at"].replace("+00:00", "Z")
+    assert actual == expected
     mock_get_all.assert_called_once()

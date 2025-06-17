@@ -14,7 +14,7 @@ from app.schemas.tuning_parameter_schema import TuningParameterCreate
 @pytest.mark.asyncio
 async def test_create_tuning_parameters():
     """Test the creation of a new tuning parameter."""
-    db = AsyncMock()
+    db = MagicMock()
     tuning_parameter_create = TuningParameterCreate(
         output_1=1.0,
         output_2=1.0,
