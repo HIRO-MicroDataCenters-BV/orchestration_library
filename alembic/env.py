@@ -11,10 +11,7 @@ from alembic import context
 from app.db.database import Base
 
 # Import all your models here to ensure they are registered with Alembic
-from app.models import (
-    node, pod, workload_request_decision,
-    workload_request, tuning_parameter
-)
+from app.models import *
 
 # The alembic.context module does have a config attribute at runtime,
 # but it’s not declared in its type stubs, so static analysis tools complain.
@@ -33,11 +30,6 @@ target_metadata = Base.metadata
 
 
 print("Running migrations online...")
-print("Models node:", node.__name__)
-print("Models pod:", pod.__name__)
-print("Models workload_request_decision:", workload_request_decision.__name__)
-print("Models workload_request:", workload_request.__name__)
-print("Models tuning_parameter:", tuning_parameter.__name__)
 print("Database URL:", db_url)
 
 def run_migrations_offline():

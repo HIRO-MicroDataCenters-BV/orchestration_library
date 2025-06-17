@@ -11,13 +11,9 @@ from app.api.k8s import (
     k8s_node,
     k8s_pod_parent,
     k8s_user_pod,
-    k8s_cluster_info
+    k8s_cluster_info,
 )
-from app.api import (
-    pod_request_decision,
-    tuning_parameters_api,
-    alerts_api
-)
+from app.api import pod_request_decision, tuning_parameters_api, alerts_api
 
 from app.utils.exception_handlers import init_exception_handlers
 
