@@ -33,8 +33,8 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    If you provide a parameter, that will be used as the cluster name.
 
    ```bash
-   bash scripts/scripts/create_kind_cluster.sh             # Uses default cluster name 'kind-sample'
-   bash scripts/scripts/create_kind_cluster.sh my-cluster  # Uses 'my-cluster' as the cluster name
+   bash scripts/create_kind_cluster.sh             # Uses default cluster name 'kind-sample'
+   bash scripts/create_kind_cluster.sh my-cluster  # Uses 'my-cluster' as the cluster name
    ```
 
 2. **Build and deploy the application**
@@ -43,8 +43,8 @@ To get started with a local [kind](https://kind.sigs.k8s.io/) Kubernetes cluster
    If you specified a custom cluster name above, pass the same parameter here.
 
    ```bash
-   bash scripts/scripts/deploy_orchestration_api.sh         # Deploys to 'kind-sample' by default
-   bash scripts/scripts/deploy_orchestration_api.sh         # Deploys to 'my-cluster'
+   bash scripts/deploy_orchestration_api.sh                    # Deploys to 'kind-sample' by default
+   bash scripts/deploy_orchestration_api.sh my-cluster         # Deploys to 'my-cluster'
    ```
 
    If you do not provide any parameter, the application will be deployed to the `kind-sample` cluster.
@@ -88,7 +88,7 @@ Follow these steps to modify the database schema using Alembic:
 
    #### Script Usage
    ```bash
-   bash scripts/migrate_database.sh [DB_PORT] [CLUSTER_NAME] [--local]
+   bash scripts/manage_db_migrations.sh [DB_PORT] [CLUSTER_NAME] [--local]
    ```
 
    - `DB_PORT` (default: `5432`)
@@ -100,7 +100,7 @@ Follow these steps to modify the database schema using Alembic:
    Ensure your local database is up to date:
 
    ```bash
-   bash scripts/migrate_database.sh
+   bash scripts/manage_db_migrations.sh
    ```
 
    At the _`Choose an Alembic action:`_ prompt, enter `2` to upgrade.
@@ -110,12 +110,12 @@ Follow these steps to modify the database schema using Alembic:
 
    - **For a local kind cluster:**
       ```bash
-      bash scripts/migrate_database.sh
+      bash scripts/manage_db_migrations.sh
       ```
 
    - **For a local Docker container:**
       ```bash
-      bash scripts/migrate_database.sh --local
+      bash scripts/manage_db_migrations.sh --local
       ```
 
    Steps:
@@ -142,7 +142,7 @@ Follow these steps to modify the database schema using Alembic:
 To apply the migration, run:
 
 ```bash
-bash scripts/migrate_database.sh
+bash scripts/manage_db_migrations.sh
 ```
 
 Then enter `2` at the prompt to upgrade to the latest revision.
