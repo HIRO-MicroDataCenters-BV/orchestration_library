@@ -1,3 +1,6 @@
+"""
+This module imports all model files in the current directory.
+"""
 import os
 import glob
 
