@@ -8,9 +8,10 @@ from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.database import Base
+from app.models.base_dict_mixin import BaseDictMixin
 
 
-class Alert(Base):
+class Alert(Base, BaseDictMixin):
     """
     SQLAlchemy model for alerts table.
     Matches the PostgreSQL schema exactly.

@@ -159,6 +159,9 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.HIRO_KUBE_CONFIG }}" > ~/.kube/config
           chmod 600 ~/.kube/config
+      
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Deploy Helm chart
         run: |
@@ -169,3 +172,27 @@ jobs:
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
             --set runMigration=true \
+      
+      - name: Wait for Alembic migration job to complete
+        run: |
+          # Get the latest alembic job name
+          JOB_NAME=$(kubectl get jobs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -o json \
+            | jq -r '.items | map(select(.metadata.name | startswith("alembic-migration-"))) | sort_by(.metadata.creationTimestamp) | last(.[]).metadata.name')
+
+          echo "Waiting for Job: $JOB_NAME"
+          kubectl wait --for=condition=complete --timeout=300s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} || {
+            echo "Alembic migration job failed or timed out."
+            # Print job logs for debugging
+            POD_NAME=$(kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o jsonpath="{.items[0].metadata.name}")
+            kubectl logs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} $POD_NAME || true
+            exit 1
+          }
+
+          # Check for job failure
+          JOB_STATUS=$(kubectl get job $JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -o jsonpath='{.status.failed}')
+          if [[ "$JOB_STATUS" != "" && "$JOB_STATUS" != "0" ]]; then
+            echo "Alembic migration job failed."
+            POD_NAME=$(kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o jsonpath="{.items[0].metadata.name}")
+            kubectl logs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} $POD_NAME || true
+            exit 1
+          fi
