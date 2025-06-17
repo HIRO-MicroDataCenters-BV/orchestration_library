@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CLUSTER_NAME=${1:-sample}
-<<<<<<< HEAD
+
 KUBERNETES_DASHBOARD_NAMESPACE="kubernetes-dashboard"
 KUBERNETES_DASHBOARD_REPO_NAME="kubernetes-dashboard"
 KUBERNETES_DASHBOARD_REPO_URL="https://kubernetes.github.io/dashboard/"
@@ -12,8 +12,6 @@ ORCHRESTRATION_API_RELEASE_NAME="orchestration-api"
 ORCHRESTRATION_API_APP_NAME="orchestration-api"
 ORCHRESTRATION_API_IMAGE_NAME="orchestration-api"
 ORCHRESTRATION_API_IMAGE_TAG="alpha1"
-=======
->>>>>>> origin/main
 
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
