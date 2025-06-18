@@ -22,7 +22,7 @@ reverseProxy:
     port: 80
 
 # Subchart (dependency) values
-dashboard:
+dashboard: # its alias in Chart.yaml is "dashboard"
   enabled: true
   protocolHttp: true
   kong:
