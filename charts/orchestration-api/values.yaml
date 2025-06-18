@@ -40,11 +40,3 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
-dashboard:
-  namespace: kubernetes-dashboard
-  serviceAccountName: readonly-user
-  # This is the service name for the Kubernetes Dashboard proxy 
-  # (Do not change unless you have a custom setup)
-  proxyServiceName: kubernetes-dashboard-kong-proxy
-  # Default port for the Kubernetes Dashboard proxy service
-  proxyServicePort: 8000

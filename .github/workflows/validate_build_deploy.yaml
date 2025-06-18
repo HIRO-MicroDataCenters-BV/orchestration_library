@@ -171,14 +171,15 @@ jobs:
 
       - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
         run: |
-          helm upgrade --install kubernetes-dashboard ./charts/k8s-dashboard \
+          helm upgrade --install ${{ vars.KUBERNETES_DASHBOARD_RELEASE_NAME}} ./charts/k8s-dashboard \
             --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
             --create-namespace \
             --set namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }}
+            --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA}} \
 
       - name: Deploy Orchestration API Helm chart
         run: |
-          helm upgrade --install orchestration-api ./charts/orchestration-api \
+          helm upgrade --install ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
             --set namespace=${{ vars.ORCHESTRATION_API_NAMESPACE }} \

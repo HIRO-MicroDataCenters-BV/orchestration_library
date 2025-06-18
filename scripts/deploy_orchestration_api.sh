@@ -5,8 +5,8 @@ CLUSTER_NAME=${1:-sample}
 KUBERNETES_DASHBOARD_NAMESPACE="aces-kubernetes-dashboard"
 KUBERNETES_DASHBOARD_REPO_NAME="aces-kubernetes-dashboard"
 KUBERNETES_DASHBOARD_REPO_URL="https://kubernetes.github.io/dashboard/"
-KUBERNETES_DASHBOARD_CHART_NAME="aces-kubernetes-dashboard"
 KUBERNETES_DASHBOARD_RELEASE_NAME="aces-kubernetes-dashboard"
+KUBERNETES_DASHBOARD_RO_SA = "readonly-user"
 
 ORCHRESTRATION_API_NAMESPACE="aces-orchestration-api"
 ORCHRESTRATION_API_RELEASE_NAME="aces-orchestration-api"
@@ -33,15 +33,6 @@ echo "Add and Update Helm repository for Kubernetes Dashboard"
 helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
 helm repo update
 
-# echo "Deploy the Kubernetes Dashboard to the Kind cluster"
-# helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME $KUBERNETES_DASHBOARD_REPO_NAME/$KUBERNETES_DASHBOARD_CHART_NAME \
-#   --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
-#   --create-namespace \
-#   --set protocolHttp=true \
-#   --set kong.admin.tls.enabled=false \
-#   --set kong.proxy.http.enabled=true \
-#   --set 'api.containers.args={--disable-csrf-protection=true}'
-
 echo "Update Helm dependencies for k8s-dashboard chart"
 helm dependency build ./charts/k8s-dashboard
 
@@ -49,7 +40,8 @@ echo "Deploy the Kubernetes Dashboard with reverse proxy to the cluster"
 helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
   --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
   --create-namespace \
-  --set namespace=$KUBERNETES_DASHBOARD_NAMESPACE
+  --set namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
+  --set serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA
 
 echo "Deploy the orchestration-api to the Kind cluster"
 helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
@@ -57,9 +49,7 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --create-namespace \
   --set app.image.repository=$ORCHRESTRATION_API_IMAGE_NAME \
   --set app.image.tag=$ORCHRESTRATION_API_IMAGE_TAG \
-  --set app.name=$ORCHRESTRATION_API_APP_NAME \
   --set namespace=$ORCHRESTRATION_API_NAMESPACE \
-  --set dashboard.namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
   --set app.image.pullPolicy=IfNotPresent \
   --set runMigration=true \
   --set dummyRedeployTimestamp=$(date +%s)  
