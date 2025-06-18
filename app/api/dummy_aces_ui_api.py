@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 DASHBOARD_ACCESS_URL = os.getenv(
     "DASHBOARD_ACCESS_URL",
     #"http://aces-dashboard-reverse-proxy.aces-kubernetes-dashboard.svc.cluster.local/k8s/dashboard",
-    "http://localhost:8080/k8s/dashboard/", # Port forwarded to local port 8080 of the reverse proxy
+    "http://localhost:8080/", # Port forwarded to local port 8080 of the reverse proxy
 )
 
 DASHBOARD_NAMESPACE = os.getenv(
@@ -48,14 +48,18 @@ async def root():
 <body>
     <h3>K8s Dashboard Auto Login</h3>
     <button onclick="loginToDashboard()">Open Dashboard</button>
+    <br><br>
+    <iframe id="dashboardFrame" src="" width="100%" height="800" style="display:none; border:1px solid #ccc;"></iframe>
 
     <script>
         function loginToDashboard() {{
             // Set token as cookie
-            document.cookie = "auth_token={token}; path=/k8s/dashboard/";
+            document.cookie = "auth_token={token}; path=/";
 
-            // Redirect
-            window.open("{DASHBOARD_ACCESS_URL}", "_blank");
+            // Show the iframe and set its src to the dashboard URL
+            var frame = document.getElementById('dashboardFrame');
+            frame.style.display = 'block';
+            frame.src = "{DASHBOARD_ACCESS_URL}";
         }}
     </script>
 </body>

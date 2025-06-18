@@ -13,14 +13,14 @@ data:
         server {
             listen {{ .Values.reverseProxy.containerPort }};
 
-            location /{{ .Values.reverseProxy.locationPath }}/ {
+            location {{ .Values.reverseProxy.locationPath }} {
                 access_by_lua_block {
                     local token = ngx.var.cookie_auth_token or ngx.var.arg_token
 
                     if token then
                         -- Set token as a cookie if passed via URL
                         if ngx.var.arg_token then
-                            ngx.header["Set-Cookie"] = "auth_token=" .. token .. "; Path=/{{ .Values.reverseProxy.locationPath }}/"
+                            ngx.header["Set-Cookie"] = "auth_token=" .. token .. "; Path={{ .Values.reverseProxy.locationPath }}"
                         end
                         ngx.req.set_header("Authorization", "Bearer " .. token)
                     else
