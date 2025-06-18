@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.reverseProxy.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.reverseProxy.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.reverseProxy.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.reverseProxy.name }}
+    spec:
+      containers:
+        - name: proxy
+          image: "{{ .Values.reverseProxy.image.repository }}:{{ .Values.reverseProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.reverseProxy.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.reverseProxy.containerPort }}
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /usr/local/openresty/nginx/conf/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: {{ .Values.reverseProxy.configmapName }}

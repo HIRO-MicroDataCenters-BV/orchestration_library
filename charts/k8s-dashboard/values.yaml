@@ -1,0 +1,37 @@
+# Parent chart values
+namespace: aces-kubernetes-dashboard
+serviceAccountName: readonly-user
+# This is the service name for the Kubernetes Dashboard proxy
+proxyServiceNameSuffix: kong-proxy # Do not change this. 
+# Default port for the Kubernetes Dashboard proxy service
+proxyServicePort: 80 
+
+reverseProxy:
+  enabled: true
+  name: aces-dashboard-reverse-proxy
+  configmapName: aces-dashboard-reverse-proxy-config
+  replicaCount: 1
+  containerPort: 8080
+  image:
+    repository: openresty/openresty
+    tag: alpine
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+
+# Subchart (dependency) values
+dashboard:
+  enabled: true
+  protocolHttp: true
+  kong:
+    admin:
+      tls:
+        enabled: false
+    proxy:
+      http:
+        enabled: true
+  api:
+    containers:
+      args:
+        - --disable-csrf-protection=true
