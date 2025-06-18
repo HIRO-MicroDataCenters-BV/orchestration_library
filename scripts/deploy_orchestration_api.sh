@@ -29,9 +29,9 @@ kubectl config use-context kind-$CLUSTER_NAME
 echo "Load Image to Kind cluster named '$CLUSTER_NAME'"
 kind load docker-image --name $CLUSTER_NAME $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG
 
-# echo "Add and Update Helm repository for Kubernetes Dashboard"
-# helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
-# helm repo update
+echo "Add and Update Helm repository for Kubernetes Dashboard"
+helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
+helm repo update
 
 # echo "Deploy the Kubernetes Dashboard to the Kind cluster"
 # helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME $KUBERNETES_DASHBOARD_REPO_NAME/$KUBERNETES_DASHBOARD_CHART_NAME \
