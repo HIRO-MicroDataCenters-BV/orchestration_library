@@ -171,7 +171,7 @@ jobs:
 
       - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
         run: |
-          helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
+          helm upgrade --install kubernetes-dashboard ./charts/k8s-dashboard \
             --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
             --create-namespace \
             --set namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }}
