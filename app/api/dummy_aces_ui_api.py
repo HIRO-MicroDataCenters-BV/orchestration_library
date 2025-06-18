@@ -4,10 +4,12 @@ This API provides a simple HTML page with a button to open the Kubernetes Dashbo
 
 Its goinng to be deleted in the future, but is useful for testing purposes.
 """
+
 import os
+import json
+import logging
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
-import logging
 
 from app.repositories.k8s.k8s_get_token import get_read_only_token
 
@@ -19,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 DASHBOARD_ACCESS_URL = os.getenv(
     "DASHBOARD_ACCESS_URL",
-    #"http://aces-dashboard-reverse-proxy.aces-kubernetes-dashboard.svc.cluster.local/",
-    "http://localhost:8080/", # Port forwarded to local port 8080 of the reverse proxy
+    # "http://aces-dashboard-reverse-proxy.aces-kubernetes-dashboard.svc.cluster.local/",
+    "http://localhost:8080/",  # Port forwarded to local port 8080 of the reverse proxy
 )
 
 DASHBOARD_NAMESPACE = os.getenv(
@@ -32,18 +34,34 @@ SERVICE_ACCOUNT_NAME = os.getenv(
 
 
 async def get_dashboard_token():
+    """
+    Get a read-only token for the Kubernetes Dashboard service account.
+    This function retrieves the token for the service account specified 
+    in the environment variables.
+    Returns:
+        str: The read-only token for the Kubernetes Dashboard service account.
+    """
     token_data = get_read_only_token(
         namespace=DASHBOARD_NAMESPACE,
         service_account_name=SERVICE_ACCOUNT_NAME,
     )
     if hasattr(token_data, "body"):
-        import json
-
         return json.loads(token_data.body.decode()).get("token")
-    return token_data.get("token")
+    if isinstance(token_data, dict):
+        return token_data.get("token")
+    logger.error("Unexpected token_data type: %s", type(token_data))
+    return None
+
 
 @router.get("/", response_class=HTMLResponse)
 async def root():
+    """
+    Root endpoint that serves an HTML page with a button to 
+    open the Kubernetes Dashboard.
+    This endpoint generates an HTML page with a button that, when clicked, 
+    sets a cookie with the read-only token
+    and opens the Kubernetes Dashboard in an iframe.
+    """
     token = await get_dashboard_token()
     if not token:
         return HTMLResponse("Failed to get token", status_code=500)
