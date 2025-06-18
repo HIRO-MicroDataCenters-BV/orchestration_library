@@ -78,7 +78,7 @@ async def root():
     </p>
     <button onclick="loginToDashboard()">Open Dashboard</button>
     <br><br>
-    <iframe id="dashboardFrame" src="" width="100%" height="800" style="display:none; border:1px solid #ccc;"></iframe>
+    <iframe id="dashboardFrame" src="" width="100%" height="80%" style="display:none; border:1px solid #ccc;"></iframe>
 
     <script>
         function loginToDashboard() {{
