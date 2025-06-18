@@ -40,3 +40,16 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
+dashboard:
+  # Namespace should match the value set in the 
+  # k8s-dashboard chart (values.namespace)
+  namespace: kubernetes-dashboard 
+  # Service account name should match the value set in the 
+  # k8s-dashboard chart (values.serviceAccountName)
+  serviceAccountName: readonly-user
+  # Reverse proxy service name should match the value set in the 
+  # k8s-dashboard chart (values.reverseProxy.Name)  
+  reverseProxyServiceName: aces-dashboard-reverse-proxy
+  # Reverse proxy service port should match the value set in the 
+  # k8s-dashboard chart (values.reverseProxy.service.port)  
+  reverseProxyServicePort: 80
