@@ -1,6 +1,9 @@
+runMigration: false
+namespace: aces-orchestration-api
+
 # PostgreSQL Database
 postgres:
-  name: postgres
+  name: aces-postgres
   image:
     repository: postgres
     tag: "14"
@@ -20,7 +23,7 @@ postgres:
 
 # FastAPI Application
 app:
-  name: orchestration-api
+  name: aces-orchestration-api
   secret:
     name: orchestration-api-secret
   image:
@@ -37,5 +40,11 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
-runMigration: false
-namespace: orchestration-api
+dashboard:
+  namespace: kubernetes-dashboard
+  serviceAccountName: readonly-user
+  # This is the service name for the Kubernetes Dashboard proxy 
+  # (Do not change unless you have a custom setup)
+  proxyServiceName: kubernetes-dashboard-kong-proxy
+  # Default port for the Kubernetes Dashboard proxy service
+  proxyServicePort: 8000

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.reverseProxy.configmapName }}
+  namespace: {{ .Values.namespace }}
+data:
+  nginx.conf: |
+    worker_processes 1;
+
+    events { worker_connections 1024; }
+
+    http {
+        server {
+            listen {{ .Values.reverseProxy.containerPort }};
+
+            location {{ .Values.reverseProxy.locationPath }} {
+                access_by_lua_block {
+                    local token = ngx.var.cookie_auth_token or ngx.var.arg_token
+
+                    if token then
+                        -- Set token as a cookie if passed via URL
+                        if ngx.var.arg_token then
+                            ngx.header["Set-Cookie"] = "auth_token=" .. token .. "; Path={{ .Values.reverseProxy.locationPath }}"
+                        end
+                        ngx.req.set_header("Authorization", "Bearer " .. token)
+                    else
+                        ngx.status = ngx.HTTP_FORBIDDEN
+                        ngx.say("Missing token")
+                        ngx.exit(ngx.HTTP_FORBIDDEN)
+                    end
+                }
+
+                proxy_pass http://{{ .Values.namespace }}-{{ .Values.proxyServiceNameSuffix }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.proxyServicePort }}/;
+                proxy_set_header Host $host;
+            }
+        }
+    }

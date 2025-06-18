@@ -163,7 +163,17 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Deploy Helm chart
+      - name: Update Helm dependencies for k8s-dashboard chart
+        run: helm dependency build ./charts/k8s-dashboard
+
+      - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
+        run: |
+          helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
+            --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
+            --create-namespace \
+            --set namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }}
+
+      - name: Deploy Orchestration API Helm chart
         run: |
           helm upgrade --install orchestration-api ./charts/orchestration-api \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \

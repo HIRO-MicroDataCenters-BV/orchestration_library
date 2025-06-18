@@ -2,6 +2,18 @@
 
 CLUSTER_NAME=${1:-sample}
 
+KUBERNETES_DASHBOARD_NAMESPACE="aces-kubernetes-dashboard"
+KUBERNETES_DASHBOARD_REPO_NAME="aces-kubernetes-dashboard"
+KUBERNETES_DASHBOARD_REPO_URL="https://kubernetes.github.io/dashboard/"
+KUBERNETES_DASHBOARD_CHART_NAME="aces-kubernetes-dashboard"
+KUBERNETES_DASHBOARD_RELEASE_NAME="aces-kubernetes-dashboard"
+
+ORCHRESTRATION_API_NAMESPACE="aces-orchestration-api"
+ORCHRESTRATION_API_RELEASE_NAME="aces-orchestration-api"
+ORCHRESTRATION_API_APP_NAME="aces-orchestration-api"
+ORCHRESTRATION_API_IMAGE_NAME="orchestration-api"
+ORCHRESTRATION_API_IMAGE_TAG="alpha1"
+
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
   exit 1
@@ -15,24 +27,48 @@ kubectl cluster-info --context kind-$CLUSTER_NAME
 kubectl config use-context kind-$CLUSTER_NAME
 
 echo "Load Image to Kind cluster named '$CLUSTER_NAME'"
-kind load docker-image --name $CLUSTER_NAME orchestration-api:alpha1
+kind load docker-image --name $CLUSTER_NAME $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG
+
+# echo "Add and Update Helm repository for Kubernetes Dashboard"
+# helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
+# helm repo update
+
+# echo "Deploy the Kubernetes Dashboard to the Kind cluster"
+# helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME $KUBERNETES_DASHBOARD_REPO_NAME/$KUBERNETES_DASHBOARD_CHART_NAME \
+#   --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
+#   --create-namespace \
+#   --set protocolHttp=true \
+#   --set kong.admin.tls.enabled=false \
+#   --set kong.proxy.http.enabled=true \
+#   --set 'api.containers.args={--disable-csrf-protection=true}'
+
+echo "Update Helm dependencies for k8s-dashboard chart"
+helm dependency build ./charts/k8s-dashboard
+
+echo "Deploy the Kubernetes Dashboard with reverse proxy to the cluster"
+helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
+  --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
+  --create-namespace \
+  --set namespace=$KUBERNETES_DASHBOARD_NAMESPACE
 
 echo "Deploy the orchestration-api to the Kind cluster"
-helm upgrade --install orchestration-api ./charts/orchestration-api \
-  --namespace orchestration-api \
+helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
+  --namespace $ORCHRESTRATION_API_NAMESPACE \
   --create-namespace \
-  --set app.image.repository=orchestration-api \
-  --set app.image.tag=alpha1 \
-  --set namespace=orchestration-api \
+  --set app.image.repository=$ORCHRESTRATION_API_IMAGE_NAME \
+  --set app.image.tag=$ORCHRESTRATION_API_IMAGE_TAG \
+  --set app.name=$ORCHRESTRATION_API_APP_NAME \
+  --set namespace=$ORCHRESTRATION_API_NAMESPACE \
+  --set dashboard.namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
   --set app.image.pullPolicy=IfNotPresent \
   --set runMigration=true \
   --set dummyRedeployTimestamp=$(date +%s)  
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
 
-echo "Wait for the orchestration-api to be ready"
-kubectl wait --for=condition=available --timeout=60s deployment/orchestration-api -n orchestration-api --context kind-$CLUSTER_NAME
+echo "Wait for the $ORCHRESTRATION_API_APP_NAME to be ready"
+kubectl wait --for=condition=available --timeout=60s deployment/$ORCHRESTRATION_API_APP_NAME -n $ORCHRESTRATION_API_NAMESPACE --context kind-$CLUSTER_NAME
 
-echo "Get the orchestration-api service"
-kubectl get service -n orchestration-api --context kind-$CLUSTER_NAME
+echo "Get the $ORCHRESTRATION_API_APP_NAME service"
+kubectl get service -n $ORCHRESTRATION_API_APP_NAME --context kind-$CLUSTER_NAME
 
