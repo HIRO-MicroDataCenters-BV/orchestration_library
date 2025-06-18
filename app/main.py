@@ -13,7 +13,7 @@ from app.api.k8s import (
     k8s_user_pod,
     k8s_cluster_info,
 )
-from app.api import pod_request_decision, tuning_parameters_api, alerts_api
+from app.api import dummy_aces_ui_api, pod_request_decision, tuning_parameters_api, alerts_api
 
 from app.utils.exception_handlers import init_exception_handlers
 
@@ -31,6 +31,8 @@ app.include_router(cluster_ui.router, tags=["K8s Cluster UI"])
 app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
 app.include_router(pod_request_decision.router, tags=["Pod Request Decision"])
 app.include_router(alerts_api.router, tags=["Alerts API"])
+
+app.include_router(dummy_aces_ui_api.router, tags=["Dummy ACES UI API"])
 
 
 init_exception_handlers(app)
