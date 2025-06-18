@@ -175,7 +175,7 @@ jobs:
             --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
             --create-namespace \
             --set namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
-            --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA}} \
+            --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set reverseProxy.name=aces-dashboard-reverse-proxy \
             --set reverseProxy.service.port=80 \
 
@@ -188,7 +188,7 @@ jobs:
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
             --set dashboard.namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
-            --set dashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA}} \
+            --set dashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set dashboard.reverseProxyServiceName=aces-dashboard-reverse-proxy \
             --set dashboard.reverseProxyServicePort=80 \
             --set runMigration=true \
