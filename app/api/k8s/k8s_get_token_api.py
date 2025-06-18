@@ -1,6 +1,7 @@
 """
 API to retrieve a read-only token for a specific Kubernetes service account.
 """
+
 import os
 from fastapi import APIRouter
 from app.repositories.k8s import k8s_get_token
@@ -15,8 +16,12 @@ SERVICE_ACCOUNT_NAME = os.getenv(
     "KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME", "readonly-user"
 )
 
+
 @router.get("/")
-def get_ro_token(namespace: str = DASHBOARD_NAMESPACE, service_account_name: str = SERVICE_ACCOUNT_NAME):
+def get_ro_token(
+    namespace: str = DASHBOARD_NAMESPACE,
+    service_account_name: str = SERVICE_ACCOUNT_NAME,
+):
     """
     Get a read-only token for a specific service account in a namespace.
     If no namespace or service account name is provided, it returns an error.
