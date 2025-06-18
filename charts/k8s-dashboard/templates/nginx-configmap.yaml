@@ -20,7 +20,7 @@ data:
                     if token then
                         -- Set token as a cookie if passed via URL
                         if ngx.var.arg_token then
-                            ngx.header["Set-Cookie"] = "auth_token=" .. token .. "; Path=/"
+                            ngx.header["Set-Cookie"] = "auth_token=" .. token .. "; Path=/{{ .Values.reverseProxy.locationPath }}/"
                         end
                         ngx.req.set_header("Authorization", "Bearer " .. token)
                     else
