@@ -13,7 +13,7 @@ data:
         server {
             listen {{ .Values.reverseProxy.containerPort }};
 
-            location / {
+            location /{{ .Values.reverseProxy.locationPath }}/ {
                 access_by_lua_block {
                     local token = ngx.var.cookie_auth_token or ngx.var.arg_token
 

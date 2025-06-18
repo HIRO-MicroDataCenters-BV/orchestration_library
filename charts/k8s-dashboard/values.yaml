@@ -12,6 +12,7 @@ reverseProxy:
   configmapName: aces-dashboard-reverse-proxy-config
   replicaCount: 1
   containerPort: 8080
+  locationPath: k8s/dashboard
   image:
     repository: openresty/openresty
     tag: alpine
