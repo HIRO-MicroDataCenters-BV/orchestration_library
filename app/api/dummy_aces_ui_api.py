@@ -1,3 +1,9 @@
+"""
+Dummy API for ACES UI to auto-login to Kubernetes Dashboard
+This API provides a simple HTML page with a button to open the Kubernetes Dashboard.
+
+Its goinng to be deleted in the future, but is useful for testing purposes.
+"""
 import os
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
@@ -13,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 DASHBOARD_ACCESS_URL = os.getenv(
     "DASHBOARD_ACCESS_URL",
-    #"http://aces-dashboard-reverse-proxy.aces-kubernetes-dashboard.svc.cluster.local/k8s/dashboard",
+    #"http://aces-dashboard-reverse-proxy.aces-kubernetes-dashboard.svc.cluster.local/",
     "http://localhost:8080/", # Port forwarded to local port 8080 of the reverse proxy
 )
 
@@ -47,6 +53,11 @@ async def root():
 <head><title>K8s Dashboard Auto Login</title></head>
 <body>
     <h3>K8s Dashboard Auto Login</h3>
+    <p style="color: #b00;">
+        <b>Note:</b> Please port-forward the <code>aces-dashboard-reverse-proxy</code> service to <code>localhost:8080</code> for this button to work.<br>
+        Example:<br>
+        <code>kubectl port-forward svc/aces-dashboard-reverse-proxy -n aces-kubernetes-dashboard 8080:80</code>
+    </p>
     <button onclick="loginToDashboard()">Open Dashboard</button>
     <br><br>
     <iframe id="dashboardFrame" src="" width="100%" height="800" style="display:none; border:1px solid #ccc;"></iframe>
