@@ -41,10 +41,15 @@ configmap:
   databaseInitConfig: db-init-script
 
 dashboard:
-  namespace: kubernetes-dashboard
+  # Namespace should match the value set in the 
+  # k8s-dashboard chart (values.namespace)
+  namespace: kubernetes-dashboard 
+  # Service account name should match the value set in the 
+  # k8s-dashboard chart (values.serviceAccountName)
   serviceAccountName: readonly-user
-  # This is the service name for the Kubernetes Dashboard proxy 
-  # (Do not change unless you have a custom setup)
-  proxyServiceName: kubernetes-dashboard-kong-proxy
-  # Default port for the Kubernetes Dashboard proxy service
-  proxyServicePort: 8000
+  # Reverse proxy service name should match the value set in the 
+  # k8s-dashboard chart (values.reverseProxy.Name)  
+  reverseProxyServiceName: aces-dashboard-reverse-proxy
+  # Reverse proxy service port should match the value set in the 
+  # k8s-dashboard chart (values.reverseProxy.service.port)  
+  reverseProxyServicePort: 80
