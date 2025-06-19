@@ -77,7 +77,7 @@ spec:
             value: {{ .Values.dashboard.namespace }}
           - name: KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME
             value: {{ .Values.dashboard.serviceAccountName }}
-          - name: KUBERNETES_DASHBOARD_PROXY_SERVICE_NAME
-            value: {{ .Values.dashboard.proxyServiceName }}
-          - name: KUBERNETES_DASHBOARD_PROXY_SERVICE_PORT
-            value: "{{ .Values.dashboard.proxyServicePort }}"
+          - name: NGINX_REVERSE_PROXY_SERVICE_NAME
+            value: {{ .Values.dashboard.reverseProxyServiceName }}
+          - name: NGINX_REVERSE_PROXY_SERVICE_PORT
+            value: "{{ .Values.dashboard.reverseProxyServicePort }}"

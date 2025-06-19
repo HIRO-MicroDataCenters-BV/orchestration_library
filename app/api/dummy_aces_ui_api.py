@@ -19,11 +19,6 @@ router = APIRouter(prefix="/dummy_aces_ui")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DASHBOARD_ACCESS_URL = os.getenv(
-    "DASHBOARD_ACCESS_URL",
-    # "http://aces-dashboard-reverse-proxy.aces-kubernetes-dashboard.svc.cluster.local/",
-    "http://localhost:8080/",  # Port forwarded to local port 8080 of the reverse proxy
-)
 
 DASHBOARD_NAMESPACE = os.getenv(
     "KUBERNETES_DASHBOARD_NAMESPACE", "aces-kubernetes-dashboard"
@@ -31,12 +26,25 @@ DASHBOARD_NAMESPACE = os.getenv(
 SERVICE_ACCOUNT_NAME = os.getenv(
     "KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME", "readonly-user"
 )
+REVERSE_PROXY_SERVICE_NAME = os.getenv(
+    "NGINX_REVERSE_PROXY_SERVICE_NAME", "aces-dashboard-reverse-proxy"
+)
+
+REVERSE_PROXY_SERVICE_PORT = os.getenv("NGINX_REVERSE_PROXY_SERVICE_PORT", "80")
+
+DASHBOARD_ACCESS_URL = (
+    f"http://{REVERSE_PROXY_SERVICE_NAME}."
+    f"{DASHBOARD_NAMESPACE}.svc.cluster.local:"
+    f"{REVERSE_PROXY_SERVICE_PORT}/"
+)
+
+DASHBOARD_ACCESS_URL = "http://localhost:8080/"
 
 
 async def get_dashboard_token():
     """
     Get a read-only token for the Kubernetes Dashboard service account.
-    This function retrieves the token for the service account specified 
+    This function retrieves the token for the service account specified
     in the environment variables.
     Returns:
         str: The read-only token for the Kubernetes Dashboard service account.
@@ -56,9 +64,9 @@ async def get_dashboard_token():
 @router.get("/", response_class=HTMLResponse)
 async def root():
     """
-    Root endpoint that serves an HTML page with a button to 
+    Root endpoint that serves an HTML page with a button to
     open the Kubernetes Dashboard.
-    This endpoint generates an HTML page with a button that, when clicked, 
+    This endpoint generates an HTML page with a button that, when clicked,
     sets a cookie with the read-only token
     and opens the Kubernetes Dashboard in an iframe.
     """
