@@ -200,7 +200,7 @@ jobs:
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
             --set app.service.port=80 \
             --set app.service.type=NodePort \
-            --set app.service.nodePort=30015 \
+            --set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }} \
             --set dashboard.namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
             --set dashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set dashboard.reverseProxyServiceName=aces-dashboard-reverse-proxy \
