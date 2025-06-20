@@ -187,7 +187,7 @@ jobs:
             --set reverseProxy.name=aces-dashboard-reverse-proxy \
             --set reverseProxy.service.port=80 \
             --set reverseProxy.service.type=NodePort \
-            --set reverseProxy.service.nodePort=30016
+            --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
             ${{ steps.helm-dry-run.outputs.flag }}
 
       - name: Deploy Orchestration API Helm chart
