@@ -10,5 +10,8 @@ spec:
   ports:
     - port: {{ .Values.app.service.port }}
       targetPort: {{ .Values.app.service.port }}
+      {{- if eq .Values.app.service.type "NodePort" }}
+      nodePort: {{ .Values.app.service.nodePort }}
+      {{- end }}
   selector:
     app: {{ .Values.app.name }}

@@ -9,4 +9,8 @@ spec:
     - protocol: TCP
       port: {{ .Values.reverseProxy.service.port }}
       targetPort: {{ .Values.reverseProxy.containerPort }}
+      {{- if eq .Values.reverseProxy.service.type "NodePort" }}
+      nodePort: {{ .Values.reverseProxy.service.nodePort }}
+      {{- end }}
+
   type: {{ .Values.reverseProxy.service.type }}

@@ -20,6 +20,7 @@ reverseProxy:
   service:
     type: ClusterIP
     port: 80
+    nodePort: 30016
 
 # Subchart (dependency) values
 dashboard: # its alias in Chart.yaml is "dashboard"
