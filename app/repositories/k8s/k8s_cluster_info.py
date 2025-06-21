@@ -188,30 +188,29 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns):
         ]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_pods = executor.submit(fetch_pods)
-        future_deployments = executor.submit(fetch_deployments)
-        future_jobs = executor.submit(fetch_jobs)
-        future_statefulsets = executor.submit(fetch_statefulsets)
-        future_daemonsets = executor.submit(fetch_daemonsets)
+        futures = {
+            "pods": executor.submit(fetch_pods),
+            "deployments": executor.submit(fetch_deployments),
+            "jobs": executor.submit(fetch_jobs),
+            "statefulsets": executor.submit(fetch_statefulsets),
+            "daemonsets": executor.submit(fetch_daemonsets),
+        }
+        results = {key: future.result() for key, future in futures.items()}
 
-        pods = future_pods.result()
-        deployments = future_deployments.result()
-        jobs = future_jobs.result()
-        statefulsets = future_statefulsets.result()
-        daemonsets = future_daemonsets.result()
-
-    return pods, deployments, jobs, statefulsets, daemonsets
+    return results
 
 
 def get_all_resources(core_v1, apps_v1, batch_v1, namespaces):
     """
     Fetches and returns basic information about all resources in all namespaces.
     """
-    pods = []
-    deployments = []
-    jobs = []
-    statefulsets = []
-    daemonsets = []
+    all_resources = {
+        "pods": [],
+        "deployments": [],
+        "jobs": [],
+        "statefulsets": [],
+        "daemonsets": [],
+    }
 
     def fetch_ns_resources(ns):
         return get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns)
@@ -219,14 +218,11 @@ def get_all_resources(core_v1, apps_v1, batch_v1, namespaces):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = list(executor.map(fetch_ns_resources, namespaces))
 
-    for ns_pods, ns_deployments, ns_jobs, ns_statefulsets, ns_daemonsets in results:
-        pods += ns_pods
-        deployments += ns_deployments
-        jobs += ns_jobs
-        statefulsets += ns_statefulsets
-        daemonsets += ns_daemonsets
+    for ns_resources in results:
+        for key in all_resources:
+            all_resources[key] += ns_resources.get(key, [])
 
-    return pods, deployments, jobs, statefulsets, daemonsets
+    return all_resources
 
 
 def get_cluster_info():
@@ -241,37 +237,32 @@ def get_cluster_info():
     namespaces = get_namespaces(core_v1)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_resources = executor.submit(
-            get_all_resources, core_v1, apps_v1, batch_v1, namespaces
-        )
-        future_version = executor.submit(get_version_info, version_v1)
-        future_components = executor.submit(get_component_status, core_v1)
-        future_kube_system_pods = executor.submit(get_kube_system_pods_info, core_v1)
-        future_cluster_id = executor.submit(get_cluster_id, core_v1)
-        future_cluster_name = executor.submit(get_cluster_name, core_v1)
-        future_nodes = executor.submit(get_nodes)
+        futures = {
+            "resources": executor.submit(get_all_resources, core_v1, apps_v1, batch_v1, namespaces),
+            "version": executor.submit(get_version_info, version_v1),
+            "components": executor.submit(get_component_status, core_v1),
+            "kube_system_pods": executor.submit(get_kube_system_pods_info, core_v1),
+            "cluster_id": executor.submit(get_cluster_id, core_v1),
+            "cluster_name": executor.submit(get_cluster_name, core_v1),
+            "nodes": executor.submit(get_nodes),
+        }
 
-        pods, deployments, jobs, statefulsets, daemonsets = future_resources.result()
-        kubernetes_version = future_version.result().git_version
-        components = future_components.result()
-        kube_system_pods = future_kube_system_pods.result()
-        cluster_id = future_cluster_id.result()
-        cluster_name = future_cluster_name.result()
-        nodes = future_nodes.result()
+        results = {key: future.result() for key, future in futures.items()}
 
+    resources = results["resources"]
     cluster_info = {
-        "kubernetes_version": kubernetes_version,
-        "components": components,
-        "kube_system_pods": kube_system_pods,
-        "cluster_id": cluster_id,
-        "cluster_name": cluster_name,
-        "nodes": nodes,
+        "kubernetes_version": getattr(results["version"], "git_version", None),
+        "components": results["components"],
+        "kube_system_pods": results["kube_system_pods"],
+        "cluster_id": results["cluster_id"],
+        "cluster_name": results["cluster_name"],
+        "nodes": results["nodes"],
         "namespaces": namespaces,
-        "pods": pods,
-        "deployments": deployments,
-        "jobs": jobs,
-        "statefulsets": statefulsets,
-        "daemonsets": daemonsets,
+        "pods": resources["pods"],
+        "deployments": resources["deployments"],
+        "jobs": resources["jobs"],
+        "statefulsets": resources["statefulsets"],
+        "daemonsets": resources["daemonsets"],
     }
 
     return cluster_info
