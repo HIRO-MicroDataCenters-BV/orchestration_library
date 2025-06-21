@@ -168,16 +168,20 @@ jobs:
       - name: Update Helm dependencies for k8s-dashboard chart
         run: helm dependency build ./charts/k8s-dashboard
 
-      - name: Set Helm dry-run flag
-        id: helm-dry-run
+      - name: Validate the Kubernetes Dashboard Helm chart (template only)
+        if: github.event_name != 'push'
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "flag=" >> $GITHUB_OUTPUT
-          else
-            echo "flag=--dry-run" >> $GITHUB_OUTPUT
-          fi
+          helm template ${{ vars.KUBERNETES_DASHBOARD_RELEASE_NAME}} ./charts/k8s-dashboard \
+            --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
+            --set namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
+            --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
+            --set reverseProxy.name=aces-dashboard-reverse-proxy \
+            --set reverseProxy.service.port=80 \
+            --set reverseProxy.service.type=NodePort \
+            --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}
 
       - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
+        if: github.event_name == 'push'
         run: |
           helm upgrade --install ${{ vars.KUBERNETES_DASHBOARD_RELEASE_NAME}} ./charts/k8s-dashboard \
             --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
@@ -187,10 +191,28 @@ jobs:
             --set reverseProxy.name=aces-dashboard-reverse-proxy \
             --set reverseProxy.service.port=80 \
             --set reverseProxy.service.type=NodePort \
-            --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
-            ${{ steps.helm-dry-run.outputs.flag }}
+            --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}
+      
+
+      - name: Validate Orchestration API Helm chart (template only)
+        if: github.event_name != 'push'
+        run: |
+          helm template ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
+            --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
+            --set namespace=${{ vars.ORCHESTRATION_API_NAMESPACE }} \
+            --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
+            --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
+            --set app.service.port=80 \
+            --set app.service.type=NodePort \
+            --set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }} \
+            --set dashboard.namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
+            --set dashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
+            --set dashboard.reverseProxyServiceName=aces-dashboard-reverse-proxy \
+            --set dashboard.reverseProxyServicePort=80 \
+            --set runMigration=true
 
       - name: Deploy Orchestration API Helm chart
+        if: github.event_name == 'push'
         run: |
           helm upgrade --install ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
@@ -205,8 +227,7 @@ jobs:
             --set dashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set dashboard.reverseProxyServiceName=aces-dashboard-reverse-proxy \
             --set dashboard.reverseProxyServicePort=80 \
-            --set runMigration=true \
-            ${{ steps.helm-dry-run.outputs.flag }}
+            --set runMigration=true
       
       - name: Wait for Alembic migration job to complete
         if: github.event_name == 'push'
