@@ -3,6 +3,7 @@ Get cluster information from Kubernetes.
 """
 
 import logging
+import concurrent
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
 import yaml
@@ -23,6 +24,7 @@ from app.utils.k8s import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 def get_version_info(version_v1):
     """
@@ -83,6 +85,7 @@ def get_kube_system_pods_info(core_v1):
         kube_system_pods_info.append(get_pod_basic_info(pod))
     return kube_system_pods_info
 
+
 # This below function imolimented as the cluster ID is the UID of the kube-system namespace.
 # This is a common practice in Kubernetes to uniquely identify clusters.
 def get_cluster_id(core_v1):
@@ -95,6 +98,7 @@ def get_cluster_id(core_v1):
         cluster_id = None
         logger.error("Error fetching cluster ID: %s", {e})
     return cluster_id
+
 
 # This function implimented assuming that the cluster is created with kubeadm and
 # cluster details are in kubeadm-config configmap in kube-system namespace.
@@ -115,6 +119,7 @@ def get_kubeadm_config(core_v1):
         kubeadm_config = {}
         logger.error("Error fetching kubeadm config: %s", {e})
     return kubeadm_config
+
 
 def get_cluster_name(core_v1):
     """
@@ -150,28 +155,51 @@ def get_namespaces(core_v1):
 
 def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns):
     """
-    Fetches and returns basic information about resources in a specific namespace.
+    Fetches and returns basic information about resources in a specific namespace, in parallel.
     """
-    pods = [
-        get_pod_basic_info(pod)
-        for pod in core_v1.list_namespaced_pod(namespace=ns).items
-    ]
-    deployments = [
-        get_deployment_basic_info(dep)
-        for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
-    ]
-    jobs = [
-        get_job_basic_info(job)
-        for job in batch_v1.list_namespaced_job(namespace=ns).items
-    ]
-    statefulsets = [
-        get_statefulset_basic_info(sts)
-        for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
-    ]
-    daemonsets = [
-        get_daemonset_basic_info(ds)
-        for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
-    ]
+    def fetch_pods():
+        return [
+            get_pod_basic_info(pod)
+            for pod in core_v1.list_namespaced_pod(namespace=ns).items
+        ]
+
+    def fetch_deployments():
+        return [
+            get_deployment_basic_info(dep)
+            for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
+        ]
+
+    def fetch_jobs():
+        return [
+            get_job_basic_info(job)
+            for job in batch_v1.list_namespaced_job(namespace=ns).items
+        ]
+
+    def fetch_statefulsets():
+        return [
+            get_statefulset_basic_info(sts)
+            for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
+        ]
+
+    def fetch_daemonsets():
+        return [
+            get_daemonset_basic_info(ds)
+            for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
+        ]
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_pods = executor.submit(fetch_pods)
+        future_deployments = executor.submit(fetch_deployments)
+        future_jobs = executor.submit(fetch_jobs)
+        future_statefulsets = executor.submit(fetch_statefulsets)
+        future_daemonsets = executor.submit(fetch_daemonsets)
+
+        pods = future_pods.result()
+        deployments = future_deployments.result()
+        jobs = future_jobs.result()
+        statefulsets = future_statefulsets.result()
+        daemonsets = future_daemonsets.result()
+
     return pods, deployments, jobs, statefulsets, daemonsets
 
 
@@ -184,15 +212,20 @@ def get_all_resources(core_v1, apps_v1, batch_v1, namespaces):
     jobs = []
     statefulsets = []
     daemonsets = []
-    for ns in namespaces:
-        ns_pods, ns_deployments, ns_jobs, ns_statefulsets, ns_daemonsets = (
-            get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns)
-        )
+
+    def fetch_ns_resources(ns):
+        return get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(fetch_ns_resources, namespaces))
+
+    for ns_pods, ns_deployments, ns_jobs, ns_statefulsets, ns_daemonsets in results:
         pods += ns_pods
         deployments += ns_deployments
         jobs += ns_jobs
         statefulsets += ns_statefulsets
         daemonsets += ns_daemonsets
+
     return pods, deployments, jobs, statefulsets, daemonsets
 
 
@@ -206,17 +239,33 @@ def get_cluster_info():
     batch_v1 = get_k8s_batch_v1_client()
 
     namespaces = get_namespaces(core_v1)
-    pods, deployments, jobs, statefulsets, daemonsets = get_all_resources(
-        core_v1, apps_v1, batch_v1, namespaces
-    )
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_resources = executor.submit(
+            get_all_resources, core_v1, apps_v1, batch_v1, namespaces
+        )
+        future_version = executor.submit(get_version_info, version_v1)
+        future_components = executor.submit(get_component_status, core_v1)
+        future_kube_system_pods = executor.submit(get_kube_system_pods_info, core_v1)
+        future_cluster_id = executor.submit(get_cluster_id, core_v1)
+        future_cluster_name = executor.submit(get_cluster_name, core_v1)
+        future_nodes = executor.submit(get_nodes)
+
+        pods, deployments, jobs, statefulsets, daemonsets = future_resources.result()
+        kubernetes_version = future_version.result().git_version
+        components = future_components.result()
+        kube_system_pods = future_kube_system_pods.result()
+        cluster_id = future_cluster_id.result()
+        cluster_name = future_cluster_name.result()
+        nodes = future_nodes.result()
 
     cluster_info = {
-        "kubernetes_version": get_version_info(version_v1).git_version,
-        "components": get_component_status(core_v1),
-        "kube_system_pods": get_kube_system_pods_info(core_v1),
-        "cluster_id": get_cluster_id(core_v1),
-        "cluster_name": get_cluster_name(core_v1),
-        "nodes": get_nodes(),
+        "kubernetes_version": kubernetes_version,
+        "components": components,
+        "kube_system_pods": kube_system_pods,
+        "cluster_id": cluster_id,
+        "cluster_name": cluster_name,
+        "nodes": nodes,
         "namespaces": namespaces,
         "pods": pods,
         "deployments": deployments,
