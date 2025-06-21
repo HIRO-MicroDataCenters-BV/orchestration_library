@@ -49,9 +49,8 @@ helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard
   --set serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
   --set reverseProxy.name=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
   --set reverseProxy.service.port=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
+  --set reverseProxy.service.type=NodePort \
   --set reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
-  # --set reverseProxy.service.type=NodePort \
-
 
 echo "Deploy the orchestration-api to the Kind cluster"
 helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
@@ -65,11 +64,11 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --set dashboard.serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
   --set dashboard.reverseProxyServiceName=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
   --set dashboard.reverseProxyServicePort=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
+  --set app.service.type=NodePort \
   --set app.service.port=$ORCHRESTRATION_API_SERVICE_PORT \
   --set app.service.nodePort=$ORCHRESTRATION_API_NODE_PORT \
   --set runMigration=true \
   --set dummyRedeployTimestamp=$(date +%s)
-  # --set app.service.type=NodePort \
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
 
