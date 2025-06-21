@@ -4,6 +4,54 @@
 
 This project contains a FastAPI-based backend and a PostgreSQL database container that initializes with tables on startup using SQL scripts.
 
+## Project Directory Structure
+
+```
+orchestration_library/
+├── alembic/                        # Alembic migration configuration and migration scripts
+│   ├── env.py                      # Alembic environment setup (model imports, DB URL, etc.)
+│   ├── script.py.mako              # Alembic migration script template
+│   └── versions/                   # Auto-generated migration files (one per schema change)
+├── app/                            # Main FastAPI application source code
+│   ├── __init__.py                 # Marks the directory as a Python package
+│   ├── main.py                     # FastAPI app entry point
+│   ├── api/                        # API route definitions (FastAPI routers)
+│   ├── db/                         # Database connection and session management
+│   ├── models/                     # SQLAlchemy ORM models
+│   ├── repositories/               # Data access logic (CRUD operations)
+│   ├── schemas/                    # Pydantic models for request/response validation
+│   ├── tests/                      # Unit and integration tests
+│   └── utils/                      # Utility/helper functions
+├── charts/                         # Helm charts for Kubernetes deployments
+│   ├── k8s-dashboard/              # Helm chart for deploying the Kubernetes Dashboard with proxy
+│   │   ├── Chart.yaml              # Chart metadata and dependencies
+│   │   ├── values.yaml             # Default configuration values for the chart
+│   │   ├── templates/              # Kubernetes manifest templates for the dashboard
+│   │   └── charts/                 # Subcharts (dependencies) if any
+│   └── orchestration-api/          # Helm chart for deploying the orchestration API
+│       ├── Chart.yaml              # Chart metadata and dependencies
+│       ├── values.yaml             # Default configuration values for the chart
+│       └── templates/              # Kubernetes manifest templates for the API
+├── scripts/                        # Shell scripts for setup, deployment, and DB migrations
+│   ├── create_kind_cluster.sh      # Script to create a local kind Kubernetes cluster
+│   ├── deploy_orchestration_api.sh # Script to build and deploy the API to kind
+│   └── manage_db_migrations.sh     # Script to manage Alembic DB migrations
+├── Dockerfile                      # Docker build instructions for the FastAPI app
+├── docker-compose.yml              # Docker Compose setup for local development (app + DB)
+├── README.md                       # Project documentation and usage instructions
+└── requirements.txt                # Python dependencies for the project
+```
+
+## Prerequisites
+
+Before you begin, ensure you have the following tools installed on your system:
+
+- [**Helm**](https://helm.sh/docs/intro/install/): Kubernetes package manager for deploying and managing charts.
+- [**kubectl**](https://kubernetes.io/docs/tasks/tools/): Command-line tool for interacting with Kubernetes clusters.
+- [**Docker**](https://docs.docker.com/get-docker/): Containerization platform for building and running containers.
+- [**Docker Compose**](https://docs.docker.com/compose/install/): Tool for defining and running multi-container Docker applications.
+- [**kind**](https://kind.sigs.k8s.io/docs/user/quick-start/#installation): Tool for running local Kubernetes clusters using Docker containers as nodes.
+
 ## Run the project
 
 ### Running on a local with docker

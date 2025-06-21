@@ -11,7 +11,7 @@ data:
 
     http {
         server {
-            listen {{ .Values.reverseProxy.containerPort }};
+            listen {{ .Values.reverseProxy.service.targetPort }};
 
             location {{ .Values.reverseProxy.locationPath }} {
                 access_by_lua_block {

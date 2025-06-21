@@ -33,8 +33,9 @@ app:
   replicaCount: 2
   service:
     type: ClusterIP
-    port: 8000
-    nodePort: 
+    port: 80
+    targetPort: 8000
+    nodePort: 30015
 
 configmap:
   databaseURLConfig: orchestration-api-config

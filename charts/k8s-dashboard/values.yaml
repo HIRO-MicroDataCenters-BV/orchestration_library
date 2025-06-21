@@ -11,7 +11,6 @@ reverseProxy:
   name: aces-dashboard-reverse-proxy
   configmapName: aces-dashboard-reverse-proxy-config
   replicaCount: 1
-  containerPort: 8080
   locationPath: /
   image:
     repository: openresty/openresty
@@ -20,6 +19,8 @@ reverseProxy:
   service:
     type: ClusterIP
     port: 80
+    targetPort: 8080
+    nodePort: 30016
 
 # Subchart (dependency) values
 dashboard: # its alias in Chart.yaml is "dashboard"

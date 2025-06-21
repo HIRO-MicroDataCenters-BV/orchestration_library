@@ -18,7 +18,7 @@ spec:
           image: "{{ .Values.reverseProxy.image.repository }}:{{ .Values.reverseProxy.image.tag }}"
           imagePullPolicy: {{ .Values.reverseProxy.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.reverseProxy.containerPort }}
+            - containerPort: {{ .Values.reverseProxy.service.targetPort }}
           volumeMounts:
             - name: nginx-conf
               mountPath: /usr/local/openresty/nginx/conf/nginx.conf
