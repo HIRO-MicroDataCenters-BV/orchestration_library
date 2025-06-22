@@ -26,6 +26,32 @@ from app.utils.k8s import (
 logger = logging.getLogger(__name__)
 
 
+def parse_cpu(cpu_str):
+    """
+    Parses CPU string like "1000m" to millicores (m).
+    """
+    # Parses CPU string like "448007813n" to millicores (m)
+    if cpu_str.endswith("n"):
+        return int(cpu_str[:-1]) / 1_000_000  # nanocores to millicores
+    if cpu_str.endswith("u"):
+        return int(cpu_str[:-1]) / 1_000  # microcores to millicores
+    if cpu_str.endswith("m"):
+        return int(cpu_str[:-1])  # already in millicores
+    return int(cpu_str) * 1000  # assume cores, convert to millicores
+
+
+def parse_memory(mem_str):
+    """
+    Parses memory string like "13459572Ki" to Mi.
+    """
+    # Parses memory string like "13459572Ki" to Mi
+    units = {"Ki": 1 / 1024, "Mi": 1, "Gi": 1024}
+    for unit, factor in units.items():
+        if mem_str.endswith(unit):
+            return int(mem_str[: -len(unit)]) * factor
+    return int(mem_str) / (1024 * 1024)  # bytes to Mi
+
+
 def get_version_info(version_v1):
     """
     Fetches and returns the Kubernetes version information.
@@ -153,67 +179,62 @@ def get_namespaces(core_v1):
     return namespaces
 
 
-def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns):
+def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=None):
     """
-    Fetches and returns basic information about resources in a specific namespace, in parallel.
+    Fetches and returns basic information about specified resources in 
+    a specific namespace, in parallel.
+    resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
     """
-    def fetch_pods():
-        return [
+    if resource_types is None:
+        resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
+
+    fetchers = {
+        "pods": lambda: [
             get_pod_basic_info(pod)
             for pod in core_v1.list_namespaced_pod(namespace=ns).items
-        ]
-
-    def fetch_deployments():
-        return [
+        ],
+        "deployments": lambda: [
             get_deployment_basic_info(dep)
             for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
-        ]
-
-    def fetch_jobs():
-        return [
+        ],
+        "jobs": lambda: [
             get_job_basic_info(job)
             for job in batch_v1.list_namespaced_job(namespace=ns).items
-        ]
-
-    def fetch_statefulsets():
-        return [
+        ],
+        "statefulsets": lambda: [
             get_statefulset_basic_info(sts)
             for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
-        ]
-
-    def fetch_daemonsets():
-        return [
+        ],
+        "daemonsets": lambda: [
             get_daemonset_basic_info(ds)
             for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
-        ]
+        ],
+    }
 
+    selected_fetchers = {k: v for k, v in fetchers.items() if k in resource_types}
+
+    results = {}
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {
-            "pods": executor.submit(fetch_pods),
-            "deployments": executor.submit(fetch_deployments),
-            "jobs": executor.submit(fetch_jobs),
-            "statefulsets": executor.submit(fetch_statefulsets),
-            "daemonsets": executor.submit(fetch_daemonsets),
-        }
-        results = {key: future.result() for key, future in futures.items()}
-
+        futures = {key: executor.submit(fetcher) for key, fetcher in selected_fetchers.items()}
+        for key, future in futures.items():
+            results[key] = future.result()
     return results
 
 
-def get_all_resources(core_v1, apps_v1, batch_v1, namespaces):
+def get_all_resources(core_v1, apps_v1, batch_v1, namespaces, resource_types=None):
     """
-    Fetches and returns basic information about all resources in all namespaces.
+    Fetches and returns basic information about specified resources in all namespaces.
+    resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
     """
-    all_resources = {
-        "pods": [],
-        "deployments": [],
-        "jobs": [],
-        "statefulsets": [],
-        "daemonsets": [],
-    }
+    if resource_types is None:
+        resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
+
+    all_resources = {key: [] for key in resource_types}
 
     def fetch_ns_resources(ns):
-        return get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns)
+        return get_resources_for_namespace(
+            core_v1, apps_v1, batch_v1, ns, resource_types=resource_types
+        )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = list(executor.map(fetch_ns_resources, namespaces))
@@ -225,44 +246,154 @@ def get_all_resources(core_v1, apps_v1, batch_v1, namespaces):
     return all_resources
 
 
-def get_cluster_info():
+def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
     """
-    Fetches and returns basic information about the Kubernetes cluster.
+    Fetches only cluster_id, cluster_name, nodes, and pods.
     """
-    core_v1 = get_k8s_core_v1_client()
-    version_v1 = get_k8s_version_api_client()
-    apps_v1 = get_k8s_apps_v1_client()
-    batch_v1 = get_k8s_batch_v1_client()
-
-    namespaces = get_namespaces(core_v1)
-
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
-            "resources": executor.submit(get_all_resources, core_v1, apps_v1, batch_v1, namespaces),
-            "version": executor.submit(get_version_info, version_v1),
-            "components": executor.submit(get_component_status, core_v1),
-            "kube_system_pods": executor.submit(get_kube_system_pods_info, core_v1),
             "cluster_id": executor.submit(get_cluster_id, core_v1),
             "cluster_name": executor.submit(get_cluster_name, core_v1),
             "nodes": executor.submit(get_nodes),
+            "resources": executor.submit(
+                get_all_resources, core_v1, apps_v1, batch_v1, namespaces, ["pods"]
+            ),
         }
-
         results = {key: future.result() for key, future in futures.items()}
-
-    resources = results["resources"]
-    cluster_info = {
-        "kubernetes_version": getattr(results["version"], "git_version", None),
-        "components": results["components"],
-        "kube_system_pods": results["kube_system_pods"],
+    return {
         "cluster_id": results["cluster_id"],
         "cluster_name": results["cluster_name"],
         "nodes": results["nodes"],
-        "namespaces": namespaces,
-        "pods": resources["pods"],
+        "pods": results["resources"]["pods"],
+    }
+
+
+def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces):
+    """
+    Fetches advanced cluster info (version, components, kube-system 
+    pods, deployments, jobs, statefulsets, daemonsets, namespaces).
+    """
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {
+            "version": executor.submit(get_version_info, version_v1),
+            "components": executor.submit(get_component_status, core_v1),
+            "kube_system_pods": executor.submit(get_kube_system_pods_info, core_v1),
+            "resources": executor.submit(
+                get_all_resources, core_v1, apps_v1, batch_v1, namespaces
+            ),
+        }
+        results = {key: future.result() for key, future in futures.items()}
+    resources = results["resources"]
+    return {
+        "kubernetes_version": getattr(results["version"], "git_version", None),
+        "components": results["components"],
+        "kube_system_pods": results["kube_system_pods"],
         "deployments": resources["deployments"],
         "jobs": resources["jobs"],
         "statefulsets": resources["statefulsets"],
         "daemonsets": resources["daemonsets"],
+        "namespaces": namespaces,
     }
 
-    return cluster_info
+
+def get_cluster_info(advanced: bool = False) -> dict:
+    """
+    Fetches and returns basic or advanced information about the Kubernetes cluster.
+    """
+    try:
+        core_v1 = get_k8s_core_v1_client()
+        apps_v1 = get_k8s_apps_v1_client()
+        batch_v1 = get_k8s_batch_v1_client()
+        namespaces = get_namespaces(core_v1)
+
+        # Always get basic info
+        basic_info = get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces)
+        cluster_resource_utilization = summarize_cluster_resource_utilization(basic_info)
+        basic_info.update(cluster_resource_utilization)
+
+        if not advanced:
+            return basic_info
+
+        # Advanced info
+        version_v1 = get_k8s_version_api_client()
+        advanced_info = get_advanced_cluster_info(
+            core_v1, version_v1, apps_v1, batch_v1, namespaces
+        )
+        cluster_info = {**basic_info, **advanced_info}
+
+        return cluster_info
+    except ApiException as e:
+        logger.error("Error fetching cluster info: %s", {e})
+        return {
+            "error": "Failed to fetch cluster information",
+            "details": str(e),
+        }
+    except config.ConfigException as e:
+        logger.error("Kubernetes configuration error: %s", {e})
+        return {
+            "error": "Kubernetes configuration error",
+            "details": str(e),
+        }
+    except ValueError as e:
+        logger.error("Value error while fetching cluster info: %s", {e})
+        return {
+            "error": "Value error while fetching cluster information",
+            "details": str(e),
+        }
+
+
+def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:
+    """
+    Summarizes cluster resource usage and utilization statistics for UI display.
+
+    Args:
+        cluster_info (dict): Cluster information dictionary.
+
+    Returns:
+        dict: Summary of cluster resource utilization.
+    """
+
+    # loop the nodes of the cluster , get each node usage, and calculate the cluster usage""
+    cluster_cpu_usage = 0
+    cluster_memory_usage = 0
+    cluster_cpu_availability = 0
+    cluster_memory_availability = 0
+
+    for node in cluster_info.get("nodes", []):
+        node_usage = node.get("usage", {})
+        cpu_str = node_usage.get("cpu", "0")
+        mem_str = node_usage.get("memory", "0")
+        cluster_cpu_usage += parse_cpu(cpu_str)
+        cluster_memory_usage += parse_memory(mem_str)
+        node_allocatable = node.get("allocatable", {})
+        cluster_cpu_availability += parse_cpu(node_allocatable.get("cpu", "0"))
+        cluster_memory_availability += parse_memory(node_allocatable.get("memory", "0"))
+
+    # calculate cpu and memory utilization
+    cluster_cpu_usage = round(cluster_cpu_usage, 2)  # in millicores
+    cluster_memory_usage = round(cluster_memory_usage, 2)  # in Mi
+    cluster_cpu_availability = round(cluster_cpu_availability, 2)  # in millicores
+    cluster_memory_availability = round(cluster_memory_availability, 2)  # in Mi
+    if cluster_cpu_availability > 0:
+        cluster_cpu_utilization = round(
+            (cluster_cpu_usage / cluster_cpu_availability) * 100, 2
+        )
+    else:
+        cluster_cpu_utilization = 0.0
+    if cluster_memory_availability > 0:
+        cluster_memory_utilization = round(
+            (cluster_memory_usage / cluster_memory_availability) * 100, 2
+        )
+    else:
+        cluster_memory_utilization = 0.0
+
+    cluster_resource_utilization = {
+        "cluster_cpu_usage": cluster_cpu_usage,
+        "cluster_memory_usage": cluster_memory_usage,
+        "cluster_cpu_availability": cluster_cpu_availability,
+        "cluster_memory_availability": cluster_memory_availability,
+        "cluster_cpu_utilization": cluster_cpu_utilization,
+        "cluster_memory_utilization": cluster_memory_utilization,
+    }
+
+    return cluster_resource_utilization

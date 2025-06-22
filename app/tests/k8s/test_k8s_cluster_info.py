@@ -100,7 +100,7 @@ def test_get_cluster_info_success():
         mock_custom_api.list_cluster_custom_object.return_value = {"items": []}
         mocks["mock_node_custom"].return_value = mock_custom_api
 
-        result = k8s_cluster_info.get_cluster_info()
+        result = k8s_cluster_info.get_cluster_info(advanced=True)
         assert result["kubernetes_version"] == "v1.25.0-test-10.0.0.1"
         assert result["nodes"][0]["name"] == "test-node"
         assert result["components"][0]["name"] == "scheduler"
@@ -147,7 +147,7 @@ def test_get_cluster_info_handles_exceptions():
         mocks["mock_config"].ConfigException = ConfigException
         mocks["mock_config"].load_kube_config.return_value = None
 
-        result = k8s_cluster_info.get_cluster_info()
+        result = k8s_cluster_info.get_cluster_info(advanced=True)
         assert not result["nodes"]
         assert not result["components"]
         assert not result["kube_system_pods"]

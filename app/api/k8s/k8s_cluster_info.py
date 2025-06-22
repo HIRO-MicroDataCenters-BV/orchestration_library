@@ -10,9 +10,13 @@ router = APIRouter(prefix="/k8s_cluster_info")
 
 
 @router.get("/")
-def get_cluster_info():
+def get_cluster_info(advanced: bool = False):
     """
-    Get basic information about the Kubernetes cluster.
-    This includes version info, nodes, components, and kube-system pods.
+    Get cluster information about the Kubernetes cluster.
+    If `advanced` is set to True, it will return detailed information.
+    Otherwise, it will return basic information.
+
+    :param advanced: If True, returns detailed cluster information.
+    :return: A dictionary containing cluster information.
     """
-    return k8s_cluster_info.get_cluster_info()
+    return k8s_cluster_info.get_cluster_info(advanced=advanced)
