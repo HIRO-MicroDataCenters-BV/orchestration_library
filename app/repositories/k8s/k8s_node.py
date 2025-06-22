@@ -64,5 +64,9 @@ def get_k8s_node_metric_map():
         )
         return {item["metadata"]["name"]: item for item in node_metrics["items"]}
     except client.rest.ApiException as e:
-        print(f"Failed to fetch node metrics: {e}")
+        if e.status == 404:
+            print("Warning: Metrics server not installed or not available. " \
+            "Node metrics will be empty.")
+        else:
+            print(f"Failed to fetch node metrics: {e}")
         return {}

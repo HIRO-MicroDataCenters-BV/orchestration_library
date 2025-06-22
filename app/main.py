@@ -6,7 +6,6 @@ import logging
 
 from fastapi import FastAPI
 from app.api.k8s import (
-    cluster_ui,
     k8s_get_token_api,
     k8s_pod,
     k8s_node,
@@ -27,7 +26,6 @@ app.include_router(k8s_pod_parent.router, tags=["Kubernetes"])
 app.include_router(k8s_user_pod.router, tags=["Kubernetes"])
 app.include_router(k8s_node.router, tags=["Kubernetes"])
 app.include_router(k8s_cluster_info.router, tags=["Kubernetes"])
-app.include_router(cluster_ui.router, tags=["Kubernetes"])
 app.include_router(k8s_get_token_api.router, tags=["Kubernetes"])
 
 app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
