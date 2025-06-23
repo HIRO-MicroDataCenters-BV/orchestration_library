@@ -1,5 +1,10 @@
-"""Mock objects for testing Kubernetes cluster information retrieval"""""
+"""Mock objects for testing Kubernetes cluster information retrieval""" ""
+from datetime import datetime, timezone
 from unittest.mock import MagicMock
+from uuid import uuid4
+
+from app.schemas.workload_action_schema import WorkloadAction, WorkloadActionCreate, WorkloadActionUpdate
+
 
 def mock_version_info():
     """
@@ -9,6 +14,7 @@ def mock_version_info():
     version.git_version = "v1.25.0-test-10.0.0.1"
     version.git_commit = "abcdef123456"
     return version
+
 
 # @pytest.fixture
 def mock_component():
@@ -20,6 +26,7 @@ def mock_component():
     cond = MagicMock(type="Healthy", status="True")
     comp.conditions = [cond]
     return comp
+
 
 def mock_configmap():
     """
@@ -55,6 +62,7 @@ scheduler: {}
     }
     return configmap
 
+
 # @pytest.fixture
 def mock_pod():
     """
@@ -72,6 +80,7 @@ def mock_pod():
     container_status.image = "kube-proxy:v1.25.0"
     pod.status.container_statuses = [container_status]
     return pod
+
 
 def mock_node():
     """
@@ -116,6 +125,7 @@ def mock_node():
     node.spec.unschedulable = False
     return node
 
+
 def mock_custom_api():
     """
     Mock a Kubernetes custom API object for metrics.
@@ -125,11 +135,12 @@ def mock_custom_api():
         "items": [
             {
                 "metadata": {"name": "test-node"},
-                "usage": {"cpu": "100m", "memory": "512Mi"}
+                "usage": {"cpu": "100m", "memory": "512Mi"},
             }
         ]
     }
     return custom_api
+
 
 def pod_mock_fixture():
     """
@@ -158,6 +169,7 @@ def pod_mock_fixture():
     pod.spec.containers = [container]
     return pod
 
+
 def mock_user_pod():
     """
     Mock pod object with necessary attributes.
@@ -178,3 +190,78 @@ def make_owner(kind, name):
     owner.kind = kind
     owner.name = name
     return owner
+
+
+def mock_workload_action_create_obj(
+    action_id=None, action_type=None, action_status=None, count=1
+):
+    """
+    Mock a workload action object with necessary attributes.
+    """
+    return WorkloadActionCreate(
+        action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
+        action_type=action_type or "Create",
+        action_status=action_status or "pending",
+        action_start_time=datetime.now(timezone.utc),
+        action_end_time=None,
+        action_reason=f"Test reason {count}",
+        pod_parent_name=f"parent {count}",
+        pod_parent_type="Deployment",
+        pod_parent_uid=uuid4(),
+        created_pod_name=f"pod {count}",
+        created_pod_namespace="default",
+        created_node_name=f"node {count}",
+        deleted_pod_name=None,
+        deleted_pod_namespace=None,
+        deleted_node_name=None,
+        bound_pod_name=None,
+        bound_pod_namespace=None,
+        bound_node_name=None,
+    )
+
+def mock_workload_action_update_obj(
+    action_id=None, action_type=None, action_status=None, count=1
+):
+    """
+    Mock a workload action update object with necessary attributes.
+    """
+    return WorkloadActionUpdate(
+        action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
+        action_type=action_type or "Update",
+        action_status=action_status or "in_progress",
+        action_reason=f"Updated reason {count}",
+        pod_parent_name=f"parent {count}",
+        pod_parent_type="Deployment",
+        pod_parent_uid=uuid4(),
+        created_pod_name=f"pod {count}",
+        created_pod_namespace="default",
+        created_node_name=f"node {count}",
+        updated_at= datetime.now(timezone.utc),
+    )
+
+def mock_workload_action_obj(
+    action_id=None, action_type=None, action_status=None, count=1
+):
+    """
+    Mock a workload action object with necessary attributes.
+    """
+    return WorkloadAction(
+        action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
+        action_type=action_type or "Create",
+        action_status=action_status or "pending",
+        action_start_time=datetime.now(timezone.utc),
+        action_end_time=None,
+        action_reason=f"Test reason {count}",
+        pod_parent_name=f"parent {count}",
+        pod_parent_type="Deployment",
+        pod_parent_uid=uuid4(),
+        created_pod_name=f"pod {count}",
+        created_pod_namespace="default",
+        created_node_name=f"node {count}",
+        deleted_pod_name=None,
+        deleted_pod_namespace=None,
+        deleted_node_name=None,
+        bound_pod_name=None,
+        bound_pod_namespace=None,
+        bound_node_name=None,
+    )
