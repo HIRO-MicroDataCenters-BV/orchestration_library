@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 from starlette import status
 
 
-class BaseException(Exception):
+class OrchestrationBaseException(Exception):
     """
     Base exception class for database-related errors.
     
@@ -37,7 +37,7 @@ class BaseException(Exception):
         super().__init__(self.message)
 
 
-class DBEntryNotFoundException(BaseException):
+class DBEntryNotFoundException(OrchestrationBaseException):
     """
     Exception raised when a database entry is not found.
     
@@ -60,7 +60,7 @@ class DBEntryNotFoundException(BaseException):
         )
 
 
-class DBEntryCreationException(BaseException):
+class DBEntryCreationException(OrchestrationBaseException):
     """
     Exception raised when there's an error creating a database entry.
     
@@ -83,7 +83,7 @@ class DBEntryCreationException(BaseException):
         )
 
 
-class DBEntryUpdateException(BaseException):
+class DBEntryUpdateException(OrchestrationBaseException):
     """
     Exception raised when there's an error updating a database entry.
     
@@ -106,7 +106,7 @@ class DBEntryUpdateException(BaseException):
         )
 
 
-class DBEntryDeletionException(BaseException):
+class DBEntryDeletionException(OrchestrationBaseException):
     """
     Exception raised when there's an error deleting a database entry.
     
@@ -129,7 +129,7 @@ class DBEntryDeletionException(BaseException):
         )
 
 
-class DatabaseConnectionException(BaseException):
+class DatabaseConnectionException(OrchestrationBaseException):
     """
     Exception raised when there's a database connection error.
     
@@ -151,7 +151,7 @@ class DatabaseConnectionException(BaseException):
             details=details
         )
 
-class K8sAPIException(BaseException):
+class K8sAPIException(OrchestrationBaseException):
     """Exception raised for errors in Kubernetes API operations.
 
     This exception is used to indicate that an error occurred while interacting
@@ -168,12 +168,12 @@ class K8sAPIException(BaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message, 
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            message=message,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             details=details
         )
 
-class K8sValueError(BaseException):
+class K8sValueError(OrchestrationBaseException):
     """Exception raised for value errors in Kubernetes operations.
 
     This exception is used to indicate that a value provided to a Kubernetes operation
@@ -189,12 +189,12 @@ class K8sValueError(BaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message, 
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, 
+            message=message,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             details=details
         )
 
-class K8sTypeError(BaseException):
+class K8sTypeError(OrchestrationBaseException):
     """Exception raised for type errors in Kubernetes operations.
 
     This exception is used to indicate that a type mismatch occurred in a Kubernetes operation,
@@ -210,12 +210,12 @@ class K8sTypeError(BaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message, 
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, 
+            message=message,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             details=details
         )
 
-class K8sConfigException(BaseException):
+class K8sConfigException(OrchestrationBaseException):
     """Exception raised for errors in Kubernetes configuration.
 
     This exception is used to indicate that there is an issue with the Kubernetes configuration,
@@ -231,7 +231,7 @@ class K8sConfigException(BaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message, 
+            message=message,
             status_code=status.HTTP_403_FORBIDDEN,
             details=details
         )

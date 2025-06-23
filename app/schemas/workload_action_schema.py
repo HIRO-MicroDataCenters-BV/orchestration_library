@@ -9,15 +9,10 @@ from typing import Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
-WORKLOAD_ACTION_TYPE_ENUM = ("Bind", "Create", "Delete", "Move", "Swap")
-ACTION_STATUS_ENUM = ("pending", "successful", "failed", "partial")
-POD_PARENT_TYPE_ENUM = (
-    "Deployment",
-    "StatefulSet",
-    "ReplicaSet",
-    "Job",
-    "DaemonSet",
-    "CronJob",
+from app.utils.constants import (
+    WORKLOAD_ACTION_TYPE_ENUM,
+    ACTION_STATUS_ENUM,
+    POD_PARENT_TYPE_ENUM,
 )
 
 

@@ -13,9 +13,13 @@ import logging
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from starlette import status
-from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sTypeError, K8sValueError, k8sConfigException
-
-from app.utils.exceptions import BaseException
+from app.utils.exceptions import (
+    OrchestrationBaseException,
+    K8sAPIException,
+    K8sConfigException,
+    K8sTypeError,
+    K8sValueError
+)
 
 # Configure logger
 logger = logging.getLogger("uvicorn.error")
@@ -24,7 +28,7 @@ logger = logging.getLogger("uvicorn.error")
 def init_exception_handlers(app: FastAPI):
     """
     Register global exception handlers for the FastAPI application.
-    
+
     This function sets up exception handlers that will catch and process various types
     of exceptions that may occur during request processing. The handlers ensure:
     - Consistent error response format
@@ -51,13 +55,11 @@ def init_exception_handlers(app: FastAPI):
         logger.error("Unhandled exception: %s", exc, exc_info=True)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Internal Server Error. Please try again later."
-            }
+            content={"message": "Internal Server Error. Please try again later."},
         )
 
-    @app.exception_handler(BaseException)
-    async def db_exception_handler(_: Request, exc: BaseException):
+    @app.exception_handler(OrchestrationBaseException)
+    async def db_exception_handler(_: Request, exc: OrchestrationBaseException):
         """
         Handle database-related exceptions.
 
@@ -74,17 +76,14 @@ def init_exception_handlers(app: FastAPI):
         """
         logger.error("DataBase exception: %s", exc, exc_info=False)
         return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "message": exc.message
-            }
+            status_code=exc.status_code, content={"message": exc.message}
         )
 
     def _k8s_exception_response(exc, exc_type: str):
         logger.error("Kubernetes %s: %s", exc_type, exc.message, exc_info=False)
         return JSONResponse(
             status_code=exc.status_code,
-            content={"message": exc.message, "details": getattr(exc, "details", None)}
+            content={"message": exc.message, "details": getattr(exc, "details", None)},
         )
 
     @app.exception_handler(K8sAPIException)

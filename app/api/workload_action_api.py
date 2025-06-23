@@ -108,6 +108,3 @@ async def delete_workload_action_route(action_id: UUID,
         None
     """
     return await delete_workload_action(db_session, action_id)
-
-
-
