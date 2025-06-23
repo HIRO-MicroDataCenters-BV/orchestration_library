@@ -40,8 +40,8 @@ class WorkloadAction(Base, BaseDictMixin):
         nullable=True,
         doc="Status of the action",
     )
-    action_start_time = Column(TIMESTAMP, nullable=True, doc="Start time of the action")
-    action_end_time = Column(TIMESTAMP, nullable=True, doc="End time of the action")
+    action_start_time = Column(TIMESTAMP(timezone=True), nullable=True, doc="Start time of the action")
+    action_end_time = Column(TIMESTAMP(timezone=True), nullable=True, doc="End time of the action")
     action_reason = Column(String, nullable=True, doc="Reason for the action")
 
     pod_parent_name = Column(
@@ -81,13 +81,13 @@ class WorkloadAction(Base, BaseDictMixin):
     )
 
     created_at = Column(
-        TIMESTAMP,
+        TIMESTAMP(timezone=True),
         server_default=text("CURRENT_TIMESTAMP"),
         nullable=False,
         doc="Timestamp of record creation",
     )
     updated_at = Column(
-        TIMESTAMP,
+        TIMESTAMP(timezone=True),
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=text("CURRENT_TIMESTAMP"),
         nullable=False,

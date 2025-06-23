@@ -1,8 +1,8 @@
 """Added workload_action table
 
-Revision ID: b4c9e32b5e6c
+Revision ID: 78030ce8df1b
 Revises: 536865fdd9ba
-Create Date: 2025-06-24 00:03:27.698882
+Create Date: 2025-06-24 01:24:55.163966
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b4c9e32b5e6c'
+revision: str = '78030ce8df1b'
 down_revision: Union[str, None] = '536865fdd9ba'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,8 @@ def upgrade() -> None:
     sa.Column('action_id', sa.UUID(), nullable=False),
     sa.Column('action_type', sa.Enum('Bind', 'Create', 'Delete', 'Move', 'Swap', name='workload_action_type_enum'), nullable=False),
     sa.Column('action_status', sa.Enum('pending', 'successful', 'failed', 'partial', name='action_status_enum'), nullable=True),
-    sa.Column('action_start_time', sa.TIMESTAMP(), nullable=True),
-    sa.Column('action_end_time', sa.TIMESTAMP(), nullable=True),
+    sa.Column('action_start_time', sa.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('action_end_time', sa.TIMESTAMP(timezone=True), nullable=True),
     sa.Column('action_reason', sa.String(), nullable=True),
     sa.Column('pod_parent_name', sa.String(), nullable=True),
     sa.Column('pod_parent_type', sa.Enum('Deployment', 'StatefulSet', 'ReplicaSet', 'Job', 'DaemonSet', 'CronJob', name='pod_parent_type_enum'), nullable=True),
@@ -40,8 +40,8 @@ def upgrade() -> None:
     sa.Column('bound_pod_name', sa.String(), nullable=True),
     sa.Column('bound_pod_namespace', sa.String(), nullable=True),
     sa.Column('bound_node_name', sa.String(), nullable=True),
-    sa.Column('created_at', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
-    sa.Column('updated_at', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('action_id')
     )
     op.create_index(op.f('ix_workload_action_action_id'), 'workload_action', ['action_id'], unique=True)

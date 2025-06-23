@@ -198,7 +198,7 @@ class WorkloadActionCreate(BaseModel):
     )
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp when the action was created",
     )
     updated_at: Optional[datetime] = Field(
