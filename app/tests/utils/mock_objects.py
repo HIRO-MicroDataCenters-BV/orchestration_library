@@ -3,7 +3,11 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from app.schemas.workload_action_schema import WorkloadAction, WorkloadActionCreate, WorkloadActionUpdate
+from app.schemas.workload_action_schema import (
+    WorkloadAction,
+    WorkloadActionCreate,
+    WorkloadActionUpdate,
+)
 
 
 def mock_version_info():
@@ -219,6 +223,7 @@ def mock_workload_action_create_obj(
         bound_node_name=None,
     )
 
+
 def mock_workload_action_update_obj(
     action_id=None, action_type=None, action_status=None, count=1
 ):
@@ -236,8 +241,9 @@ def mock_workload_action_update_obj(
         created_pod_name=f"pod {count}",
         created_pod_namespace="default",
         created_node_name=f"node {count}",
-        updated_at= datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
+
 
 def mock_workload_action_obj(
     action_id=None, action_type=None, action_status=None, count=1
