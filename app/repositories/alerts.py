@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.alerts import Alert
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.utils.exceptions import (
-    DBEntryCreationException, DataBaseException
+    DBEntryCreationException, BaseException
 )
 
 logger = logging.getLogger(__name__)
@@ -99,13 +99,13 @@ async def get_alerts(
         return [AlertResponse.from_orm(alert) for alert in alerts]
     except SQLAlchemyError as e:
         logger.error("Database error while retrieving alerts: %s", str(e))
-        raise DataBaseException(
+        raise BaseException(
             "Failed to retrieve alerts",
             details={"error": str(e)}
         ) from e
     except Exception as e:
         logger.error("Unexpected error while retrieving alerts: %s", str(e))
-        raise DataBaseException(
+        raise BaseException(
             "An unexpected error occurred while retrieving alerts",
             details={"error": str(e)}
         ) from e

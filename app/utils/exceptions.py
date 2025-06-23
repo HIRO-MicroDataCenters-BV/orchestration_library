@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 from starlette import status
 
 
-class DataBaseException(Exception):
+class BaseException(Exception):
     """
     Base exception class for database-related errors.
     
@@ -37,7 +37,7 @@ class DataBaseException(Exception):
         super().__init__(self.message)
 
 
-class DBEntryNotFoundException(DataBaseException):
+class DBEntryNotFoundException(BaseException):
     """
     Exception raised when a database entry is not found.
     
@@ -60,7 +60,7 @@ class DBEntryNotFoundException(DataBaseException):
         )
 
 
-class DBEntryCreationException(DataBaseException):
+class DBEntryCreationException(BaseException):
     """
     Exception raised when there's an error creating a database entry.
     
@@ -83,7 +83,7 @@ class DBEntryCreationException(DataBaseException):
         )
 
 
-class DBEntryUpdateException(DataBaseException):
+class DBEntryUpdateException(BaseException):
     """
     Exception raised when there's an error updating a database entry.
     
@@ -106,7 +106,7 @@ class DBEntryUpdateException(DataBaseException):
         )
 
 
-class DBEntryDeletionException(DataBaseException):
+class DBEntryDeletionException(BaseException):
     """
     Exception raised when there's an error deleting a database entry.
     
@@ -129,7 +129,7 @@ class DBEntryDeletionException(DataBaseException):
         )
 
 
-class DatabaseConnectionException(DataBaseException):
+class DatabaseConnectionException(BaseException):
     """
     Exception raised when there's a database connection error.
     
@@ -151,26 +151,87 @@ class DatabaseConnectionException(DataBaseException):
             details=details
         )
 
+class K8sAPIException(BaseException):
+    """Exception raised for errors in Kubernetes API operations.
 
-class K8sAPIException(Exception):
+    This exception is used to indicate that an error occurred while interacting
+    with the Kubernetes API, such as when a resource is not found or when there
+    are permission issues.
     """
-    Exception raised when Kubernetes API interaction fails.
 
-    This exception wraps Kubernetes-related errors to provide
-    consistent error responses.
-    """
-
-    def __init__(self, message: str, status_code: int = status.HTTP_502_BAD_GATEWAY,
-                 details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
         """
         Initialize the Kubernetes API exception.
 
         Args:
-            message (str): Human-readable error message.
-            status_code (int): HTTP status code to return. Default is 502.
-            details (Optional[Dict[str, Any]]): Additional error context.
+            message (str): A human-readable error message.
+            details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
-        self.message = message
-        self.status_code = status_code
-        self.details = details or {}
-        super().__init__(self.message)
+        super().__init__(
+            message=message, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            details=details
+        )
+
+class K8sValueError(BaseException):
+    """Exception raised for value errors in Kubernetes operations.
+
+    This exception is used to indicate that a value provided to a Kubernetes operation
+    is invalid or not acceptable.
+    """
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """
+        Initialize the Kubernetes value error.
+
+        Args:
+            message (str): A human-readable error message.
+            details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
+        """
+        super().__init__(
+            message=message, 
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, 
+            details=details
+        )
+
+class K8sTypeError(BaseException):
+    """Exception raised for type errors in Kubernetes operations.
+
+    This exception is used to indicate that a type mismatch occurred in a Kubernetes operation,
+    such as when an expected type does not match the provided value.
+    """
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """
+        Initialize the Kubernetes type error.
+
+        Args:
+            message (str): A human-readable error message.
+            details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
+        """
+        super().__init__(
+            message=message, 
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, 
+            details=details
+        )
+
+class K8sConfigException(BaseException):
+    """Exception raised for errors in Kubernetes configuration.
+
+    This exception is used to indicate that there is an issue with the Kubernetes configuration,
+    such as when the configuration file is missing or invalid.
+    """
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """
+        Initialize the Kubernetes configuration exception.
+
+        Args:
+            message (str): A human-readable error message.
+            details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
+        """
+        super().__init__(
+            message=message, 
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details
+        )

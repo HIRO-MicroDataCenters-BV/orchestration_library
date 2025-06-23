@@ -15,6 +15,7 @@ from app.repositories.k8s.k8s_common import (
     get_k8s_version_api_client,
 )
 from app.repositories.k8s.k8s_node import get_k8s_nodes
+from app.utils.exceptions import K8sAPIException, K8sConfigException
 from app.utils.k8s import (
     get_daemonset_basic_info,
     get_deployment_basic_info,
@@ -324,16 +325,16 @@ def get_cluster_info(advanced: bool = False) -> dict:
         return cluster_info
     except ApiException as e:
         logger.error("Error fetching cluster info: %s", {e})
-        return {
-            "error": "Failed to fetch cluster information",
-            "details": str(e),
-        }
+        raise K8sAPIException(
+            message="Failed to fetch cluster information",
+            details=str(e),
+        ) from e
     except config.ConfigException as e:
         logger.error("Kubernetes configuration error: %s", {e})
-        return {
-            "error": "Kubernetes configuration error",
-            "details": str(e),
-        }
+        raise K8sConfigException(
+            message="Kubernetes configuration error",
+            details=str(e),
+        ) from e
     except ValueError as e:
         logger.error("Value error while fetching cluster info: %s", {e})
         return {

@@ -18,7 +18,7 @@ from app.schemas.pod_request_decision import (
 from app.utils.db_utils import handle_db_exception
 from app.utils.exceptions import (
     DBEntryCreationException,
-    DataBaseException,
+    BaseException,
     DBEntryUpdateException,
     DBEntryDeletionException,
     DBEntryNotFoundException,
@@ -124,13 +124,13 @@ async def get_pod_decision(db_session: AsyncSession, pod_decision_id: UUID):
         logger.error(
             "Database operational error while retrieving pod decision : %s", str(exc)
         )
-        raise DataBaseException(
+        raise BaseException(
             message="Failed to retrieve pod decision : Database connection error",
             details={"error_type": "database_connection_error", "error": str(exc)},
         ) from exc
     except SQLAlchemyError as exc:
         logger.error("Database error while retrieving pod decision : %s", str(exc))
-        raise DataBaseException(
+        raise BaseException(
             message="Failed to retrieve pod decision: Database error",
             details={"error_type": "database_error", "error": str(exc)},
         ) from exc
@@ -160,7 +160,7 @@ async def get_all_pod_decisions(
         return result.scalars().all()
     except SQLAlchemyError as exc:
         logger.error("Error retrieving all pod decisions %s", str(exc))
-        raise DataBaseException(
+        raise BaseException(
             message="Failed to retrieve pod decisions due to database error.",
             details={"error": str(exc)},
         ) from exc
