@@ -12,6 +12,7 @@ from app.utils.constants import (
     POD_PARENT_TYPE_ENUM,
 )
 
+
 class WorkloadAction(Base, BaseDictMixin):
     """
     Model representing a workload action in the orchestration library.
@@ -40,8 +41,12 @@ class WorkloadAction(Base, BaseDictMixin):
         nullable=True,
         doc="Status of the action",
     )
-    action_start_time = Column(TIMESTAMP(timezone=True), nullable=True, doc="Start time of the action")
-    action_end_time = Column(TIMESTAMP(timezone=True), nullable=True, doc="End time of the action")
+    action_start_time = Column(
+        TIMESTAMP(timezone=True), nullable=True, doc="Start time of the action"
+    )
+    action_end_time = Column(
+        TIMESTAMP(timezone=True), nullable=True, doc="End time of the action"
+    )
     action_reason = Column(String, nullable=True, doc="Reason for the action")
 
     pod_parent_name = Column(
