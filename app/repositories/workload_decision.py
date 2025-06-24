@@ -10,10 +10,10 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.pod_request_decision import PodRequestDecision
-from app.schemas.pod_request_decision import (
-    PodRequestDecisionUpdate,
-    PodRequestDecisionCreate,
+from app.models.workload_decision import WorkloadDecision
+from app.schemas.workload_decision_schema import (
+    WorkloadDecisionUpdate,
+    WorkloadDecisionCreate,
 )
 from app.utils.db_utils import handle_db_exception
 from app.utils.exceptions import (
@@ -29,7 +29,7 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecisionCreate):
+async def create_pod_decision(db_session: AsyncSession, data: WorkloadDecisionCreate):
     """
     Create a new PodRequestDecision record in the database.
 
@@ -44,7 +44,7 @@ async def create_pod_decision(db_session: AsyncSession, data: PodRequestDecision
         DBEntryCreationException: If creation fails due to integrity or DB errors.
     """
     try:
-        db_obj = PodRequestDecision(**data.dict())
+        db_obj = WorkloadDecision(**data.dict())
         db_session.add(db_obj)
         await db_session.commit()
         await db_session.refresh(db_obj)
@@ -110,7 +110,7 @@ async def get_pod_decision(db_session: AsyncSession, pod_decision_id: UUID):
     """
     try:
         result = await db_session.execute(
-            select(PodRequestDecision).where(PodRequestDecision.id == pod_decision_id)
+            select(WorkloadDecision).where(WorkloadDecision.id == pod_decision_id)
         )
         pod_decision = result.scalar_one_or_none()
 
@@ -155,7 +155,7 @@ async def get_all_pod_decisions(
     """
     try:
         result = await db_session.execute(
-            select(PodRequestDecision).offset(skip).limit(limit)
+            select(WorkloadDecision).offset(skip).limit(limit)
         )
         return result.scalars().all()
     except SQLAlchemyError as exc:
@@ -167,7 +167,7 @@ async def get_all_pod_decisions(
 
 
 async def update_pod_decision(
-    db_session: AsyncSession, pod_decision_id: UUID, data: PodRequestDecisionUpdate
+    db_session: AsyncSession, pod_decision_id: UUID, data: WorkloadDecisionUpdate
 ):
     """
     Update an existing PodRequestDecision record by its ID.
@@ -186,7 +186,7 @@ async def update_pod_decision(
     """
     try:
         result = await db_session.execute(
-            select(PodRequestDecision).where(PodRequestDecision.id == pod_decision_id)
+            select(WorkloadDecision).where(WorkloadDecision.id == pod_decision_id)
         )
         pod_decision = result.scalar_one_or_none()
 
@@ -257,7 +257,7 @@ async def delete_pod_decision(db_session: AsyncSession, pod_decision_id: UUID):
     """
     try:
         result = await db_session.execute(
-            select(PodRequestDecision).where(PodRequestDecision.id == pod_decision_id)
+            select(WorkloadDecision).where(WorkloadDecision.id == pod_decision_id)
         )
         pod_decision = result.scalar_one_or_none()
 
