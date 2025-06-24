@@ -1,5 +1,5 @@
 """
-CRUD operations for pod request decision in the database.
+CRUD operations for workload decision in the database.
 """
 
 import logging
