@@ -3,7 +3,16 @@ SQLAlchemy models for Alerts.
 This module defines the database models used for storing and retrieving Alerts.
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, CheckConstraint, text
+from sqlalchemy import (
+    TIMESTAMP,
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    CheckConstraint,
+    text,
+)
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -16,6 +25,7 @@ class Alert(Base, BaseDictMixin):
     SQLAlchemy model for alerts table.
     Matches the PostgreSQL schema exactly.
     """
+
     __tablename__ = "alerts"
 
     # Primary Key - SERIAL
@@ -26,7 +36,7 @@ class Alert(Base, BaseDictMixin):
         String(50),
         CheckConstraint("alert_type IN ('Abnormal', 'Network-Attack', 'Other')"),
         nullable=False,
-        index=True  # Add index for faster queries by type
+        index=True,  # Add index for faster queries by type
     )
 
     # Alert Description - TEXT
@@ -40,11 +50,9 @@ class Alert(Base, BaseDictMixin):
 
     # Created At - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
     created_at = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=func.current_timestamp,
-        server_default=text("CURRENT_TIMESTAMP"),
-        index=True  # Index for time-based queries
+        TIMESTAMP(timezone=True), 
+        server_default=func.current_timestamp(), 
+        index=True,  # Index for time-based queries
     )
 
     def __repr__(self) -> str:
