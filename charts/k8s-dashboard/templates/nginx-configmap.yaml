@@ -14,6 +14,22 @@ data:
             listen {{ .Values.reverseProxy.service.targetPort }};
 
             location {{ .Values.reverseProxy.locationPath }} {
+                # CORS Preflight
+                if ($request_method = OPTIONS) {
+                    add_header 'Access-Control-Allow-Origin' '*';
+                    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+                    add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
+                    add_header 'Access-Control-Max-Age' 3600;
+                    add_header 'Content-Type' 'text/plain; charset=UTF-8';
+                    add_header 'Content-Length' 0;
+                    return 204;
+                }
+                
+                # Enable CORS
+                add_header 'Access-Control-Allow-Origin' '*';
+                add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+                add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
+                
                 access_by_lua_block {
                     local token = ngx.var.cookie_auth_token or ngx.var.arg_token
 
