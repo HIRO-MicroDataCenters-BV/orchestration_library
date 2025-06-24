@@ -79,7 +79,7 @@ async def test_update_workload_action():
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
     assert updated_action.action_status == "in_progress"
-    assert updated_action.action_id == action_id
+    assert updated_action.id == action_id
 
 
 @pytest.mark.asyncio

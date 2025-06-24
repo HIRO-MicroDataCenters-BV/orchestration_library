@@ -8,7 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class WorkloadDecisionSchema(BaseModel):
+class WorkloadRequestDecisionSchema(BaseModel):
     """
     Schema for workload decision.
     """
@@ -30,7 +30,7 @@ class WorkloadDecisionSchema(BaseModel):
     updated_at: Optional[datetime] = None
 
 
-class WorkloadDecisionUpdate(BaseModel):
+class WorkloadRequestDecisionUpdate(BaseModel):
     """
     Schema for workload update decision.
     """
@@ -48,7 +48,7 @@ class WorkloadDecisionUpdate(BaseModel):
     pod_parent_kind: Optional[str] = None
 
 
-class WorkloadDecisionCreate(BaseModel):
+class WorkloadRequestDecisionCreate(BaseModel):
     """
     Schema for creating a workload decision.
     """

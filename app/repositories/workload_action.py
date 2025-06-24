@@ -97,7 +97,7 @@ async def get_workload_action_by_id(
     try:
         logger.debug("Retrieving workload action with ID: %d", action_id)
         result = await db.execute(
-            select(WorkloadAction).where(WorkloadAction.action_id == action_id)
+            select(WorkloadAction).where(WorkloadAction.id == action_id)
         )
         workload_action = result.scalar_one_or_none()
         if not workload_action:
@@ -138,7 +138,7 @@ async def update_workload_action(
     try:
         logger.debug("Updating workload action with ID: %d", action_id)
         result = await db.execute(
-            select(WorkloadAction).where(WorkloadAction.action_id == action_id)
+            select(WorkloadAction).where(WorkloadAction.id == action_id)
         )
         workload_action = result.scalar_one_or_none()
 
@@ -194,7 +194,7 @@ async def delete_workload_action(
     try:
         logger.debug("Deleting workload action with ID: %d", action_id)
         result = await db.execute(
-            select(WorkloadAction).where(WorkloadAction.action_id == action_id)
+            select(WorkloadAction).where(WorkloadAction.id == action_id)
         )
         workload_action = result.scalar_one_or_none()
 
