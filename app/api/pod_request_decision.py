@@ -21,7 +21,7 @@ from app.repositories.pod_request_decision import (
     delete_pod_decision
 )
 
-router = APIRouter(prefix="/pod_request_decision", tags=["Pod Request Decision"])
+router = APIRouter(prefix="/workload_decision", tags=["Workload Decision"])
 
 
 @router.post(path="/", response_model=PodRequestDecisionSchema)

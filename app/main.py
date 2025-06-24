@@ -29,7 +29,7 @@ app.include_router(k8s_cluster_info.router, tags=["Kubernetes"])
 app.include_router(k8s_get_token_api.router, tags=["Kubernetes"])
 
 app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
-app.include_router(pod_request_decision.router, tags=["Pod Request Decision"])
+app.include_router(pod_request_decision.router, tags=["Workload Decision"])
 app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
 
