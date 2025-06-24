@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
 
 from app.repositories.k8s.k8s_get_token import get_read_only_token
 
-router = APIRouter(prefix="/dummy_aces_ui")
+router = APIRouter(prefix="/k8s-dashboard", tags=["Kubernetes Dashboard"])
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,19 +26,24 @@ DASHBOARD_NAMESPACE = os.getenv(
 SERVICE_ACCOUNT_NAME = os.getenv(
     "KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME", "readonly-user"
 )
-REVERSE_PROXY_SERVICE_NAME = os.getenv(
-    "NGINX_REVERSE_PROXY_SERVICE_NAME", "aces-dashboard-reverse-proxy"
+# REVERSE_PROXY_SERVICE_NAME = os.getenv(
+#     "NGINX_REVERSE_PROXY_SERVICE_NAME", "aces-dashboard-reverse-proxy"
+# )
+
+# REVERSE_PROXY_SERVICE_PORT = os.getenv("NGINX_REVERSE_PROXY_SERVICE_PORT", "80")
+
+# DASHBOARD_ACCESS_URL = (
+#     f"http://{REVERSE_PROXY_SERVICE_NAME}."
+#     f"{DASHBOARD_NAMESPACE}.svc.cluster.local:"
+#     f"{REVERSE_PROXY_SERVICE_PORT}/"
+# )
+
+# DASHBOARD_ACCESS_URL = "http://localhost:8080/"
+
+DASHBOARD_ACCESS_URL = os.getenv(
+    "KUBERNETES_DASHBOARD_ACCESS_URL",
+    "http://localhost:30016/",
 )
-
-REVERSE_PROXY_SERVICE_PORT = os.getenv("NGINX_REVERSE_PROXY_SERVICE_PORT", "80")
-
-DASHBOARD_ACCESS_URL = (
-    f"http://{REVERSE_PROXY_SERVICE_NAME}."
-    f"{DASHBOARD_NAMESPACE}.svc.cluster.local:"
-    f"{REVERSE_PROXY_SERVICE_PORT}/"
-)
-
-DASHBOARD_ACCESS_URL = "http://localhost:8080/"
 
 
 async def get_dashboard_token():
@@ -76,17 +81,53 @@ async def root():
     html_content = f"""
 <!DOCTYPE html>
 <html>
-<head><title>K8s Dashboard Auto Login</title></head>
+<head>
+    <title>K8s Dashboard Auto Login</title>
+    <style>
+        html, body {{
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }}
+        body {{
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 100vh;
+        }}
+        #dashboardFrame {{
+            flex: 1 1 auto;
+            width: 100%;
+            border: 1px solid #ccc;
+            display: none;
+        }}
+        .button-container {{
+            margin-bottom: 16px;
+        }}
+        button {{
+            display: inline-block;
+            padding: 10px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #1976d2;
+            background-color: #1976d2;
+            color: #fff;
+            cursor: pointer;
+            margin-bottom: 16px;
+            width: auto;
+        }}
+        button:hover {{
+            background-color: #1565c0;
+        }}
+    </style>
+</head>
 <body>
     <h3>K8s Dashboard Auto Login</h3>
-    <p style="color: #b00;">
-        <b>Note:</b> Please port-forward the <code>aces-dashboard-reverse-proxy</code> service to <code>localhost:8080</code> for this button to work.<br>
-        Example:<br>
-        <code>kubectl port-forward svc/aces-dashboard-reverse-proxy -n aces-kubernetes-dashboard 8080:80</code>
-    </p>
-    <button onclick="loginToDashboard()">Open Dashboard</button>
-    <br><br>
-    <iframe id="dashboardFrame" src="" width="100%" height="1000" style="display:none; border:1px solid #ccc;"></iframe>
+    <div class="button-container">
+        <button onclick="loginToDashboard()">Open Dashboard</button>
+    </div>
+    <br>
+    <iframe id="dashboardFrame" src=""></iframe>
 
     <script>
         function loginToDashboard() {{

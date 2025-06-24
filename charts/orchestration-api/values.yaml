@@ -48,9 +48,11 @@ dashboard:
   # Service account name should match the value set in the 
   # k8s-dashboard chart (values.serviceAccountName)
   serviceAccountName: readonly-user
-  # Reverse proxy service name should match the value set in the 
-  # k8s-dashboard chart (values.reverseProxy.Name)  
-  reverseProxyServiceName: aces-dashboard-reverse-proxy
-  # Reverse proxy service port should match the value set in the 
-  # k8s-dashboard chart (values.reverseProxy.service.port)  
-  reverseProxyServicePort: 80
+  # Access URL for the Kubernetes Dashboard
+  # This should be the URL where the Kubernetes Dashboard is accessible
+  # If using a reverse proxy, it should point to the proxy service URL
+  # For example, if using NodePort, it could be something like:
+  # http://<node-ip>:<node-port>/
+  # If using a LoadBalancer, it could be the external IP of the LoadBalancer
+  # If using Ingress, it could be the Ingress URL
+  accessURL: http://localhost:30016

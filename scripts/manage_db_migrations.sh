@@ -6,6 +6,8 @@ set -e
 # Usage: ./db_migrate.sh [PORT] [CLUSTER_NAME] [--local]
 DATABASE_PORT=5432
 CLUSTER_NAME="sample"
+NAMESPACE="aces-orchestration-api"
+SERVICE_NAME="aces-postgres"
 LOCAL_MODE=0
 
 # Parse arguments
@@ -30,12 +32,12 @@ done
 
 if [ "$LOCAL_MODE" -eq 0 ]; then
   echo "Remove the port-forwarding on the database service"
-  if pgrep -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME" > /dev/null; then
-    pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+  if pgrep -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME" > /dev/null; then
+    pkill -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
   fi
 
   echo "Port-forwarding the database service to localhost:$DATABASE_PORT"
-  kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
+  kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
 
   echo "Wait for port-forwarding to be ready"
   sleep 3
@@ -120,7 +122,7 @@ esac
 
 if [ "$LOCAL_MODE" -eq 0 ]; then
   echo "Remove the port-forwarding on the database service"
-  pkill -f "kubectl port-forward service/postgres -n orchestration-api $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+  pkill -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
 fi
 
 echo "Done."
