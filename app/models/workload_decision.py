@@ -7,11 +7,11 @@ from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
 
 
-class PodRequestDecision(Base, BaseDictMixin):
+class WorkloadDecision(Base, BaseDictMixin):
     """
     Model representing the pod placement decision.
     """
-    __tablename__ = "pod_request_decision"
+    __tablename__ = "workload_decision"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
     pod_id = Column(UUID(as_uuid=True), nullable=False)

@@ -15,10 +15,10 @@ from app.api.k8s import (
 )
 from app.api import (
     dummy_aces_ui_api,
-    pod_request_decision,
     tuning_parameters_api,
     alerts_api,
     workload_action_api,
+    workload_decision_api,
 )
 
 from app.utils.exception_handlers import init_exception_handlers
@@ -35,7 +35,7 @@ app.include_router(k8s_cluster_info.router, tags=["Kubernetes"])
 app.include_router(k8s_get_token_api.router, tags=["Kubernetes"])
 
 app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
-app.include_router(pod_request_decision.router, tags=["Workload Decision"])
+app.include_router(workload_decision_api.router, tags=["Workload Decision"])
 app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
 
