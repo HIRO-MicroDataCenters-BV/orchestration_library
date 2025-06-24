@@ -50,7 +50,7 @@ class PodRequestDecisionUpdate(BaseModel):
 
 class PodRequestDecisionCreate(BaseModel):
     """
-    ...
+    Schema for creating a pod request decision.
     """
     pod_id: UUID
     pod_name: str

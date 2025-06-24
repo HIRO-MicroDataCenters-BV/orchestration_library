@@ -27,7 +27,6 @@ def list_all_pods(
         logger.error("Kubernetes API error: %s", str(exc), exc_info=True)
         raise K8sAPIException(
             message="Failed to list Kubernetes pods due to API error.",
-            status_code=exc.status or 502,
             details={"error": exc.reason}
         ) from exc
     except Exception as exc:
