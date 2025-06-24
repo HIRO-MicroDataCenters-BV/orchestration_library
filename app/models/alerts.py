@@ -9,11 +9,9 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    DateTime,
     CheckConstraint,
     text,
 )
-from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.database import Base
@@ -50,8 +48,8 @@ class Alert(Base, BaseDictMixin):
 
     # Created At - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
     created_at = Column(
-        TIMESTAMP(timezone=True), 
-        server_default=func.current_timestamp(), 
+        TIMESTAMP(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
         index=True,  # Index for time-based queries
     )
 
