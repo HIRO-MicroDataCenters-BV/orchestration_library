@@ -5,6 +5,7 @@ FastAPI application entry point.
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.k8s import (
     k8s_get_token_api,
     k8s_pod,
@@ -24,6 +25,14 @@ from app.api import (
 from app.utils.exception_handlers import init_exception_handlers
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust as needed for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logging.basicConfig(level=logging.DEBUG)
 
