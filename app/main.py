@@ -7,6 +7,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.k8s import (
+    k8s_dashboard_api,
     k8s_get_token_api,
     k8s_pod,
     k8s_node,
@@ -15,7 +16,6 @@ from app.api.k8s import (
     k8s_cluster_info,
 )
 from app.api import (
-    dummy_aces_ui_api,
     tuning_parameters_api,
     alerts_api,
     workload_action_api,
@@ -48,7 +48,7 @@ app.include_router(workload_request_decision_api.router, tags=["Workload Request
 app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
 
-app.include_router(dummy_aces_ui_api.router, tags=["Dummy ACES UI API"])
+app.include_router(k8s_dashboard_api.router, tags=["Kubernetes Dashboard"])
 
 
 init_exception_handlers(app)
