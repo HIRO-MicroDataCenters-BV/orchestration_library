@@ -20,7 +20,7 @@ class WorkloadAction(Base, BaseDictMixin):
 
     __tablename__ = "workload_action"
 
-    action_id = Column(
+    id = Column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,

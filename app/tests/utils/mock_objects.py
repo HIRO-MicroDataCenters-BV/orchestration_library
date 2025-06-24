@@ -252,7 +252,7 @@ def mock_workload_action_obj(
     Mock a workload action object with necessary attributes.
     """
     return WorkloadAction(
-        action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
+        id=action_id or "123e4567-e89b-12d3-a456-426614174000",
         action_type=action_type or "Create",
         action_status=action_status or "pending",
         action_start_time=datetime.now(timezone.utc),

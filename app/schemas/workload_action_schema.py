@@ -21,7 +21,7 @@ class WorkloadAction(BaseModel):
     Schema for workload action.
     """
 
-    action_id: UUID = Field(..., description="Unique identifier for the request")
+    id: UUID = Field(..., description="Unique identifier for the request")
     action_type: str = Field(
         ...,
         description="Type of the action within the request",
