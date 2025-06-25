@@ -189,7 +189,7 @@ jobs:
             --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set reverseProxy.name=aces-dashboard-reverse-proxy \
             --set reverseProxy.service.port=80 \
-            --set reverseProxy.service.type=NodePort \
+            --set reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
             --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
             ${{ steps.helm-dry-run.outputs.flag }} || true
 
@@ -214,7 +214,7 @@ jobs:
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
             --set app.service.port=80 \
-            --set app.service.type=NodePort \
+            --set app.service.type=${{ vars.ORCHESTRATION_API_SERVICE_TYPE }} \
             --set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }} \
             --set dashboard.namespace=${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
             --set dashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
