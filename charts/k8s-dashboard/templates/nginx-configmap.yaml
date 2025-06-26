@@ -31,7 +31,7 @@ data:
                 add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
                 
                 access_by_lua_block {
-                    local token = ngx.var.cookie_auth_token or ngx.var.arg_token
+                    local token = ngx.var.arg_token or ngx.var.cookie_auth_token
 
                     if token then
                         -- Set token as a cookie if passed via URL
