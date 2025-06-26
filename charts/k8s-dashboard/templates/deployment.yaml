@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: {{ .Values.reverseProxy.name }}
+      annotations:
+        checksum/nginx-conf: {{ include "k8s-dashboard.nginxConfChecksum" . }}
     spec:
       containers:
         - name: proxy
