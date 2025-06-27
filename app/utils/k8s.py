@@ -1,3 +1,6 @@
+from kubernetes import client, config
+from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
+from functools import wraps
 """
 Utility functions for Kubernetes operations.
 """
@@ -208,3 +211,17 @@ def get_daemonset_basic_info(ds):
         "desired_number_scheduled": getattr(ds.status, "desired_number_scheduled", None),
         "number_ready": getattr(ds.status, "number_ready", None),
     }
+
+def handle_k8s_exceptions(e, context_msg, details=None):
+    """
+    Handles exceptions raised by Kubernetes API or configuration issues.
+    Raises specific exceptions based on the type of error.
+    """
+    if isinstance(e, client.rest.ApiException):
+        raise K8sAPIException(f"{context_msg}: {str(e)}", details=details or str(e))
+    elif isinstance(e, config.ConfigException):
+        raise K8sConfigException(f"{context_msg}: {str(e)}", details=details or str(e))
+    elif isinstance(e, ValueError):
+        raise K8sValueError(f"{context_msg}: {str(e)}", details=details or str(e))
+    else:
+        raise  # re-raise unexpected exceptions

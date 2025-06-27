@@ -2,10 +2,13 @@
 Get cluster information from Kubernetes.
 """
 
+from calendar import c
 import logging
 import concurrent
+from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
+from sqlalchemy import JSON
 import yaml
 
 from app.repositories.k8s.k8s_common import (
@@ -15,13 +18,14 @@ from app.repositories.k8s.k8s_common import (
     get_k8s_version_api_client,
 )
 from app.repositories.k8s.k8s_node import get_k8s_nodes
-from app.utils.exceptions import K8sAPIException, K8sConfigException
+from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
 from app.utils.k8s import (
     get_daemonset_basic_info,
     get_deployment_basic_info,
     get_job_basic_info,
     get_pod_basic_info,
     get_statefulset_basic_info,
+    handle_k8s_exceptions,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,12 +68,8 @@ def get_nodes():
     """
     Fetches and returns the list of Kubernetes nodes.
     """
-    try:
-        nodes = get_k8s_nodes()
-        logger.info("Fetched %s", nodes)
-    except ApiException as e:
-        nodes = []
-        logger.error("Error fetching nodes: %s", {e})
+    nodes = get_k8s_nodes()
+    logger.info("Fetched %s", nodes)
     return nodes
 
 
@@ -77,12 +77,7 @@ def get_component_status(core_v1):
     """
     Fetches and returns the status of Kubernetes components.
     """
-    try:
-        components = core_v1.list_component_status().items
-    except ApiException as e:
-        components = []
-        logger.error("Error fetching components: %s", {e})
-
+    components = core_v1.list_component_status().items
     component_status = []
     for comp in components:
         component_status.append(
@@ -101,11 +96,7 @@ def get_kube_system_pods_info(core_v1):
     """
     Fetches and returns basic information about pods in the kube-system namespace.
     """
-    try:
-        kube_system_pods = core_v1.list_namespaced_pod(namespace="kube-system").items
-    except ApiException as e:
-        kube_system_pods = []
-        logger.error("Error fetching kube-system pods: %s", {e})
+    kube_system_pods = core_v1.list_namespaced_pod(namespace="kube-system").items
 
     kube_system_pods_info = []
     for pod in kube_system_pods:
@@ -119,11 +110,7 @@ def get_cluster_id(core_v1):
     """
     Fetches and returns the cluster ID from the kube-system namespace.
     """
-    try:
-        cluster_id = core_v1.read_namespace(name="kube-system").metadata.uid
-    except ApiException as e:
-        cluster_id = None
-        logger.error("Error fetching cluster ID: %s", {e})
+    cluster_id = core_v1.read_namespace(name="kube-system").metadata.uid
     return cluster_id
 
 
@@ -133,18 +120,14 @@ def get_kubeadm_config(core_v1):
     """
     Fetches and returns the kubeadm configuration from the kube-system namespace.
     """
-    try:
-        config_map = core_v1.read_namespaced_config_map(
-            name="kubeadm-config", namespace="kube-system"
-        )
-        raw_config = config_map.data.get("ClusterConfiguration", None)
-        if raw_config:
-            kubeadm_config = yaml.safe_load(raw_config)
-        else:
-            kubeadm_config = {}
-    except ApiException as e:
+    config_map = core_v1.read_namespaced_config_map(
+        name="kubeadm-config", namespace="kube-system"
+    )
+    raw_config = config_map.data.get("ClusterConfiguration", None)
+    if raw_config:
+        kubeadm_config = yaml.safe_load(raw_config)
+    else:
         kubeadm_config = {}
-        logger.error("Error fetching kubeadm config: %s", {e})
     return kubeadm_config
 
 
@@ -152,19 +135,15 @@ def get_cluster_name(core_v1):
     """
     Fetches and returns the cluster name from the current kubeconfig context.
     """
-    try:
-        kubeadm_config = get_kubeadm_config(core_v1)
-        if kubeadm_config and "clusterName" in kubeadm_config:
-            return kubeadm_config["clusterName"]
-        # If kubeadm config is not available, fallback to kubeconfig context
-        config.load_incluster_config()
-        contexts, active_context = config.list_kube_config_contexts()
-        logger.info("Contexts: %s", contexts)
-        logger.info("Active context: %s", active_context)
-        cluster_name = active_context["context"]["cluster"]
-    except config.ConfigException as e:
-        cluster_name = None
-        logger.error("Error fetching cluster name: %s", {e})
+    kubeadm_config = get_kubeadm_config(core_v1)
+    if kubeadm_config and "clusterName" in kubeadm_config:
+        return kubeadm_config["clusterName"]
+    # If kubeadm config is not available, fallback to kubeconfig context
+    config.load_incluster_config()
+    contexts, active_context = config.list_kube_config_contexts()
+    logger.info("Contexts: %s", contexts)
+    logger.info("Active context: %s", active_context)
+    cluster_name = active_context["context"]["cluster"]
     return cluster_name
 
 
@@ -172,17 +151,13 @@ def get_namespaces(core_v1):
     """
     Fetches and returns the list of namespaces in the Kubernetes cluster.
     """
-    try:
-        namespaces = [ns.metadata.name for ns in core_v1.list_namespace().items]
-    except ApiException as e:
-        namespaces = []
-        logger.error("Error fetching namespaces: %s", {e})
+    namespaces = [ns.metadata.name for ns in core_v1.list_namespace().items]
     return namespaces
 
 
 def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=None):
     """
-    Fetches and returns basic information about specified resources in 
+    Fetches and returns basic information about specified resources in
     a specific namespace, in parallel.
     resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
     """
@@ -216,7 +191,9 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=N
 
     results = {}
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {key: executor.submit(fetcher) for key, fetcher in selected_fetchers.items()}
+        futures = {
+            key: executor.submit(fetcher) for key, fetcher in selected_fetchers.items()
+        }
         for key, future in futures.items():
             results[key] = future.result()
     return results
@@ -271,7 +248,7 @@ def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
 
 def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces):
     """
-    Fetches advanced cluster info (version, components, kube-system 
+    Fetches advanced cluster info (version, components, kube-system
     pods, deployments, jobs, statefulsets, daemonsets, namespaces).
     """
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -297,7 +274,12 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
     }
 
 
-def get_cluster_info(advanced: bool = False) -> dict:
+@handle_k8s_exceptions(
+    api_exception_msg="Failed to fetch cluster information",
+    config_exception_msg="Configuration error while fetching cluster information",
+    value_exception_msg="Value error while fetching cluster information",
+)
+def get_cluster_info(advanced: bool = False) -> JSONResponse:
     """
     Fetches and returns basic or advanced information about the Kubernetes cluster.
     """
@@ -309,7 +291,9 @@ def get_cluster_info(advanced: bool = False) -> dict:
 
         # Always get basic info
         basic_info = get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces)
-        cluster_resource_utilization = summarize_cluster_resource_utilization(basic_info)
+        cluster_resource_utilization = summarize_cluster_resource_utilization(
+            basic_info
+        )
         basic_info.update(cluster_resource_utilization)
 
         if not advanced:
@@ -322,25 +306,20 @@ def get_cluster_info(advanced: bool = False) -> dict:
         )
         cluster_info = {**basic_info, **advanced_info}
 
-        return cluster_info
+        return JSONResponse(content=cluster_info)
     except ApiException as e:
-        logger.error("Error fetching cluster info: %s", {e})
-        raise K8sAPIException(
-            message="Failed to fetch cluster information",
-            details=str(e),
-        ) from e
+        handle_k8s_exceptions(
+            e, context_msg="Kubernetes API error while fetching cluster information"
+        )
     except config.ConfigException as e:
-        logger.error("Kubernetes configuration error: %s", {e})
-        raise K8sConfigException(
-            message="Kubernetes configuration error",
-            details=str(e),
-        ) from e
+        handle_k8s_exceptions(
+            e,
+            context_msg="Kubernetes configuration error while fetching cluster information",
+        )
     except ValueError as e:
-        logger.error("Value error while fetching cluster info: %s", {e})
-        return {
-            "error": "Value error while fetching cluster information",
-            "details": str(e),
-        }
+        handle_k8s_exceptions(
+            e, context_msg="Value error while fetching cluster information"
+        )
 
 
 def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:
