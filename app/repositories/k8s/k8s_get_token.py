@@ -3,7 +3,6 @@ Get a read-only token for a service account in a Kubernetes namespace.
 """
 
 import logging
-from math import log
 from fastapi.responses import JSONResponse
 from kubernetes import client
 from kubernetes.config import ConfigException
@@ -47,15 +46,18 @@ def get_read_only_token(
             e,
             context_msg=f"Kubernetes API error for {service_account_name} in {namespace}",
         )
+        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg=f"Kubernetes configuration error for {service_account_name} in {namespace}",
         )
+        raise
     except ValueError as e:
         handle_k8s_exceptions(
             e, context_msg=f"Value error for {service_account_name} in {namespace}"
         )
+        raise
 
 
 def create_token_for_sa(

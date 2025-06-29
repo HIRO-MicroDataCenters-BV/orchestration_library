@@ -3,7 +3,6 @@ Tests for the get_parent_controller_details_of_pod function.
 """
 
 import json
-import re
 from unittest.mock import patch, MagicMock
 import pytest
 

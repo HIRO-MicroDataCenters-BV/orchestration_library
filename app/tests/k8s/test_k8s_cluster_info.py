@@ -4,7 +4,6 @@ Tests for the k8s_cluster_info module.
 
 from contextlib import contextmanager
 import json
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 from kubernetes.config.config_exception import ConfigException
@@ -137,6 +136,11 @@ def test_get_cluster_info_success():
 
 
 def setup_common_mocks(mocks):
+    """
+    Helper function to set up common mocks for the Kubernetes API clients.
+    This function initializes the core client and sets up default return values
+    for various API calls to ensure that tests can run without needing a real Kubernetes cluster.
+    """
     # Set up all mocks to return valid/empty data by default
     mock_core = MagicMock()
     mock_core.list_namespace.return_value.items = []
@@ -151,11 +155,18 @@ def setup_common_mocks(mocks):
     mocks["mock_node_core"].return_value = mock_core
     mocks["mock_apps"].return_value = MagicMock()
     mocks["mock_batch"].return_value = MagicMock()
-    mocks["mock_config"].list_kube_config_contexts.return_value = ([], {"context": {"cluster": None}})
+    mocks["mock_config"].list_kube_config_contexts.return_value = (
+        [],
+        {"context": {"cluster": None}},
+    )
     return mock_core
 
 
 def test_get_cluster_info_namespace_exception():
+    """Test the get_cluster_info function when listing namespaces fails.
+    This test checks if the function raises a K8sAPIException when the namespace list
+    cannot be retrieved due to an API error.
+    """
     with patch("kubernetes.config.load_kube_config", return_value=None), patch(
         "kubernetes.config.load_incluster_config", return_value=None
     ), k8s_cluster_info_mocks() as mocks:
@@ -167,6 +178,10 @@ def test_get_cluster_info_namespace_exception():
 
 
 def test_get_cluster_info_nodes_exception():
+    """Test the get_cluster_info function when listing nodes fails.
+    This test checks if the function raises a K8sAPIException when the node list
+    cannot be retrieved due to an API error.
+    """
     with patch("kubernetes.config.load_kube_config", return_value=None), patch(
         "kubernetes.config.load_incluster_config", return_value=None
     ), k8s_cluster_info_mocks() as mocks:

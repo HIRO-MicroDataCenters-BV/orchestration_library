@@ -1,8 +1,6 @@
 """
 Get the parent controller of a Kubernetes pod.
 """
-
-from calendar import c
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
@@ -117,7 +115,10 @@ def get_parent_controller_details_of_pod(
         pod = get_pod_by_name_or_uid(core_v1, namespace, pod_name, pod_id)
         if not pod:
             return {
-                "message": f"No pod found with name: {pod_name} or UID: {pod_id} in namespace: {namespace}"
+                "message": (
+                    f"No pod found with name: {pod_name} or UID: {pod_id} "
+                    f"in namespace: {namespace}"
+                )
             }
 
         if not pod.metadata.owner_references:
@@ -140,6 +141,7 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
+        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
@@ -148,6 +150,7 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
+        raise
     except ValueError as e:
         handle_k8s_exceptions(
             e,
@@ -156,3 +159,4 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
+        raise

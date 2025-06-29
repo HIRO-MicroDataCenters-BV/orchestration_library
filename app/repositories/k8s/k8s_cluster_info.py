@@ -305,15 +305,18 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes API error while fetching cluster information"
         )
+        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg="Kubernetes configuration error while fetching cluster information",
         )
+        raise
     except ValueError as e:
         handle_k8s_exceptions(
             e, context_msg="Value error while fetching cluster information"
         )
+        raise
 
 
 def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:

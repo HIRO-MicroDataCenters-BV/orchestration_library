@@ -50,12 +50,15 @@ def list_k8s_pods(
         return JSONResponse(content=simplified_pods)
     except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing pods")
+        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes configuration error while listing pods"
         )
+        raise
     except ValueError as e:
         handle_k8s_exceptions(e, context_msg="Value error while listing pods")
+        raise
 
 
 def list_k8s_user_pods(namespace=None, name=None, pod_id=None, status=None):

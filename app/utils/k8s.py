@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Utility functions for Kubernetes operations.
+This module provides functions to extract and format information from Kubernetes nodes and pods,
+as well as handle exceptions related to Kubernetes API and configuration.
+"""
 from collections.abc import Mapping, Iterable
 from kubernetes import client, config
 from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
-from functools import wraps
-"""
-Utility functions for Kubernetes operations.
-"""
 
 def to_serializable(obj):
     """Recursively convert an object to a JSON-serializable format."""
@@ -239,9 +241,8 @@ def handle_k8s_exceptions(e, context_msg, details=None):
     """
     if isinstance(e, client.rest.ApiException):
         raise K8sAPIException(f"{context_msg}: {str(e)}", details=details or str(e))
-    elif isinstance(e, config.ConfigException):
+    if isinstance(e, config.ConfigException):
         raise K8sConfigException(f"{context_msg}: {str(e)}", details=details or str(e))
-    elif isinstance(e, ValueError):
+    if isinstance(e, ValueError):
         raise K8sValueError(f"{context_msg}: {str(e)}", details=details or str(e))
-    else:
-        raise  # re-raise unexpected exceptions
+    raise e  # re-raise unexpected exceptions
