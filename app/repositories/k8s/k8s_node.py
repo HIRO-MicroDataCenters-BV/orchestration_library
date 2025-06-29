@@ -15,6 +15,8 @@ from app.repositories.k8s.k8s_common import (
 from app.utils.k8s import get_node_details, handle_k8s_exceptions
 
 
+# Suppress R1710: All exception handlers call a function that always raises, so no return needed.
+# pylint: disable=R1710
 def list_k8s_nodes(name=None, node_id=None, status=None) -> JSONResponse:
     """
     List all nodes in the Kubernetes cluster with optional filters.
@@ -27,15 +29,12 @@ def list_k8s_nodes(name=None, node_id=None, status=None) -> JSONResponse:
         return JSONResponse(content=get_k8s_nodes(name, node_id, status))
     except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing nodes")
-        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes configuration error while listing nodes"
         )
-        raise
     except ValueError as e:
         handle_k8s_exceptions(e, context_msg="Value error while listing nodes")
-        raise
 
 
 def get_k8s_nodes(name=None, node_id=None, status=None):

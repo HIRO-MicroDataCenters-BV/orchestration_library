@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_EXPIRATION_SECONDS = 3600  # Default token expiration time in seconds
 DEFAULT_AUDIENCE = "https://kubernetes.default.svc.cluster.local"
 
-
+# Suppress R1710: All exception handlers call a function that always raises, so no return needed.
+# pylint: disable=R1710
 def get_read_only_token(
     namespace: str = None, service_account_name: str = None
 ) -> JSONResponse:
@@ -46,18 +47,15 @@ def get_read_only_token(
             e,
             context_msg=f"Kubernetes API error for {service_account_name} in {namespace}",
         )
-        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg=f"Kubernetes configuration error for {service_account_name} in {namespace}",
         )
-        raise
     except ValueError as e:
         handle_k8s_exceptions(
             e, context_msg=f"Value error for {service_account_name} in {namespace}"
         )
-        raise
 
 
 def create_token_for_sa(

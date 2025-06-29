@@ -272,7 +272,8 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
         "namespaces": namespaces,
     }
 
-
+# Suppress R1710: All exception handlers call a function that always raises, so no return needed.
+# pylint: disable=R1710
 def get_cluster_info(advanced: bool = False) -> JSONResponse:
     """
     Fetches and returns basic or advanced information about the Kubernetes cluster.
@@ -305,18 +306,15 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes API error while fetching cluster information"
         )
-        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg="Kubernetes configuration error while fetching cluster information",
         )
-        raise
     except ValueError as e:
         handle_k8s_exceptions(
             e, context_msg="Value error while fetching cluster information"
         )
-        raise
 
 
 def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:

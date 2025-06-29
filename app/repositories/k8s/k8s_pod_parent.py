@@ -93,7 +93,8 @@ def get_controller_details(apps_v1, batch_v1, namespace, owner):
 
     return None
 
-
+# Suppress R1710: All exception handlers call a function that always raises, so no return needed.
+# pylint: disable=R1710
 def get_parent_controller_details_of_pod(
     namespace, pod_name=None, pod_id=None
 ) -> JSONResponse:
@@ -141,7 +142,6 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
-        raise
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
@@ -150,7 +150,6 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
-        raise
     except ValueError as e:
         handle_k8s_exceptions(
             e,
@@ -159,4 +158,3 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
-        raise
