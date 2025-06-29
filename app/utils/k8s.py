@@ -1,6 +1,31 @@
+# -*- coding: utf-8 -*-
 """
 Utility functions for Kubernetes operations.
+This module provides functions to extract and format information from Kubernetes nodes and pods,
+as well as handle exceptions related to Kubernetes API and configuration.
 """
+from collections.abc import Mapping, Iterable
+from kubernetes import client, config
+from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
+
+def to_serializable(obj):
+    """Recursively convert an object to a JSON-serializable format."""
+    if isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+
+    if isinstance(obj, Mapping):
+        return {k: to_serializable(v) for k, v in obj.items()}
+
+    if isinstance(obj, Iterable) and not isinstance(obj, (str, bytes)):
+        return [to_serializable(item) for item in obj]
+
+    if hasattr(obj, "__dict__"):
+        return {k: to_serializable(v) for k, v in vars(obj).items() if not k.startswith("_")}
+
+    if hasattr(obj, "__slots__"):
+        return {slot: to_serializable(getattr(obj, slot)) for slot in obj.__slots__}
+
+    return str(obj)
 
 def get_node_info(node):
     """
@@ -208,3 +233,16 @@ def get_daemonset_basic_info(ds):
         "desired_number_scheduled": getattr(ds.status, "desired_number_scheduled", None),
         "number_ready": getattr(ds.status, "number_ready", None),
     }
+
+def handle_k8s_exceptions(e, context_msg, details=None):
+    """
+    Handles exceptions raised by Kubernetes API or configuration issues.
+    Raises specific exceptions based on the type of error.
+    """
+    if isinstance(e, client.rest.ApiException):
+        raise K8sAPIException(f"{context_msg}: {str(e)}", details=details or str(e))
+    if isinstance(e, config.ConfigException):
+        raise K8sConfigException(f"{context_msg}: {str(e)}", details=details or str(e))
+    if isinstance(e, ValueError):
+        raise K8sValueError(f"{context_msg}: {str(e)}", details=details or str(e))
+    raise e  # re-raise unexpected exceptions

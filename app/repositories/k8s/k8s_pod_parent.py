@@ -1,12 +1,16 @@
 """
 Get the parent controller of a Kubernetes pod.
 """
-
+from fastapi.responses import JSONResponse
+from kubernetes.client.rest import ApiException
+from kubernetes.config import ConfigException
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
     get_k8s_batch_v1_client,
     get_k8s_core_v1_client,
 )
+from app.utils.exceptions import K8sValueError
+from app.utils.k8s import handle_k8s_exceptions
 
 
 def get_pod_by_name_or_uid(core_v1, namespace, pod_name=None, pod_id=None):
@@ -14,7 +18,7 @@ def get_pod_by_name_or_uid(core_v1, namespace, pod_name=None, pod_id=None):
     Get a pod by its name or UID.
     """
     if not pod_name and not pod_id:
-        raise ValueError("Either pod_name or pod_id must be provided.")
+        raise K8sValueError("Either pod_name or pod_id must be provided.")
 
     if pod_name:
         return core_v1.read_namespaced_pod(name=pod_name, namespace=namespace)
@@ -89,8 +93,11 @@ def get_controller_details(apps_v1, batch_v1, namespace, owner):
 
     return None
 
-
-def get_parent_controller_details_of_pod(namespace, pod_name=None, pod_id=None):
+# Suppress R1710: All exception handlers call a function that always raises, so no return needed.
+# pylint: disable=R1710
+def get_parent_controller_details_of_pod(
+    namespace, pod_name=None, pod_id=None
+) -> JSONResponse:
     """
     Get the parent controller of a Kubernetes pod.
     Args:
@@ -101,25 +108,53 @@ def get_parent_controller_details_of_pod(namespace, pod_name=None, pod_id=None):
         dict: Details of the parent controller (Deployment, StatefulSet, DaemonSet, or Job).
     """
 
-    core_v1 = get_k8s_core_v1_client()
-    apps_v1 = get_k8s_apps_v1_client()
-    batch_v1 = get_k8s_batch_v1_client()
+    try:
+        core_v1 = get_k8s_core_v1_client()
+        apps_v1 = get_k8s_apps_v1_client()
+        batch_v1 = get_k8s_batch_v1_client()
 
-    pod = get_pod_by_name_or_uid(core_v1, namespace, pod_name, pod_id)
-    if not pod:
+        pod = get_pod_by_name_or_uid(core_v1, namespace, pod_name, pod_id)
+        if not pod:
+            return {
+                "message": (
+                    f"No pod found with name: {pod_name} or UID: {pod_id} "
+                    f"in namespace: {namespace}"
+                )
+            }
+
+        if not pod.metadata.owner_references:
+            return {"message": "Pod has no owner references (standalone pod)"}
+
+        for owner in pod.metadata.owner_references:
+            controller_details = get_controller_details(
+                apps_v1, batch_v1, namespace, owner
+            )
+            if controller_details:
+                return JSONResponse(content=controller_details)
         return {
-            "message": 
-            f"No pod found with name: {pod_name} or UID: {pod_id} in namespace: {namespace}"
+            "message": "No known controller found (Deployment, StatefulSet, DaemonSet, or Job)"
         }
-
-    if not pod.metadata.owner_references:
-        return {"message": "Pod has no owner references (standalone pod)"}
-
-    for owner in pod.metadata.owner_references:
-        controller_details = get_controller_details(apps_v1, batch_v1, namespace, owner)
-        if controller_details:
-            return controller_details
-
-    return {
-        "message": "No known controller found (Deployment, StatefulSet, DaemonSet, or Job)"
-    }
+    except ApiException as e:
+        handle_k8s_exceptions(
+            e,
+            context_msg=(
+                f"Kubernetes API error while getting parent controller of pod "
+                f"{pod_name or pod_id} in namespace {namespace}"
+            ),
+        )
+    except ConfigException as e:
+        handle_k8s_exceptions(
+            e,
+            context_msg=(
+                f"Kubernetes configuration error while getting parent controller of pod "
+                f"{pod_name or pod_id} in namespace {namespace}"
+            ),
+        )
+    except ValueError as e:
+        handle_k8s_exceptions(
+            e,
+            context_msg=(
+                f"Value error while getting parent controller of pod "
+                f"{pod_name or pod_id} in namespace {namespace}"
+            ),
+        )

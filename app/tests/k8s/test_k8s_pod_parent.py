@@ -2,11 +2,13 @@
 Tests for the get_parent_controller_details_of_pod function.
 """
 
+import json
 from unittest.mock import patch, MagicMock
 import pytest
 
 from app.repositories.k8s.k8s_pod_parent import get_parent_controller_details_of_pod
 from app.tests.utils.mock_objects import mock_user_pod, make_owner
+from app.utils.exceptions import K8sValueError
 
 
 # Mocking the Kubernetes client methods
@@ -22,7 +24,7 @@ def test_no_pod_name_or_id(_mock_batch, _mock_apps, _mock_core):
     """
     Test that ValueError is raised when neither pod_name nor pod_id is provided.
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(K8sValueError):
         get_parent_controller_details_of_pod(
             namespace="default", pod_name=None, pod_id=None
         )
@@ -68,9 +70,10 @@ def test_deployment_parent(_mock_batch, mock_apps, mock_core):
     deployment.spec.replicas = 3
     mock_apps.return_value.read_namespaced_deployment.return_value = deployment
 
-    result = get_parent_controller_details_of_pod(
+    response = get_parent_controller_details_of_pod(
         namespace="default", pod_name="test-pod", pod_id=None
     )
+    result = json.loads(response.body.decode())
     assert result["kind"] == "Deployment"
     assert result["name"] == "deploy-name"
     assert result["current_scale"] == 3
@@ -95,9 +98,10 @@ def test_statefulset_parent(_mock_batch, mock_apps, mock_core):
     statefulset.spec.replicas = 2
     mock_apps.return_value.read_namespaced_stateful_set.return_value = statefulset
 
-    result = get_parent_controller_details_of_pod(
+    response = get_parent_controller_details_of_pod(
         namespace="default", pod_name="test-pod", pod_id=None
     )
+    result = json.loads(response.body.decode())
     assert result["kind"] == "StatefulSet"
     assert result["name"] == "ss-name"
     assert result["current_scale"] == 2
@@ -122,9 +126,10 @@ def test_daemonset_parent(_mock_batch, mock_apps, mock_core):
     daemonset.status.desired_number_scheduled = 5
     mock_apps.return_value.read_namespaced_daemon_set.return_value = daemonset
 
-    result = get_parent_controller_details_of_pod(
+    response = get_parent_controller_details_of_pod(
         namespace="default", pod_name="test-pod", pod_id=None
     )
+    result = json.loads(response.body.decode())
     assert result["kind"] == "DaemonSet"
     assert result["name"] == "ds-name"
     assert result["current_scale"] == 5
@@ -149,9 +154,10 @@ def test_job_parent(mock_batch, _mock_apps, mock_core):
     job.spec.parallelism = 4
     mock_batch.return_value.read_namespaced_job.return_value = job
 
-    result = get_parent_controller_details_of_pod(
+    response = get_parent_controller_details_of_pod(
         namespace="default", pod_name="test-pod", pod_id=None
     )
+    result = json.loads(response.body.decode())
     assert result["kind"] == "Job"
     assert result["name"] == "job-name"
     assert result["current_scale"] == 4
@@ -218,9 +224,10 @@ def test_pod_by_id_found(_mock_batch, mock_apps, mock_core):
     daemonset.status.desired_number_scheduled = 2
     mock_apps.return_value.read_namespaced_daemon_set.return_value = daemonset
 
-    result = get_parent_controller_details_of_pod(
+    response = get_parent_controller_details_of_pod(
         namespace="default", pod_name=None, pod_id="found-uid"
     )
+    result = json.loads(response.body.decode())
     assert result["kind"] == "DaemonSet"
     assert result["name"] == "ds-name"
     assert result["current_scale"] == 2
