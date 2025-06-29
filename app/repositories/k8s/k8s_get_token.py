@@ -6,9 +6,10 @@ import logging
 from math import log
 from fastapi.responses import JSONResponse
 from kubernetes import client
+from kubernetes.config import ConfigException
+from kubernetes.client.rest import ApiException
 
 from app.repositories.k8s.k8s_common import get_k8s_core_v1_client
-from app.utils.exceptions import K8sAPIException, K8sValueError
 from app.utils.k8s import handle_k8s_exceptions
 
 logger = logging.getLogger(__name__)
@@ -16,11 +17,6 @@ DEFAULT_EXPIRATION_SECONDS = 3600  # Default token expiration time in seconds
 DEFAULT_AUDIENCE = "https://kubernetes.default.svc.cluster.local"
 
 
-@handle_k8s_exceptions(
-    api_exception_msg="K8ubernetes API error while getting read-only token",
-    config_exception_msg="Kubernetes configuration error while getting read-only token",
-    value_exception_msg="Value error while getting read-only token",
-)
 def get_read_only_token(
     namespace: str = None, service_account_name: str = None
 ) -> JSONResponse:
@@ -46,12 +42,12 @@ def get_read_only_token(
 
         token = create_token_for_sa(namespace, service_account_name)
         return JSONResponse(content={"token": token})
-    except client.exceptions.ApiException as e:
+    except ApiException as e:
         handle_k8s_exceptions(
             e,
             context_msg=f"Kubernetes API error for {service_account_name} in {namespace}",
         )
-    except client.exceptions.ConfigException as e:
+    except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg=f"Kubernetes configuration error for {service_account_name} in {namespace}",

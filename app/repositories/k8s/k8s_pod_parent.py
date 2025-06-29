@@ -5,7 +5,7 @@ Get the parent controller of a Kubernetes pod.
 from calendar import c
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
-from kubernetes import config
+from kubernetes.config import ConfigException
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
     get_k8s_batch_v1_client,
@@ -140,7 +140,7 @@ def get_parent_controller_details_of_pod(
                 f"{pod_name or pod_id} in namespace {namespace}"
             ),
         )
-    except config.ConfigException as e:
+    except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg=(

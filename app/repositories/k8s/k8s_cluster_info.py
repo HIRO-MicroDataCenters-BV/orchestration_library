@@ -2,13 +2,12 @@
 Get cluster information from Kubernetes.
 """
 
-from calendar import c
 import logging
 import concurrent
 from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
-from sqlalchemy import JSON
+from kubernetes.config import ConfigException
 import yaml
 
 from app.repositories.k8s.k8s_common import (
@@ -18,7 +17,6 @@ from app.repositories.k8s.k8s_common import (
     get_k8s_version_api_client,
 )
 from app.repositories.k8s.k8s_node import get_k8s_nodes
-from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
 from app.utils.k8s import (
     get_daemonset_basic_info,
     get_deployment_basic_info,
@@ -26,6 +24,7 @@ from app.utils.k8s import (
     get_pod_basic_info,
     get_statefulset_basic_info,
     handle_k8s_exceptions,
+    to_serializable,
 )
 
 logger = logging.getLogger(__name__)
@@ -274,11 +273,6 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
     }
 
 
-@handle_k8s_exceptions(
-    api_exception_msg="Failed to fetch cluster information",
-    config_exception_msg="Configuration error while fetching cluster information",
-    value_exception_msg="Value error while fetching cluster information",
-)
 def get_cluster_info(advanced: bool = False) -> JSONResponse:
     """
     Fetches and returns basic or advanced information about the Kubernetes cluster.
@@ -306,12 +300,12 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         )
         cluster_info = {**basic_info, **advanced_info}
 
-        return JSONResponse(content=cluster_info)
+        return JSONResponse(content=to_serializable(cluster_info))
     except ApiException as e:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes API error while fetching cluster information"
         )
-    except config.ConfigException as e:
+    except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg="Kubernetes configuration error while fetching cluster information",

@@ -1,9 +1,29 @@
+from collections.abc import Mapping, Iterable
 from kubernetes import client, config
 from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
 from functools import wraps
 """
 Utility functions for Kubernetes operations.
 """
+
+def to_serializable(obj):
+    """Recursively convert an object to a JSON-serializable format."""
+    if isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+
+    if isinstance(obj, Mapping):
+        return {k: to_serializable(v) for k, v in obj.items()}
+
+    if isinstance(obj, Iterable) and not isinstance(obj, (str, bytes)):
+        return [to_serializable(item) for item in obj]
+
+    if hasattr(obj, "__dict__"):
+        return {k: to_serializable(v) for k, v in vars(obj).items() if not k.startswith("_")}
+
+    if hasattr(obj, "__slots__"):
+        return {slot: to_serializable(getattr(obj, slot)) for slot in obj.__slots__}
+
+    return str(obj)
 
 def get_node_info(node):
     """

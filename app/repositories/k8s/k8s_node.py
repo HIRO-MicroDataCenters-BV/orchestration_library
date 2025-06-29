@@ -4,7 +4,9 @@ This module provides functions to list nodes in the cluster.
 """
 
 from fastapi.responses import JSONResponse
-from kubernetes import client, config
+from kubernetes import client
+from kubernetes.config import ConfigException
+from kubernetes.client.rest import ApiException
 
 from app.repositories.k8s.k8s_common import (
     get_k8s_core_v1_client,
@@ -23,9 +25,9 @@ def list_k8s_nodes(name=None, node_id=None, status=None) -> JSONResponse:
     """
     try:
         return JSONResponse(content=get_k8s_nodes(name, node_id, status))
-    except client.rest.ApiException as e:
+    except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing nodes")
-    except config.ConfigException as e:
+    except ConfigException as e:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes configuration error while listing nodes"
         )

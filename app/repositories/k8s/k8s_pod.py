@@ -5,9 +5,8 @@ List the pods in the Kubernetes cluster.
 import re
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
-from kubernetes import config
-from app.utils.exceptions import handle_k8s_exceptions
-from app.utils.k8s import get_pod_details
+from kubernetes.config import ConfigException
+from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
     K8S_IN_USE_NAMESPACE_REGEX,
     get_k8s_core_v1_client,
@@ -51,7 +50,7 @@ def list_k8s_pods(
         return JSONResponse(content=simplified_pods)
     except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing pods")
-    except config.ConfigException as e:
+    except ConfigException as e:
         handle_k8s_exceptions(
             e, context_msg="Kubernetes configuration error while listing pods"
         )
