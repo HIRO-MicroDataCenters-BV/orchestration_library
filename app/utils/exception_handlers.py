@@ -76,7 +76,7 @@ def init_exception_handlers(app: FastAPI):
         """
         logger.error("DataBase exception: %s", exc, exc_info=False)
         return JSONResponse(
-            status_code=exc.status_code, 
+            status_code=exc.status_code,
             content={"message": exc.message, "details": getattr(exc, "details", None)}
         )
 

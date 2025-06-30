@@ -5,10 +5,8 @@ This module defines the API endpoints for managing workload actions in the datab
 It includes routes for creating, retrieving, updating, and deleting workload actions.
 """
 
-from datetime import datetime
-from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.schemas.workload_action_schema import (

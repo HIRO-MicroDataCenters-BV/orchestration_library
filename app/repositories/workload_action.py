@@ -5,6 +5,7 @@ This module provides functions to create, read, update, and delete workload acti
 in the database. It handles database interactions using SQLAlchemy and includes error
 handling for common database exceptions.
 """
+
 from typing import Any, Optional, Sequence, Dict
 import logging
 
@@ -249,40 +250,34 @@ async def list_workload_actions(
         filter_clauses = []
 
         if filters:
-            if filters.get("action_type"):
-                filter_clauses.append(WorkloadAction.action_type == filters["action_type"])
-            if filters.get("action_status"):
-                filter_clauses.append(WorkloadAction.action_status == filters["action_status"])
-            if filters.get("start_time"):
-                filter_clauses.append(WorkloadAction.action_start_time >= filters["start_time"])
-            if filters.get("end_time"):
-                filter_clauses.append(WorkloadAction.action_end_time <= filters["end_time"])
-            if filters.get("action_reason"):
-                filter_clauses.append(WorkloadAction.action_reason == filters["action_reason"])
-            if filters.get("pod_parent_name"):
-                filter_clauses.append(WorkloadAction.pod_parent_name == filters["pod_parent_name"])
-            if filters.get("pod_parent_type"):
-                filter_clauses.append(WorkloadAction.pod_parent_type == filters["pod_parent_type"])
-            if filters.get("pod_parent_uid"):
-                filter_clauses.append(WorkloadAction.pod_parent_uid == filters["pod_parent_uid"])
-            if filters.get("created_pod_name"):
-                filter_clauses.append(WorkloadAction.created_pod_name == filters["created_pod_name"])
-            if filters.get("created_pod_namespace"):
-                filter_clauses.append(WorkloadAction.created_pod_namespace == filters["created_pod_namespace"])
-            if filters.get("created_node_name"):
-                filter_clauses.append(WorkloadAction.created_node_name == filters["created_node_name"])
-            if filters.get("deleted_pod_name"):
-                filter_clauses.append(WorkloadAction.deleted_pod_name == filters["deleted_pod_name"])
-            if filters.get("deleted_pod_namespace"):
-                filter_clauses.append(WorkloadAction.deleted_pod_namespace == filters["deleted_pod_namespace"])
-            if filters.get("deleted_node_name"):
-                filter_clauses.append(WorkloadAction.deleted_node_name == filters["deleted_node_name"])
-            if filters.get("bound_pod_name"):
-                filter_clauses.append(WorkloadAction.bound_pod_name == filters["bound_pod_name"])
-            if filters.get("bound_pod_namespace"):
-                filter_clauses.append(WorkloadAction.bound_pod_namespace == filters["bound_pod_namespace"])
-            if filters.get("bound_node_name"):
-                filter_clauses.append(WorkloadAction.bound_node_name == filters["bound_node_name"])
+            filter_map = {
+                "action_type": WorkloadAction.action_type,
+                "action_status": WorkloadAction.action_status,
+                "action_reason": WorkloadAction.action_reason,
+                "pod_parent_name": WorkloadAction.pod_parent_name,
+                "pod_parent_type": WorkloadAction.pod_parent_type,
+                "pod_parent_uid": WorkloadAction.pod_parent_uid,
+                "created_pod_name": WorkloadAction.created_pod_name,
+                "created_pod_namespace": WorkloadAction.created_pod_namespace,
+                "created_node_name": WorkloadAction.created_node_name,
+                "deleted_pod_name": WorkloadAction.deleted_pod_name,
+                "deleted_pod_namespace": WorkloadAction.deleted_pod_namespace,
+                "deleted_node_name": WorkloadAction.deleted_node_name,
+                "bound_pod_name": WorkloadAction.bound_pod_name,
+                "bound_pod_namespace": WorkloadAction.bound_pod_namespace,
+                "bound_node_name": WorkloadAction.bound_node_name,
+            }
+            for key, column in filter_map.items():
+                if filters.get(key) is not None:
+                    filter_clauses.append(column == filters[key])
+            if filters.get("start_time") is not None:
+                filter_clauses.append(
+                    WorkloadAction.action_start_time >= filters["start_time"]
+                )
+            if filters.get("end_time") is not None:
+                filter_clauses.append(
+                    WorkloadAction.action_end_time <= filters["end_time"]
+                )
 
         if filter_clauses:
             query = query.where(and_(*filter_clauses))

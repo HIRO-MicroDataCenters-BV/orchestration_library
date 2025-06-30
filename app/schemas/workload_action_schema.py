@@ -261,4 +261,3 @@ class WorkloadActionFilters(BaseModel):
     bound_node_name: Optional[str] = Field(
         None, description="Filter by bound node name"
     )
-    
