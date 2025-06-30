@@ -2,15 +2,22 @@
 Operations on Kubernetes nodes.
 This module provides functions to list nodes in the cluster.
 """
+
 from fastapi.responses import JSONResponse
 from kubernetes import client
+from kubernetes.config import ConfigException
+from kubernetes.client.rest import ApiException
 
-from app.repositories.k8s.k8s_common import (get_k8s_core_v1_client,
-                                 get_k8s_custom_objects_client)
-from app.utils.k8s import get_node_details
+from app.repositories.k8s.k8s_common import (
+    get_k8s_core_v1_client,
+    get_k8s_custom_objects_client,
+)
+from app.utils.k8s import get_node_details, handle_k8s_exceptions
 
 
-def list_k8s_nodes(name=None, node_id=None, status=None):
+# Suppress R1710: All exception handlers call a function that always raises, so no return needed.
+# pylint: disable=R1710
+def list_k8s_nodes(name=None, node_id=None, status=None) -> JSONResponse:
     """
     List all nodes in the Kubernetes cluster with optional filters.
     :param name: Filter by node name.
@@ -18,7 +25,17 @@ def list_k8s_nodes(name=None, node_id=None, status=None):
     :param status: Filter by node status (e.g., "Ready", "NotReady").
     :return: A list of nodes with their details.
     """
-    return JSONResponse(content=get_k8s_nodes(name, node_id, status))
+    try:
+        return JSONResponse(content=get_k8s_nodes(name, node_id, status))
+    except ApiException as e:
+        handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing nodes")
+    except ConfigException as e:
+        handle_k8s_exceptions(
+            e, context_msg="Kubernetes configuration error while listing nodes"
+        )
+    except ValueError as e:
+        handle_k8s_exceptions(e, context_msg="Value error while listing nodes")
+
 
 def get_k8s_nodes(name=None, node_id=None, status=None):
     """
@@ -50,6 +67,7 @@ def get_k8s_nodes(name=None, node_id=None, status=None):
         simplified_nodes.append(node_details)
     return simplified_nodes
 
+
 def get_k8s_node_metric_map():
     """
     Get a map of node names to their metrics.
@@ -58,15 +76,15 @@ def get_k8s_node_metric_map():
     custom_api = get_k8s_custom_objects_client()
     try:
         node_metrics = custom_api.list_cluster_custom_object(
-            group="metrics.k8s.io",
-            version="v1beta1",
-            plural="nodes"
+            group="metrics.k8s.io", version="v1beta1", plural="nodes"
         )
         return {item["metadata"]["name"]: item for item in node_metrics["items"]}
     except client.rest.ApiException as e:
         if e.status == 404:
-            print("Warning: Metrics server not installed or not available. " \
-            "Node metrics will be empty.")
+            print(
+                "Warning: Metrics server not installed or not available. "
+                "Node metrics will be empty."
+            )
         else:
             print(f"Failed to fetch node metrics: {e}")
         return {}

@@ -6,11 +6,10 @@ in the database. It handles database interactions using SQLAlchemy and includes 
 handling for common database exceptions.
 """
 
-from datetime import datetime
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence, Dict
 import logging
 
-from sqlalchemy import select, desc
+from sqlalchemy import and_, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 
@@ -231,20 +230,14 @@ async def delete_workload_action(
 
 async def list_workload_actions(
     db: AsyncSession,
-    action_type: Optional[str] = None,
-    action_status: Optional[str] = None,
-    start_time: Optional[datetime] = None,
-    end_time: Optional[datetime] = None,
+    filters: Optional[Dict[str, Any]] = None,
 ) -> Sequence[WorkloadAction]:
     """
     List workload actions with optional filters.
 
     Args:
         db (AsyncSession): Database session
-        action_type (Optional[str]): Filter by action type
-        action_status (Optional[str]): Filter by action status
-        start_time (Optional[datetime]): Filter by start time
-        end_time (Optional[datetime]): Filter by end time
+        filters (Optional[Dict[str, Any]]): Dictionary of filters to apply
 
     Returns:
         Sequence[WorkloadAction]: List of workload actions matching the filters
@@ -254,25 +247,40 @@ async def list_workload_actions(
     """
     try:
         query = select(WorkloadAction).order_by(desc(WorkloadAction.action_start_time))
+        filter_clauses = []
 
-        if action_type:
-            query = query.where(WorkloadAction.action_type == action_type)
-        if action_status:
-            query = query.where(WorkloadAction.action_status == action_status)
-        if start_time:
-            query = query.where(WorkloadAction.action_start_time >= start_time)
-        if end_time:
-            query = query.where(WorkloadAction.action_end_time <= end_time)
+        if filters:
+            filter_map = {
+                "action_type": WorkloadAction.action_type,
+                "action_status": WorkloadAction.action_status,
+                "action_reason": WorkloadAction.action_reason,
+                "pod_parent_name": WorkloadAction.pod_parent_name,
+                "pod_parent_type": WorkloadAction.pod_parent_type,
+                "pod_parent_uid": WorkloadAction.pod_parent_uid,
+                "created_pod_name": WorkloadAction.created_pod_name,
+                "created_pod_namespace": WorkloadAction.created_pod_namespace,
+                "created_node_name": WorkloadAction.created_node_name,
+                "deleted_pod_name": WorkloadAction.deleted_pod_name,
+                "deleted_pod_namespace": WorkloadAction.deleted_pod_namespace,
+                "deleted_node_name": WorkloadAction.deleted_node_name,
+                "bound_pod_name": WorkloadAction.bound_pod_name,
+                "bound_pod_namespace": WorkloadAction.bound_pod_namespace,
+                "bound_node_name": WorkloadAction.bound_node_name,
+            }
+            for key, column in filter_map.items():
+                if filters.get(key) is not None:
+                    filter_clauses.append(column == filters[key])
+            if filters.get("start_time") is not None:
+                filter_clauses.append(
+                    WorkloadAction.action_start_time >= filters["start_time"]
+                )
+            if filters.get("end_time") is not None:
+                filter_clauses.append(
+                    WorkloadAction.action_end_time <= filters["end_time"]
+                )
 
-        logger.debug(
-            "Listing workload actions with filters: %s",
-            {
-                "action_type": action_type,
-                "action_status": action_status,
-                "start_time": start_time,
-                "end_time": end_time,
-            },
-        )
+        if filter_clauses:
+            query = query.where(and_(*filter_clauses))
 
         result = await db.execute(query)
         workload_actions = result.scalars().all()

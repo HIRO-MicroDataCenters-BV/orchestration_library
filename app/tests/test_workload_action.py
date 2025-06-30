@@ -116,7 +116,9 @@ async def test_list_workload_actions():
     mock_result.scalars.return_value = mock_scalars
     db.execute.return_value = mock_result
 
-    actions = await list_workload_actions(db, action_type="Bind", action_status=None)
+    actions = await list_workload_actions(
+        db, filters={"action_type": "Bind", "action_status": None}
+    )
     db.execute.assert_called_once()
     assert len(actions) == 2
     assert actions[0].action_type == "Bind"
