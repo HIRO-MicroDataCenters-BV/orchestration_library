@@ -204,3 +204,61 @@ class WorkloadActionCreate(BaseModel):
     updated_at: Optional[datetime] = Field(
         None, description="Timestamp when the action was last updated"
     )
+
+class WorkloadActionFilters(BaseModel):
+    """
+    Schema for filtering workload actions.
+    """
+
+    action_type: Optional[str] = Field(
+        None, description="Filter by action type", enum=WORKLOAD_ACTION_TYPE_ENUM
+    )
+    action_status: Optional[str] = Field(
+        None, description="Filter by action status", enum=ACTION_STATUS_ENUM
+    )
+    start_time: Optional[datetime] = Field(
+        None, description="Filter by start time"
+    )
+    end_time: Optional[datetime] = Field(
+        None, description="Filter by end time"
+    )
+    action_reason: Optional[str] = Field(
+        None, description="Filter by action reason"
+    )
+    pod_parent_name: Optional[str] = Field(
+        None, description="Filter by pod parent name"
+    )
+    pod_parent_type: Optional[str] = Field(
+        None, description="Filter by pod parent type", enum=POD_PARENT_TYPE_ENUM
+    )
+    pod_parent_uid: Optional[UUID] = Field(
+        None, description="Filter by pod parent UID"
+    )
+    created_pod_name: Optional[str] = Field(
+        None, description="Filter by created pod name"
+    )
+    created_pod_namespace: Optional[str] = Field(
+        None, description="Filter by created pod namespace"
+    )
+    created_node_name: Optional[str] = Field(
+        None, description="Filter by created node name"
+    )
+    deleted_pod_name: Optional[str] = Field(
+        None, description="Filter by deleted pod name"
+    )
+    deleted_pod_namespace: Optional[str] = Field(
+        None, description="Filter by deleted pod namespace"
+    )
+    deleted_node_name: Optional[str] = Field(
+        None, description="Filter by deleted node name"
+    )
+    bound_pod_name: Optional[str] = Field(
+        None, description="Filter by bound pod name"
+    )
+    bound_pod_namespace: Optional[str] = Field(
+        None, description="Filter by bound pod namespace"
+    )
+    bound_node_name: Optional[str] = Field(
+        None, description="Filter by bound node name"
+    )
+    

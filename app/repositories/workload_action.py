@@ -5,12 +5,10 @@ This module provides functions to create, read, update, and delete workload acti
 in the database. It handles database interactions using SQLAlchemy and includes error
 handling for common database exceptions.
 """
-
-from datetime import datetime
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence, Dict
 import logging
 
-from sqlalchemy import select, desc
+from sqlalchemy import and_, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 
@@ -231,20 +229,14 @@ async def delete_workload_action(
 
 async def list_workload_actions(
     db: AsyncSession,
-    action_type: Optional[str] = None,
-    action_status: Optional[str] = None,
-    start_time: Optional[datetime] = None,
-    end_time: Optional[datetime] = None,
+    filters: Optional[Dict[str, Any]] = None,
 ) -> Sequence[WorkloadAction]:
     """
     List workload actions with optional filters.
 
     Args:
         db (AsyncSession): Database session
-        action_type (Optional[str]): Filter by action type
-        action_status (Optional[str]): Filter by action status
-        start_time (Optional[datetime]): Filter by start time
-        end_time (Optional[datetime]): Filter by end time
+        filters (Optional[Dict[str, Any]]): Dictionary of filters to apply
 
     Returns:
         Sequence[WorkloadAction]: List of workload actions matching the filters
@@ -254,25 +246,46 @@ async def list_workload_actions(
     """
     try:
         query = select(WorkloadAction).order_by(desc(WorkloadAction.action_start_time))
+        filter_clauses = []
 
-        if action_type:
-            query = query.where(WorkloadAction.action_type == action_type)
-        if action_status:
-            query = query.where(WorkloadAction.action_status == action_status)
-        if start_time:
-            query = query.where(WorkloadAction.action_start_time >= start_time)
-        if end_time:
-            query = query.where(WorkloadAction.action_end_time <= end_time)
+        if filters:
+            if filters.get("action_type"):
+                filter_clauses.append(WorkloadAction.action_type == filters["action_type"])
+            if filters.get("action_status"):
+                filter_clauses.append(WorkloadAction.action_status == filters["action_status"])
+            if filters.get("start_time"):
+                filter_clauses.append(WorkloadAction.action_start_time >= filters["start_time"])
+            if filters.get("end_time"):
+                filter_clauses.append(WorkloadAction.action_end_time <= filters["end_time"])
+            if filters.get("action_reason"):
+                filter_clauses.append(WorkloadAction.action_reason == filters["action_reason"])
+            if filters.get("pod_parent_name"):
+                filter_clauses.append(WorkloadAction.pod_parent_name == filters["pod_parent_name"])
+            if filters.get("pod_parent_type"):
+                filter_clauses.append(WorkloadAction.pod_parent_type == filters["pod_parent_type"])
+            if filters.get("pod_parent_uid"):
+                filter_clauses.append(WorkloadAction.pod_parent_uid == filters["pod_parent_uid"])
+            if filters.get("created_pod_name"):
+                filter_clauses.append(WorkloadAction.created_pod_name == filters["created_pod_name"])
+            if filters.get("created_pod_namespace"):
+                filter_clauses.append(WorkloadAction.created_pod_namespace == filters["created_pod_namespace"])
+            if filters.get("created_node_name"):
+                filter_clauses.append(WorkloadAction.created_node_name == filters["created_node_name"])
+            if filters.get("deleted_pod_name"):
+                filter_clauses.append(WorkloadAction.deleted_pod_name == filters["deleted_pod_name"])
+            if filters.get("deleted_pod_namespace"):
+                filter_clauses.append(WorkloadAction.deleted_pod_namespace == filters["deleted_pod_namespace"])
+            if filters.get("deleted_node_name"):
+                filter_clauses.append(WorkloadAction.deleted_node_name == filters["deleted_node_name"])
+            if filters.get("bound_pod_name"):
+                filter_clauses.append(WorkloadAction.bound_pod_name == filters["bound_pod_name"])
+            if filters.get("bound_pod_namespace"):
+                filter_clauses.append(WorkloadAction.bound_pod_namespace == filters["bound_pod_namespace"])
+            if filters.get("bound_node_name"):
+                filter_clauses.append(WorkloadAction.bound_node_name == filters["bound_node_name"])
 
-        logger.debug(
-            "Listing workload actions with filters: %s",
-            {
-                "action_type": action_type,
-                "action_status": action_status,
-                "start_time": start_time,
-                "end_time": end_time,
-            },
-        )
+        if filter_clauses:
+            query = query.where(and_(*filter_clauses))
 
         result = await db.execute(query)
         workload_actions = result.scalars().all()
