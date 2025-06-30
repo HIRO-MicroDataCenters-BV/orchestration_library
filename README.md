@@ -146,10 +146,18 @@ Follow these steps to modify the database schema using Alembic:
    #### Upgrade Before Creating Migration
    
    Ensure your local database is up to date:
+   
+   Assuming the DB is hosted on localhost 5432 port
 
-   ```bash
-   bash scripts/manage_db_migrations.sh
-   ```
+   - **For a local kind cluster:**
+      ```bash
+      bash scripts/manage_db_migrations.sh
+      ```
+
+   - **For a local Docker container:**
+      ```bash
+      bash scripts/manage_db_migrations.sh --local
+      ```
 
    At the _`Choose an Alembic action:`_ prompt, enter `2` to upgrade.
 
