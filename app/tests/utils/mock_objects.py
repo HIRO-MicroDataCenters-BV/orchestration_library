@@ -232,8 +232,8 @@ def mock_workload_action_update_obj(
     """
     return WorkloadActionUpdate(
         action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
-        action_type=action_type or "Update",
-        action_status=action_status or "in_progress",
+        action_type=action_type or "Swap",
+        action_status=action_status or "pending",
         action_reason=f"Updated reason {count}",
         pod_parent_name=f"parent {count}",
         pod_parent_type="Deployment",

@@ -4,19 +4,23 @@ Schemas for the API requests and responses.
 
 from uuid import UUID
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
+
+from app.utils.constants import PodParentTypeEnum
 
 
 class WorkloadRequestDecisionSchema(BaseModel):
     """
     Schema for workload decision.
     """
+
     id: UUID
     pod_id: UUID
     pod_name: str
     namespace: str
     node_id: UUID
+    node_name: str
     is_elastic: bool
     queue_name: str
     demand_cpu: float
@@ -25,18 +29,20 @@ class WorkloadRequestDecisionSchema(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_decision_status: bool
     pod_parent_id: UUID
-    pod_parent_kind: str
+    pod_parent_kind: PodParentTypeEnum
     created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
 
 
 class WorkloadRequestDecisionUpdate(BaseModel):
     """
     Schema for workload update decision.
     """
+
     pod_name: Optional[str] = None
     namespace: Optional[str] = None
     node_id: Optional[UUID] = None
+    node_name: Optional[str] = None
     is_elastic: Optional[bool] = None
     queue_name: Optional[str] = None
     demand_cpu: Optional[float] = None
@@ -45,17 +51,20 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_decision_status: Optional[bool] = None
     pod_parent_id: Optional[UUID] = None
-    pod_parent_kind: Optional[str] = None
+    pod_parent_kind: Optional[PodParentTypeEnum] = None
+    deleted_at: Optional[datetime] = None
 
 
 class WorkloadRequestDecisionCreate(BaseModel):
     """
     Schema for creating a workload decision.
     """
+
     pod_id: UUID
     pod_name: str
     namespace: str
     node_id: UUID
+    node_name: str
     is_elastic: bool
     queue_name: str
     demand_cpu: float
@@ -64,4 +73,6 @@ class WorkloadRequestDecisionCreate(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_decision_status: bool
     pod_parent_id: UUID
-    pod_parent_kind: str
+    pod_parent_kind: PodParentTypeEnum
+    created_at: Optional[datetime] = datetime.now(timezone.utc)
+    deleted_at: Optional[datetime] = None
