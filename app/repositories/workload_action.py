@@ -270,13 +270,13 @@ async def list_workload_actions(
             for key, column in filter_map.items():
                 if filters.get(key) is not None:
                     filter_clauses.append(column == filters[key])
-            if filters.get("start_time") is not None:
+            if filters.get("action_start_time") is not None:
                 filter_clauses.append(
-                    WorkloadAction.action_start_time >= filters["start_time"]
+                    WorkloadAction.action_start_time >= filters["action_start_time"]
                 )
-            if filters.get("end_time") is not None:
+            if filters.get("action_end_time") is not None:
                 filter_clauses.append(
-                    WorkloadAction.action_end_time <= filters["end_time"]
+                    WorkloadAction.action_end_time <= filters["action_end_time"]
                 )
 
         if filter_clauses:

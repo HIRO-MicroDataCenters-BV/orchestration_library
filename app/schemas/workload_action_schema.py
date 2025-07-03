@@ -8,7 +8,7 @@ such as binding, creating, deleting, moving, or swapping pods in a Kubernetes cl
 from uuid import UUID
 from typing import Optional
 from datetime import datetime, timezone
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.utils.constants import (
     PodParentTypeEnum,
@@ -56,7 +56,9 @@ class WorkloadActionCreate(BaseModel):
 
     action_type: WorkloadActionTypeEnum = WorkloadActionTypeEnum.BIND
     action_status: WorkloadActionStatusEnum = WorkloadActionStatusEnum.PENDING
-    action_start_time: Optional[datetime] = datetime.now(timezone.utc)
+    action_start_time: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     action_end_time: Optional[datetime] = None
     action_reason: Optional[str] = None
 
@@ -76,8 +78,12 @@ class WorkloadActionCreate(BaseModel):
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
 
-    created_at: Optional[datetime] = datetime.now(timezone.utc)
-    updated_at: Optional[datetime] = datetime.now(timezone.utc)
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
 
 class WorkloadActionUpdate(BaseModel):
@@ -107,7 +113,7 @@ class WorkloadActionUpdate(BaseModel):
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
 
-    updated_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class WorkloadActionFilters(BaseModel):
@@ -117,8 +123,8 @@ class WorkloadActionFilters(BaseModel):
 
     action_type: Optional[WorkloadActionTypeEnum] = None
     action_status: Optional[WorkloadActionStatusEnum] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    action_start_time: Optional[datetime] = None
+    action_end_time: Optional[datetime] = None
     action_reason: Optional[str] = None
 
     pod_parent_name: Optional[str] = None
