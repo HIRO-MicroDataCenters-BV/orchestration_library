@@ -1,8 +1,8 @@
 """Incorporated the feedback
 
-Revision ID: c180b44f0554
+Revision ID: 7482261ed130
 Revises: 93bf61ae8164
-Create Date: 2025-07-03 02:53:47.733084
+Create Date: 2025-07-03 03:23:46.879772
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'c180b44f0554'
+revision: str = '7482261ed130'
 down_revision: Union[str, None] = '93bf61ae8164'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
