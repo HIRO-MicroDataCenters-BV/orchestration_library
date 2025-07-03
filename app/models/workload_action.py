@@ -3,12 +3,12 @@ SQLAlchemy models for the orchestration library.
 """
 
 from uuid import uuid4
-from sqlalchemy import Column, String, TIMESTAMP, text, UUID, Enum
+from sqlalchemy import Column, String, TIMESTAMP, text, UUID, Enum as SAEnum
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
 from app.utils.constants import (
     WORKLOAD_ACTION_TYPE_ENUM,
-    ACTION_STATUS_ENUM,
+    WORKLOAD_ACTION_STATUS_ENUM,
     POD_PARENT_TYPE_ENUM,
 )
 
@@ -31,18 +31,18 @@ class WorkloadAction(Base, BaseDictMixin):
     )
 
     action_type = Column(
-        Enum(*WORKLOAD_ACTION_TYPE_ENUM, name="workload_action_type_enum"),
+        SAEnum(*WORKLOAD_ACTION_TYPE_ENUM, name="workload_action_type_enum"),
         nullable=False,
         doc="Type of the action within the request",
     )
 
     action_status = Column(
-        Enum(*ACTION_STATUS_ENUM, name="action_status_enum"),
+        SAEnum(*WORKLOAD_ACTION_STATUS_ENUM, name="action_status_enum"),
         nullable=True,
         doc="Status of the action",
     )
     action_start_time = Column(
-        TIMESTAMP(timezone=True), nullable=True, doc="Start time of the action"
+        TIMESTAMP(timezone=True), nullable=False, doc="Start time of the action"
     )
     action_end_time = Column(
         TIMESTAMP(timezone=True), nullable=True, doc="End time of the action"
@@ -53,7 +53,7 @@ class WorkloadAction(Base, BaseDictMixin):
         String, nullable=True, doc="Name of the pod's parent resource"
     )
     pod_parent_type = Column(
-        Enum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"),
+        SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"),
         nullable=True,
         doc="Type of the pod's parent resource",
     )
@@ -90,6 +90,7 @@ class WorkloadAction(Base, BaseDictMixin):
         server_default=text("CURRENT_TIMESTAMP"),
         nullable=False,
         doc="Timestamp of record creation",
+        index=True,  # Index for time-based queries
     )
     updated_at = Column(
         TIMESTAMP(timezone=True),
