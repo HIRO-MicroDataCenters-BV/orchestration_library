@@ -46,7 +46,7 @@ async def test_get_workload_action_by_id():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="completed"
+        action_id=action_id, action_type="Delete", action_status="successful"
     )
 
     # Create a mock result object with scalar_one_or_none method
@@ -65,7 +65,7 @@ async def test_update_workload_action():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Update", action_status="completed"
+        action_id=action_id, action_type="Bind", action_status="successful"
     )
 
     mock_result = MagicMock()
@@ -73,12 +73,12 @@ async def test_update_workload_action():
     db.execute.return_value = mock_result
 
     update_data = mock_workload_action_update_obj(
-        action_id=action_id, action_status="in_progress"
+        action_id=action_id, action_status="pending"
     )
     updated_action = await update_workload_action(db, action_id, update_data)
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
-    assert updated_action.action_status == "in_progress"
+    assert updated_action.action_status == "pending"
     assert updated_action.id == action_id
 
 
@@ -89,7 +89,7 @@ async def test_delete_workload_action():
     action_id = uuid4()
 
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="completed"
+        action_id=action_id, action_type="Delete", action_status="successful"
     )
 
     db.execute.return_value.scalars.return_value.one_or_none.return_value = mock_action
@@ -103,7 +103,7 @@ async def test_list_workload_actions():
     """Test for listing workload actions with filters."""
     db = AsyncMock()
     mock_action1 = mock_workload_action_obj(
-        action_id=uuid4(), action_type="Bind", action_status="completed"
+        action_id=uuid4(), action_type="Bind", action_status="successful"
     )
     mock_action2 = mock_workload_action_obj(
         action_id=uuid4(), action_type="Bind", action_status="pending"
@@ -123,5 +123,5 @@ async def test_list_workload_actions():
     assert len(actions) == 2
     assert actions[0].action_type == "Bind"
     assert actions[1].action_type == "Bind"
-    assert actions[0].action_status == "completed"
+    assert actions[0].action_status == "successful"
     assert actions[1].action_status == "pending"

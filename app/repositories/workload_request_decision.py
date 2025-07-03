@@ -44,7 +44,7 @@ async def create_workload_decision(db_session: AsyncSession, data: WorkloadReque
         DBEntryCreationException: If creation fails due to integrity or DB errors.
     """
     try:
-        db_obj = WorkloadRequestDecision(**data.dict())
+        db_obj = WorkloadRequestDecision(**data.model_dump())
         db_session.add(db_obj)
         await db_session.commit()
         await db_session.refresh(db_obj)
