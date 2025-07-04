@@ -157,35 +157,39 @@ jobs:
       - name: Add kubernetes-dashboard dependency Helm repo
         run: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 
-      # - name: Pull chart dependencies
-      #   run: |
-      #     helm dependency update charts/k8s-dashboard
-      #     helm dependency update charts/orchestration-api
-
-      # - name: Package Helm charts
-      #   run: |
-      #     helm package charts/k8s-dashboard --destination charts/
-      #     helm package charts/orchestration-api --destination charts/
-
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: "./charts"
-          # package_path: "./charts"
           skip_existing: true
-          # skip_packaging: true
           packages_with_index: true
           pages_branch : gh-pages
           mark_as_latest: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
 
-      # - name: Publish Helm chart
-      #   uses: stefanprodan/helm-gh-pages@master
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     charts_dir: "charts"
-      #     # target_dir: "helm-charts"
+      # - name: Push chart packages to gh-pages
+      #   run: |
+      #     # Switch to gh-pages branch
+      #     git fetch origin gh-pages
+      #     git checkout gh-pages
+
+      #     # Copy .tgz chart packages
+      #     mkdir -p .
+      #     cp .cr-release-packages/*.tgz ./
+
+      #     git add *.tgz
+      #     git commit -m "Add chart packages" || echo "No changes to commit"
+      #     git push origin gh-pages
+
+      - name: Publish Helm Charts
+        uses: opstree/helm-charts-publisher@v1.4
+        with:
+          branch: gh-pages
+          charts_dir: charts
+          target_dir: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Print Helm repo access URL
         run: |
