@@ -133,7 +133,7 @@ jobs:
         run: |
           docker push ${{ vars.ORCHESTRATION_API_IMAGE_NAME }}:${{ steps.set-image.outputs.image_tag }}
 
-  publish:
+  helmPublish:
     name: Publish Helm Charts
     runs-on: ubuntu-latest
     # if: github.event_name == 'push'
@@ -159,6 +159,11 @@ jobs:
           helm dependency update charts/k8s-dashboard
           helm dependency update charts/orchestration-api
 
+      - name: Package Helm charts
+        run: |
+          helm package charts/k8s-dashboard --destination charts/
+          helm package charts/orchestration-api --destination charts/
+
       - name: Debug dependency
         run: ls -l charts/k8s-dashboard/charts/
 
@@ -167,6 +172,7 @@ jobs:
         with:
           charts_dir: "./charts"
           skip_existing: true
+          skip_packaging: true
           packages_with_index: true
           pages_branch : gh-pages
           mark_as_latest: true
