@@ -28,7 +28,7 @@ class TuningParameter(Base, BaseDictMixin):
     alpha = Column(Float, nullable=False)
     beta = Column(Float, nullable=False)
     gamma = Column(Float, nullable=False)
-    created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     def get_parameters(self):
         """

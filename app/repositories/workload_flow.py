@@ -57,10 +57,10 @@ async def get_workload_decision_action_flow(
             stmt = stmt.where(and_(*filters))
 
         result = await db.execute(stmt)
-        rows = result.scalars().all()
+        rows = result.all()
 
         # Return as list of dicts
-        return [{"decision": row[0], "action": row[1]} for row in rows]
+        return [{"decision": row[0].to_dict(), "action": row[1].to_dict()} for row in rows]
     except SQLAlchemyError as e:
         logger.error(
             "Database error while getting workload decison action flow: %s", str(e)
