@@ -22,6 +22,7 @@ from app.api import (
     workload_request_decision_api,
 )
 
+from app.repositories import workload_flow
 from app.utils.exception_handlers import init_exception_handlers
 
 app = FastAPI()
@@ -47,6 +48,7 @@ app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
 app.include_router(workload_request_decision_api.router, tags=["Workload Request Decision"])
 app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
+app.include_router(workload_flow.router, tags=["Workload Flow"])
 
 app.include_router(k8s_dashboard_api.router, tags=["Kubernetes Dashboard"])
 
