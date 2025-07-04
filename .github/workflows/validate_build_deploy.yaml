@@ -154,14 +154,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pull chart dependencies
+        run: |
+          helm dependency update charts/k8s-dashboard
+          helm dependency update charts/orchestration-api
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
-          chart_dir: "./charts"
+          charts_dir: "./charts"
           skip_existing: true
           packages_with_index: true
-          pages-branch : gh-pages
-          mark-as-latest: true
+          pages_branch : gh-pages
+          mark_as_latest: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
       - name: Print Helm repo access URL
