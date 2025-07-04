@@ -144,14 +144,22 @@ jobs:
         with:
           fetch-depth: 0 # Fetch all history for versioning
 
-      - name: Publish Helm chart to GitHub Pages
-        uses: mikepenz/helm-publish-action@v2
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
         with:
-          charts_dir: charts
-          pages_branch: gh-pages
-          target_dir: . # root of gh-pages
+          chart_dir: "./charts"
+          skip_existing: true
+          packages_with_index: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
       - name: Print Helm repo access URL
         run: |
           echo "Helm repo published at:"
