@@ -34,9 +34,9 @@ async def get_workload_decision_action_flow(
             WorkloadRequestDecision,
             WorkloadAction,
             and_(
-                WorkloadRequestDecision.pod_name == WorkloadAction.bind_pod_name,
-                WorkloadRequestDecision.namespace == WorkloadAction.bind_pod_namespace,
-                WorkloadRequestDecision.node_name == WorkloadAction.bind_node_name,
+                WorkloadRequestDecision.pod_name == WorkloadAction.bound_pod_name,
+                WorkloadRequestDecision.namespace == WorkloadAction.bound_pod_namespace,
+                WorkloadRequestDecision.node_name == WorkloadAction.bound_node_name,
             ),
         )
 
