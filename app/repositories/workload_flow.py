@@ -1,6 +1,8 @@
 """
-This module provides a function to retrieve the scheduling decision and action taken for each pod.
-It joins the `WorkloadRequestDecision` and `WorkloadAction` models based on pod name, namespace, and node name.
+This module provides a function to retrieve the scheduling decision and 
+action taken for each pod.
+It joins the `WorkloadRequestDecision` and `WorkloadAction` models based 
+on pod name, namespace, and node name.
 The function supports optional filtering by pod name, namespace, and node name.
 It returns a sequence of dictionaries containing the decision and action details.
 It also handles database errors and logs them appropriately.
