@@ -159,6 +159,9 @@ jobs:
           helm dependency update charts/k8s-dashboard
           helm dependency update charts/orchestration-api
 
+      - name: Debug dependency
+        run: ls -l charts/k8s-dashboard/charts/
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
