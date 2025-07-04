@@ -177,8 +177,6 @@ jobs:
           packages_with_index: true
           pages_branch : gh-pages
           mark_as_latest: true
-          push: true
-          release: false
         env:
           CR_TOKEN: "${{ secrets.ORCHESTRATION_LIBRARY_PAT }}" 
       - name: Print Helm repo access URL
