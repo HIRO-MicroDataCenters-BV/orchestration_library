@@ -178,7 +178,15 @@ jobs:
           pages_branch : gh-pages
           mark_as_latest: true
         env:
-          CR_TOKEN: "${{ secrets.ORCHESTRATION_LIBRARY_PAT }}" 
+          CR_TOKEN: "${{ secrets.ORCHESTRATION_LIBRARY_CLASSIC_PAT }}" 
+
+      # - name: Publish Helm chart
+      #   uses: stefanprodan/helm-gh-pages@master
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     charts_dir: "charts"
+      #     # target_dir: "helm-charts"
+
       - name: Print Helm repo access URL
         run: |
           echo "Helm repo published at:"
