@@ -178,7 +178,7 @@ jobs:
           pages_branch : gh-pages
           mark_as_latest: true
         env:
-          CR_TOKEN: "${{ secrets.ORCHESTRATION_LIBRARY_CLASSIC_PAT }}" 
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
 
       # - name: Publish Helm chart
       #   uses: stefanprodan/helm-gh-pages@master
