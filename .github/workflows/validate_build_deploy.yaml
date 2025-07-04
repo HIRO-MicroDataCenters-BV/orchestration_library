@@ -193,9 +193,10 @@ jobs:
           echo "https://${{ github.repository_owner }}.github.io/orchestration_library/index.yaml"
           echo ""
           echo "To use this repo:"
-          echo "helm repo add orchestration-api https://${{ github.repository_owner }}.github.io/orchestration_library"
+          echo "helm repo add orchestration_library https://${{ github.repository_owner }}.github.io/orchestration_library"
           echo "helm repo update"
-          echo "helm install my-release orchestration-api/orchestration-api"
+          echo "helm install my-release orchestration_library/k8s-dashboard"
+          echo "helm install my-release orchestration_library/orchestration-api"
 
   deploy:
     name: Deploy to Kubernetes
