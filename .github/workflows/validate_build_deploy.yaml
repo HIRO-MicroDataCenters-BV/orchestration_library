@@ -160,27 +160,12 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
-          charts_dir: "./charts"
           skip_existing: true
           packages_with_index: true
           pages_branch : gh-pages
           mark_as_latest: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
-
-      # - name: Push chart packages to gh-pages
-      #   run: |
-      #     # Switch to gh-pages branch
-      #     git fetch origin gh-pages
-      #     git checkout gh-pages
-
-      #     # Copy .tgz chart packages
-      #     mkdir -p .
-      #     cp .cr-release-packages/*.tgz ./
-
-      #     git add *.tgz
-      #     git commit -m "Add chart packages" || echo "No changes to commit"
-      #     git push origin gh-pages
 
       - name: Publish Helm charts
         uses: stefanprodan/helm-gh-pages@master
