@@ -182,14 +182,10 @@ jobs:
       #     git commit -m "Add chart packages" || echo "No changes to commit"
       #     git push origin gh-pages
 
-      - name: Publish Helm Charts
-        uses: opstree/helm-charts-publisher@v1.4
+      - name: Publish Helm charts
+        uses: stefanprodan/helm-gh-pages@master
         with:
-          branch: gh-pages
-          charts_dir: charts
-          target_dir: .
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secret.GITHUB_TOKEN }}
 
       - name: Print Helm repo access URL
         run: |
