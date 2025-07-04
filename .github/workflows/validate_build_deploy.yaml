@@ -137,7 +137,7 @@ jobs:
     name: Publish Helm Charts
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: build-and-push
+    needs: validate
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
