@@ -172,11 +172,13 @@ jobs:
         with:
           charts_dir: "./charts"
           # package_path: "./charts"
-          # skip_existing: true
+          skip_existing: true
           # skip_packaging: true
           packages_with_index: true
           pages_branch : gh-pages
           mark_as_latest: true
+          push: true
+          release: false
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
       - name: Print Helm repo access URL
