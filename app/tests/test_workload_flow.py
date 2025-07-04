@@ -21,6 +21,10 @@ async def test_get_workload_decision_action_flow_success():
     # Mock objects
     mock_decision = MagicMock(spec=WorkloadRequestDecision)
     mock_action = MagicMock(spec=WorkloadAction)
+    mock_decision_dict = {"foo": "bar"}
+    mock_action_dict = {"baz": "qux"}
+    mock_decision.to_dict.return_value = mock_decision_dict
+    mock_action.to_dict.return_value = mock_action_dict
     mock_row = (mock_decision, mock_action)
 
     # Mock result.all() to return a list of tuples
@@ -37,8 +41,8 @@ async def test_get_workload_decision_action_flow_success():
     db.execute.assert_called_once()
     assert isinstance(result, list)
     assert len(result) == 1
-    assert result[0]["decision"] == mock_decision
-    assert result[0]["action"] == mock_action
+    assert result[0]["decision"] == mock_decision_dict
+    assert result[0]["action"] == mock_action_dict
 
 
 @pytest.mark.asyncio
