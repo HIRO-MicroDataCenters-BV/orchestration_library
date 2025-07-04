@@ -180,7 +180,7 @@ jobs:
           push: true
           release: false
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
+          CR_TOKEN: "${{ secrets.ORCHESTRATION_LIBRARY_PAT }}" 
       - name: Print Helm repo access URL
         run: |
           echo "Helm repo published at:"
