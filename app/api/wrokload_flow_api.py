@@ -1,7 +1,6 @@
 """API endpoint to retrieve workload decision and action flow for pods."""
-from typing import Any, Dict
+from typing import Any, Dict, Sequence
 from fastapi import APIRouter, Depends
-from sqlalchemy import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.repositories.workload_flow import get_workload_decision_action_flow
