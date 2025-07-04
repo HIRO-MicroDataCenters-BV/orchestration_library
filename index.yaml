@@ -1,0 +1,33 @@
+apiVersion: v1
+entries:
+  k8s-dashboard:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-07-04T15:59:54.293778309Z"
+    dependencies:
+    - alias: dashboard
+      condition: dashboard.enabled
+      name: kubernetes-dashboard
+      repository: https://kubernetes.github.io/dashboard/
+      version: 7.13.0
+    description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
+    digest: f5e6b08c9f1474e6946605beb9c03413a56fb88909de73918fb91b7bd2aef4f9
+    icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
+    name: k8s-dashboard
+    type: application
+    urls:
+    - k8s-dashboard-1.0.0.tgz
+    version: 1.0.0
+  orchestration-api:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-07-04T15:59:54.428274566Z"
+    description: A Helm chart for deploying the orchestration api
+    digest: c094312d8dc50e8cf22428b99ba303e841edde1a8b1d8fe0f9b3a9e4b7913259
+    icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
+    name: orchestration-api
+    type: application
+    urls:
+    - orchestration-api-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-07-04T15:59:54.428280748Z"
