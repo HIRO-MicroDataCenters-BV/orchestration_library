@@ -136,7 +136,7 @@ jobs:
   helmPublish:
     name: Publish Helm Charts
     runs-on: ubuntu-latest
-    # if: github.event_name == 'push'
+    if: github.event_name == 'push'
     needs: validate
     steps:
       - name: Checkout code
