@@ -1,5 +1,4 @@
 runMigration: false
-namespace: aces-orchestration-api
 
 # PostgreSQL Database
 postgres:

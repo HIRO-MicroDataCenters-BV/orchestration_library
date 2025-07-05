@@ -2,6 +2,6 @@ apiVersion: v2
 name: orchestration-api
 description: A Helm chart for deploying the orchestration api
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "1.0.0"
 icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
