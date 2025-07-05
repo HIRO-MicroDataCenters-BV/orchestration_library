@@ -39,10 +39,10 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     demand_slack_memory = Column(Float)
     is_decision_status = Column(Boolean, nullable=False)
     pod_parent_id = Column(UUID(as_uuid=True), nullable=False)
-    pod_parent_kind = (
-        Column(
-            SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"), nullable=False
-        ),
+    pod_parent_kind = Column(
+        SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"), nullable=False
     )
-    created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), index=True)
-    deleted_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP"), index=True
+    )
+    deleted_at = Column(TIMESTAMP(timezone=True), nullable=True)

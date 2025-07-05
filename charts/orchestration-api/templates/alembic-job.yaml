@@ -6,6 +6,7 @@ metadata:
   name: alembic-migration-{{ now | unixEpoch }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: 600
   template:
     spec:
       restartPolicy: OnFailure

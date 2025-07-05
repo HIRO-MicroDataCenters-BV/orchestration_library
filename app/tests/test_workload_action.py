@@ -4,6 +4,7 @@ Tests for WorkloadAction CRUD operations.
 
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
+import sqlalchemy
 import pytest
 from app.models.workload_action import WorkloadAction
 from app.repositories.workload_action import (
@@ -17,6 +18,14 @@ from app.tests.utils.mock_objects import (
     mock_workload_action_create_obj,
     mock_workload_action_obj,
     mock_workload_action_update_obj,
+)
+from app.utils.exceptions import (
+    DBEntryCreationException,
+    DBEntryUpdateException,
+    DBEntryDeletionException,
+    DatabaseConnectionException,
+    DBEntryNotFoundException,
+    OrchestrationBaseException,
 )
 
 
@@ -125,3 +134,237 @@ async def test_list_workload_actions():
     assert actions[1].action_type == "Bind"
     assert actions[0].action_status == "successful"
     assert actions[1].action_status == "pending"
+
+
+@pytest.mark.asyncio
+async def test_create_workload_action_integrity_error():
+    """Test for creating a workload action with integrity error."""
+    db = MagicMock()
+    db.commit = AsyncMock(
+        side_effect=sqlalchemy.exc.IntegrityError("stmt", "params", "orig")
+    )
+    db.refresh = AsyncMock()
+    db.add = MagicMock()
+    db.rollback = AsyncMock()
+    data = mock_workload_action_create_obj(
+        action_type="Create", action_status="pending"
+    )
+    with pytest.raises(DBEntryCreationException):
+        await create_workload_action(db, data)
+
+
+@pytest.mark.asyncio
+async def test_create_workload_action_operational_error():
+    """Test for creating a workload action with operational error."""
+    db = MagicMock()
+    db.commit = AsyncMock(
+        side_effect=sqlalchemy.exc.OperationalError("stmt", "params", "orig")
+    )
+    db.refresh = AsyncMock()
+    db.add = MagicMock()
+    db.rollback = AsyncMock()
+    data = mock_workload_action_create_obj(
+        action_type="Create", action_status="pending"
+    )
+    with pytest.raises(DBEntryCreationException):
+        await create_workload_action(db, data)
+
+
+@pytest.mark.asyncio
+async def test_create_workload_action_sqlalchemy_error():
+    """Test for creating a workload action with SQLAlchemy error."""
+    db = MagicMock()
+    db.commit = AsyncMock(side_effect=sqlalchemy.exc.SQLAlchemyError("error"))
+    db.refresh = AsyncMock()
+    db.add = MagicMock()
+    db.rollback = AsyncMock()
+    data = mock_workload_action_create_obj(
+        action_type="Create", action_status="pending"
+    )
+    with pytest.raises(DBEntryCreationException):
+        await create_workload_action(db, data)
+
+
+@pytest.mark.asyncio
+async def test_get_workload_action_by_id_not_found():
+    """Test for retrieving a workload action by ID when not found."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    db.execute.return_value = mock_result
+    with pytest.raises(DBEntryNotFoundException):
+        await get_workload_action_by_id(db, action_id)
+
+
+@pytest.mark.asyncio
+async def test_get_workload_action_by_id_operational_error():
+    """Test for retrieving a workload action by ID with operational error."""
+    db = AsyncMock()
+    db.execute.side_effect = sqlalchemy.exc.OperationalError("stmt", "params", "orig")
+    with pytest.raises(OrchestrationBaseException):
+        await get_workload_action_by_id(db, uuid4())
+
+
+@pytest.mark.asyncio
+async def test_get_workload_action_by_id_sqlalchemy_error():
+    """Test for retrieving a workload action by ID with SQLAlchemy error."""
+    db = AsyncMock()
+    db.execute.side_effect = sqlalchemy.exc.SQLAlchemyError("error")
+    with pytest.raises(OrchestrationBaseException):
+        await get_workload_action_by_id(db, uuid4())
+
+
+@pytest.mark.asyncio
+async def test_update_workload_action_not_found():
+    """Test for updating a workload action when not found."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    db.execute.return_value = mock_result
+    update_data = mock_workload_action_update_obj(
+        action_id=action_id, action_status="pending"
+    )
+    with pytest.raises(DBEntryNotFoundException):
+        await update_workload_action(db, action_id, update_data)
+
+
+@pytest.mark.asyncio
+async def test_update_workload_action_integrity_error():
+    """Test for updating a workload action with integrity error."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_action = mock_workload_action_obj(
+        action_id=action_id, action_type="Bind", action_status="successful"
+    )
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_action
+    db.execute.return_value = mock_result
+    db.commit = AsyncMock(
+        side_effect=sqlalchemy.exc.IntegrityError("stmt", "params", "orig")
+    )
+    db.refresh = AsyncMock()
+    update_data = mock_workload_action_update_obj(
+        action_id=action_id, action_status="pending"
+    )
+    with pytest.raises(DBEntryUpdateException):
+        await update_workload_action(db, action_id, update_data)
+
+
+@pytest.mark.asyncio
+async def test_update_workload_action_operational_error():
+    """Test for updating a workload action with operational error."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_action = mock_workload_action_obj(
+        action_id=action_id, action_type="Bind", action_status="successful"
+    )
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_action
+    db.execute.return_value = mock_result
+    db.commit = AsyncMock(
+        side_effect=sqlalchemy.exc.OperationalError("stmt", "params", "orig")
+    )
+    db.refresh = AsyncMock()
+    update_data = mock_workload_action_update_obj(
+        action_id=action_id, action_status="pending"
+    )
+    with pytest.raises(DBEntryUpdateException):
+        await update_workload_action(db, action_id, update_data)
+
+
+@pytest.mark.asyncio
+async def test_update_workload_action_sqlalchemy_error():
+    """Test for updating a workload action with SQLAlchemy error."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_action = mock_workload_action_obj(
+        action_id=action_id, action_type="Bind", action_status="successful"
+    )
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_action
+    db.execute.return_value = mock_result
+    db.commit = AsyncMock(side_effect=sqlalchemy.exc.SQLAlchemyError("error"))
+    db.refresh = AsyncMock()
+    update_data = mock_workload_action_update_obj(
+        action_id=action_id, action_status="pending"
+    )
+    with pytest.raises(DBEntryUpdateException):
+        await update_workload_action(db, action_id, update_data)
+
+
+@pytest.mark.asyncio
+async def test_delete_workload_action_not_found():
+    """Test for deleting a workload action when not found."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    db.execute.return_value = mock_result
+    with pytest.raises(DBEntryNotFoundException):
+        await delete_workload_action(db, action_id)
+
+
+@pytest.mark.asyncio
+async def test_delete_workload_action_integrity_error():
+    """Test for deleting a workload action with integrity error."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_action = mock_workload_action_obj(
+        action_id=action_id, action_type="Delete", action_status="successful"
+    )
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_action
+    db.execute.return_value = mock_result
+    db.delete = AsyncMock()
+    db.commit = AsyncMock(
+        side_effect=sqlalchemy.exc.IntegrityError("stmt", "params", "orig")
+    )
+    with pytest.raises(DBEntryDeletionException):
+        await delete_workload_action(db, action_id)
+
+
+@pytest.mark.asyncio
+async def test_delete_workload_action_operational_error():
+    """Test for deleting a workload action with operational error."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_action = mock_workload_action_obj(
+        action_id=action_id, action_type="Delete", action_status="successful"
+    )
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_action
+    db.execute.return_value = mock_result
+    db.delete = AsyncMock()
+    db.commit = AsyncMock(
+        side_effect=sqlalchemy.exc.OperationalError("stmt", "params", "orig")
+    )
+    with pytest.raises(DBEntryDeletionException):
+        await delete_workload_action(db, action_id)
+
+
+@pytest.mark.asyncio
+async def test_delete_workload_action_sqlalchemy_error():
+    """Test for deleting a workload action with SQLAlchemy error."""
+    db = AsyncMock()
+    action_id = uuid4()
+    mock_action = mock_workload_action_obj(
+        action_id=action_id, action_type="Delete", action_status="successful"
+    )
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_action
+    db.execute.return_value = mock_result
+    db.delete = AsyncMock()
+    db.commit = AsyncMock(side_effect=sqlalchemy.exc.SQLAlchemyError("error"))
+    with pytest.raises(DBEntryDeletionException):
+        await delete_workload_action(db, action_id)
+
+
+@pytest.mark.asyncio
+async def test_list_workload_actions_sqlalchemy_error():
+    """Test for listing workload actions with SQLAlchemy error."""
+    db = AsyncMock()
+    db.execute.side_effect = sqlalchemy.exc.SQLAlchemyError("error")
+    with pytest.raises(DatabaseConnectionException):
+        await list_workload_actions(db, filters={"action_type": "Bind"})
