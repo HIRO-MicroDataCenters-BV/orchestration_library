@@ -3,6 +3,23 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-07-05T23:28:15.981540072Z"
+    dependencies:
+    - alias: dashboard
+      condition: dashboard.enabled
+      name: kubernetes-dashboard
+      repository: https://kubernetes.github.io/dashboard/
+      version: 7.13.0
+    description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
+    digest: eb6e5f06cd9d0bfa9a6c6c46cb36fb7bdb3a3bc25841548b34f94e0c78b0d250
+    icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
+    name: k8s-dashboard
+    type: application
+    urls:
+    - k8s-dashboard-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-07-05T23:22:09.929231156Z"
     dependencies:
     - alias: dashboard
@@ -41,4 +58,4 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/orchestration-api-1.0.0.tgz
     version: 1.0.0
-generated: "2025-07-05T23:22:09.907374503Z"
+generated: "2025-07-05T23:28:16.06622147Z"
