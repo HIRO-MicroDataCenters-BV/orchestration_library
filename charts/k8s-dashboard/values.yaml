@@ -1,5 +1,4 @@
 # Parent chart values
-namespace: aces-kubernetes-dashboard
 serviceAccountName: readonly-user
 # This is the service name for the Kubernetes Dashboard proxy
 proxyServiceNameSuffix: kong-proxy # Do not change this. 
