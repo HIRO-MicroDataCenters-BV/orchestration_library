@@ -21,6 +21,17 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-07-05T22:56:00.684149957Z"
+    description: A Helm chart for deploying the orchestration api
+    digest: bdf6c04608e754384e1d67ad9b25d56c1a2a22ef4027c93b5d40f74fbd458458
+    icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
+    name: orchestration-api
+    type: application
+    urls:
+    - orchestration-api-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-07-04T17:10:05.44954817Z"
     description: A Helm chart for deploying the orchestration api
     digest: cd5447afba2aaa3cb33d68558d776927c8670e793b255f4b1c6f758d9c6d5362
@@ -30,4 +41,4 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/orchestration-api-1.0.0.tgz
     version: 1.0.0
-generated: "2025-07-04T17:10:05.42716101Z"
+generated: "2025-07-05T22:56:00.684158673Z"
