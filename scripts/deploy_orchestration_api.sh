@@ -45,7 +45,6 @@ echo "Deploy the Kubernetes Dashboard with reverse proxy to the cluster"
 helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
   --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
   --create-namespace \
-  --set namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
   --set serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
   --set reverseProxy.name=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
   --set reverseProxy.service.port=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
@@ -58,7 +57,6 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --create-namespace \
   --set app.image.repository=$ORCHRESTRATION_API_IMAGE_NAME \
   --set app.image.tag=$ORCHRESTRATION_API_IMAGE_TAG \
-  --set namespace=$ORCHRESTRATION_API_NAMESPACE \
   --set app.image.pullPolicy=IfNotPresent \
   --set dashboard.namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
   --set dashboard.serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
