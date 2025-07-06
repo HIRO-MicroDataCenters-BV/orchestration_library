@@ -2,8 +2,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  # Value from parent chart(orchestration-api) values.yaml or default to serviceAccountName
-  name: {{ .Values.k8sDashboard.serviceAccountName | default .Values.serviceAccountName }}
+  name: {{ .Values.serviceAccountName }}
 ---
 # ClusterRoleBinding to built-in "view" ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
