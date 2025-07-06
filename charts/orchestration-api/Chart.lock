@@ -1,0 +1,6 @@
+dependencies:
+- name: k8s-dashboard
+  repository: file://../k8s-dashboard
+  version: 1.0.1
+digest: sha256:50311941399001e5daa6835446cd1da14e9f2801573cf28455271d5d6d8d660f
+generated: "2025-07-07T00:25:33.063259+02:00"

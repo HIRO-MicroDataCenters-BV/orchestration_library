@@ -25,6 +25,8 @@ reverseProxy:
 # Subchart (dependency) values
 dashboard: # its alias in Chart.yaml is "dashboard"
   enabled: true
+  metrics-server:
+    enabled: false
   protocolHttp: true
   kong:
     admin:
