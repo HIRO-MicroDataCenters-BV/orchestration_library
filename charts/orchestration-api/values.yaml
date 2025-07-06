@@ -40,8 +40,13 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
+# The below values are for the k8s-dashboard subchart
 k8sDashboard:
   serviceAccountName: readonly-user
+  reverseProxy:
+    service:
+      type: ClusterIP
+      nodePort: 30016
   # Access URL for the Kubernetes Dashboard
   # This should be the URL where the Kubernetes Dashboard is accessible
   # If using a reverse proxy, it should point to the proxy service URL

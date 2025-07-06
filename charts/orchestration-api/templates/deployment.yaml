@@ -34,4 +34,4 @@ spec:
           - name: KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME
             value: {{ .Values.k8sDashboard.serviceAccountName }}
           - name: KUBERNETES_DASHBOARD_ACCESS_URL
-            value: {{ .Values.k8sDashboard.accessURL }}
+            value: {{ .Values.k8sDashboard.accessURL  }}
