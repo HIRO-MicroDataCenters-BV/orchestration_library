@@ -264,7 +264,6 @@ jobs:
             --create-namespace \
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
-            --set app.service.port=80 \
             --set app.service.type=${{ vars.ORCHESTRATION_API_SERVICE_TYPE }} \
             --set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }} \
             --set k8sDashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
