@@ -218,6 +218,9 @@ jobs:
       - name: Update Helm dependencies for k8s-dashboard chart
         run: helm dependency build ./charts/k8s-dashboard
 
+      - name: Update Helm dependencies for orchestration-api chart
+        run: helm dependency build ./charts/orchestration-api
+
       - name: Set Helm dry-run flag
         id: helm-dry-run
         run: |
