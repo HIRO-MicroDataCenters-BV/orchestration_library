@@ -272,6 +272,7 @@ jobs:
             --set k8sDashboard.reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
             --set k8sDashboard.reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
             --set runMigration=true \
+            --set global.postgresql.auth.postgresPassword=postgress \
             ${{ steps.helm-dry-run.outputs.flag }}
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
@@ -280,7 +281,7 @@ jobs:
             | jq -r '.items | map(select(.metadata.name | startswith("alembic-migration-"))) | sort_by(.metadata.creationTimestamp) | last(.[]).metadata.name')
 
           echo "Waiting for Job: $JOB_NAME"
-          kubectl wait --for=condition=complete --timeout=300s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }}
+          kubectl wait --for=condition=complete --timeout=60s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }}
           JOB_STATUS=$?
 
           echo "Job status:"
