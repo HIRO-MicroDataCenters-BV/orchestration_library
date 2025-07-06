@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.reverseProxy.name }}
-  namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.reverseProxy.replicaCount }}
   selector:
