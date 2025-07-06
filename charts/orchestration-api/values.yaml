@@ -35,9 +35,6 @@ app:
     port: 80
     targetPort: 8000
     nodePort: 30015
-  roleName: aces-orchestration-api-role
-  roleBindingName: aces-orchestration-api-rolebinding
-  serviceAccountName: aces-orchestration-api-sa
 
 configmap:
   databaseURLConfig: orchestration-api-config

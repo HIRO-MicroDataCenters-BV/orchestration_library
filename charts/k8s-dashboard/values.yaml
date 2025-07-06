@@ -1,9 +1,6 @@
 # Parent chart values
+# Service account for read-only access to the Kubernetes Dashboard
 serviceAccountName: readonly-user
-roleName: readonly-user-role
-roleBindingName: readonly-user-rolebinding
-defaultRoleName: view
-defaultRoleBindingName: readonly-user-view-binding
 # This is the service name for the Kubernetes Dashboard proxy
 proxyServiceNameSuffix: kong-proxy # Do not change this. 
 # Default port for the Kubernetes Dashboard proxy service
