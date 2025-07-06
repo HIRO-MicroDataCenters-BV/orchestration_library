@@ -273,7 +273,7 @@ jobs:
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
             --set global.postgresql.auth.password=postgress \
-            ${{ steps.helm-dry-run.outputs.flag }} || true
+            ${{ steps.helm-dry-run.outputs.flag }}
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
         run: |
