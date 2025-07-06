@@ -55,3 +55,11 @@ k8sDashboard:
   # If using a LoadBalancer, it could be the external IP of the LoadBalancer
   # If using Ingress, it could be the Ingress URL
   accessURL: http://localhost:30016
+
+# Global settings for PostgreSQL which is needed by the subchart
+# This is to ensure that the PostgreSQL database is available for the k8s-dashboard subchart
+global:
+  postgresql:
+    auth:
+      postgresPassword: postgres
+      password: postgres
