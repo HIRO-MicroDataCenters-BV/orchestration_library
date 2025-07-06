@@ -40,12 +40,7 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
-dashboard:
-  # Namespace should match the value set in the 
-  # k8s-dashboard chart (values.namespace)
-  namespace: kubernetes-dashboard 
-  # Service account name should match the value set in the 
-  # k8s-dashboard chart (values.serviceAccountName)
+k8sDashboard:
   serviceAccountName: readonly-user
   # Access URL for the Kubernetes Dashboard
   # This should be the URL where the Kubernetes Dashboard is accessible

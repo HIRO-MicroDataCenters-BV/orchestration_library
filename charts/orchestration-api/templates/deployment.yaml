@@ -30,8 +30,8 @@ spec:
                 name: {{ .Values.configmap.databaseURLConfig }}
                 key: databaseURL
           - name: KUBERNETES_DASHBOARD_NAMESPACE
-            value: {{ .Values.dashboard.namespace }}
+            value: {{ .Release.Namespace }}
           - name: KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME
-            value: {{ .Values.dashboard.serviceAccountName }}
+            value: {{ .Values.k8sDashboard.serviceAccountName }}
           - name: KUBERNETES_DASHBOARD_ACCESS_URL
-            value: {{ .Values.dashboard.accessURL }}
+            value: {{ .Values.k8sDashboard.accessURL }}
