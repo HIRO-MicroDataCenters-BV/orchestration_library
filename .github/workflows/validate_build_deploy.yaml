@@ -157,6 +157,12 @@ jobs:
       - name: Add kubernetes-dashboard dependency Helm repo
         run: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 
+      - name: Update Helm dependencies for k8s-dashboard chart
+        run: helm dependency build ./charts/k8s-dashboard
+
+      - name: Update Helm dependencies for orchestration-api chart
+        run: helm dependency build ./charts/orchestration-api
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
