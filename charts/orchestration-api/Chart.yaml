@@ -8,5 +8,6 @@ icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
 dependencies:
   - name: k8s-dashboard
     alias: k8sDashboard
+    condition: k8sDashboard.enabled
     version: "1.0.1"
     repository: "file://../k8s-dashboard"

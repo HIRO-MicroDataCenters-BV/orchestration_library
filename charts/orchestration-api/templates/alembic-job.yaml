@@ -5,7 +5,7 @@ kind: Job
 metadata:
   name: alembic-migration-{{ now | unixEpoch }}
 spec:
-  backoffLimit: 3
+  backoffLimit: 0
   ttlSecondsAfterFinished: 600
   template:
     spec:

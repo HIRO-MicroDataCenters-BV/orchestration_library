@@ -42,6 +42,7 @@ configmap:
 
 # The below values are for the k8s-dashboard subchart
 k8sDashboard:
+  enabled: true
   serviceAccountName: readonly-user
   reverseProxy:
     service:
