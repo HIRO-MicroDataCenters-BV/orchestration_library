@@ -29,6 +29,7 @@ class WorkloadRequestDecisionSchema(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_decision_status: bool
     pod_parent_id: UUID
+    pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
     created_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
@@ -51,6 +52,7 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_decision_status: Optional[bool] = None
     pod_parent_id: Optional[UUID] = None
+    pod_parent_name: Optional[str] = None
     pod_parent_kind: Optional[PodParentTypeEnum] = None
     deleted_at: Optional[datetime] = None
 
@@ -73,6 +75,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     demand_slack_memory: Optional[float] = None
     is_decision_status: bool
     pod_parent_id: UUID
+    pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
     created_at: Optional[datetime] = datetime.now(timezone.utc)
     deleted_at: Optional[datetime] = None

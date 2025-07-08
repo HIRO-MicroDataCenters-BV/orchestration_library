@@ -39,6 +39,7 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     demand_slack_memory = Column(Float)
     is_decision_status = Column(Boolean, nullable=False)
     pod_parent_id = Column(UUID(as_uuid=True), nullable=False)
+    pod_parent_name = Column(String(255), nullable=False)
     pod_parent_kind = Column(
         SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"), nullable=False
     )
