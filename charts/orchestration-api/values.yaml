@@ -1,5 +1,4 @@
 runMigration: false
-namespace: aces-orchestration-api
 
 # PostgreSQL Database
 postgres:
@@ -41,13 +40,14 @@ configmap:
   databaseURLConfig: orchestration-api-config
   databaseInitConfig: db-init-script
 
-dashboard:
-  # Namespace should match the value set in the 
-  # k8s-dashboard chart (values.namespace)
-  namespace: kubernetes-dashboard 
-  # Service account name should match the value set in the 
-  # k8s-dashboard chart (values.serviceAccountName)
+# The below values are for the k8s-dashboard subchart
+k8sDashboard:
+  enabled: false
   serviceAccountName: readonly-user
+  reverseProxy:
+    service:
+      type: ClusterIP
+      nodePort: 30016
   # Access URL for the Kubernetes Dashboard
   # This should be the URL where the Kubernetes Dashboard is accessible
   # If using a reverse proxy, it should point to the proxy service URL
@@ -56,3 +56,11 @@ dashboard:
   # If using a LoadBalancer, it could be the external IP of the LoadBalancer
   # If using Ingress, it could be the Ingress URL
   accessURL: http://localhost:30016
+
+# Global settings for PostgreSQL which is needed by the subchart
+# This is to ensure that the PostgreSQL database is available for the k8s-dashboard subchart
+global:
+  postgresql:
+    auth:
+      postgresPassword: postgres
+      password: postgres

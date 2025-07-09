@@ -1,5 +1,5 @@
 # Parent chart values
-namespace: aces-kubernetes-dashboard
+# Service account for read-only access to the Kubernetes Dashboard
 serviceAccountName: readonly-user
 # This is the service name for the Kubernetes Dashboard proxy
 proxyServiceNameSuffix: kong-proxy # Do not change this. 
@@ -25,6 +25,8 @@ reverseProxy:
 # Subchart (dependency) values
 dashboard: # its alias in Chart.yaml is "dashboard"
   enabled: true
+  metrics-server:
+    enabled: false
   protocolHttp: true
   kong:
     admin:
