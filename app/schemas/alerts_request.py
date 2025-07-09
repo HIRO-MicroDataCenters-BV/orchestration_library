@@ -46,6 +46,13 @@ class AlertCreateRequest(BaseModel):
         description="Type of alert",
         examples=["Abnormal", "Network-Attack", "Other"]
     )
+    alert_model: str = Field(
+        ...,
+        description="Model used for the alert",
+        min_length=1,
+        max_length=1000,
+        examples=["SampleAnomalyDetectionModel"]
+    )
     alert_description: str = Field(
         ...,
         description="Description of the alert",
@@ -95,6 +102,7 @@ class AlertResponse(BaseModel):
     """
     id: int = Field(..., description="Unique identifier for the alert")
     alert_type: AlertType = Field(..., description="Type of alert")
+    alert_model: str = Field(..., description="Model used for the alert")
     alert_description: str = Field(..., description="Description of the alert")
     pod_id: UUID = Field(..., description="ID of the pod")
     node_id: UUID = Field(..., description="ID of the node")
@@ -108,7 +116,7 @@ class AlertResponse(BaseModel):
             str: String representation
         """
         return (
-            f"<AlertResponse(id={self.id}, type={self.alert_type}, "
+            f"<AlertResponse(id={self.id}, type={self.alert_type}, model={self.alert_model}, "
             f"pod={self.pod_id}, node={self.node_id}, "
             f"created_at={self.created_at})>"
         )
@@ -122,7 +130,7 @@ class AlertResponse(BaseModel):
         """
         return (
             f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
-            f"node {self.node_id} at {self.created_at}"
+            f"node {self.node_id} at {self.created_at} by model {self.alert_model}"
         )
 
     class Config:

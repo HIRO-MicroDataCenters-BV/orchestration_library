@@ -37,6 +37,8 @@ class Alert(Base, BaseDictMixin):
         index=True,  # Add index for faster queries by type
     )
 
+    alert_model = Column(Text, nullable=False)
+
     # Alert Description - TEXT
     alert_description = Column(Text, nullable=False)
 
