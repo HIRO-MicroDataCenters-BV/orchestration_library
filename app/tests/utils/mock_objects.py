@@ -292,6 +292,24 @@ def mock_alert_create_request_obj(
         node_id=node_id,
     )
 
+def mock_alert_create_request_data(
+    alert_type=AlertType.ABNORMAL,
+    alert_model="TestModel",
+    alert_description="Test alert",
+    pod_id=uuid4(),
+    node_id=uuid4(),
+):    
+    """
+    Mock an alert creation request data dictionary with necessary attributes.
+    """
+    return {
+        "alert_type": alert_type,
+        "alert_model": alert_model,
+        "alert_description": alert_description,
+        "pod_id": str(pod_id),
+        "node_id": str(node_id),
+    }
+
 def mock_alert_response_obj(
     alert_id=1,
     alert_type=AlertType.ABNORMAL,
@@ -337,26 +355,4 @@ def mock_alert_obj(
         created_at=created_at,
     )
 
-def mock_alert_data_dict(
-    alert_id=1,
-    alert_type=AlertType.ABNORMAL,
-    alert_model="TestModel",
-    alert_description="Test alert",
-    pod_id=uuid4(),
-    node_id=uuid4(),
-    created_at=datetime.now(timezone.utc),
-):
-    """
-    Mock an alert data dictionary with necessary attributes.
-    """
-    obj = mock_alert_obj(
-        alert_id=alert_id,
-        alert_type=alert_type,
-        alert_model=alert_model,
-        alert_description=alert_description,
-        pod_id=pod_id,
-        node_id=node_id,
-        created_at=created_at,
-    )
-    return obj.to_dict()
 
