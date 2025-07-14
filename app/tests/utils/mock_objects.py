@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from uuid import uuid4
 
+from app.models.alerts import Alert
+from app.schemas.alerts_request import AlertCreateRequest, AlertResponse, AlertType
 from app.schemas.workload_action_schema import (
     WorkloadAction,
     WorkloadActionCreate,
@@ -271,3 +273,90 @@ def mock_workload_action_obj(
         bound_pod_namespace=None,
         bound_node_name=None,
     )
+
+
+def mock_alert_create_request_obj(
+        alert_type=AlertType.ABNORMAL,
+        alert_model="TestModel",
+        alert_description="Test alert",
+        pod_id=uuid4(),
+        node_id=uuid4()):
+    """
+    Mock an alert creation object with necessary attributes.
+    """
+    return AlertCreateRequest(
+        alert_type=alert_type,
+        alert_model=alert_model,
+        alert_description=alert_description,
+        pod_id=pod_id,
+        node_id=node_id,
+    )
+
+def mock_alert_response_obj(
+    alert_id=1,
+    alert_type=AlertType.ABNORMAL,
+    alert_model="TestModel",
+    alert_description="Test alert",
+    pod_id=uuid4(),
+    node_id=uuid4(),
+    created_at=datetime.now(timezone.utc),
+):
+    """
+    Mock an alert response object with necessary attributes.
+    """
+    return AlertResponse(
+        id=alert_id,
+        alert_type=alert_type,
+        alert_model=alert_model,
+        alert_description=alert_description,
+        pod_id=pod_id,
+        node_id=node_id,
+        created_at=created_at,
+    )
+
+
+def mock_alert_obj(
+    alert_id=1,
+    alert_type=AlertType.ABNORMAL,
+    alert_model="TestModel",
+    alert_description="Test alert",
+    pod_id=uuid4(),
+    node_id=uuid4(),
+    created_at=datetime.now(timezone.utc),
+):
+    """
+    Mock an alert object with necessary attributes.
+    """
+    return Alert(
+        id=alert_id,
+        alert_type=alert_type,
+        alert_model=alert_model,
+        alert_description=alert_description,
+        pod_id=pod_id,
+        node_id=node_id,
+        created_at=created_at,
+    )
+
+def mock_alert_data_dict(
+    alert_id=1,
+    alert_type=AlertType.ABNORMAL,
+    alert_model="TestModel",
+    alert_description="Test alert",
+    pod_id=uuid4(),
+    node_id=uuid4(),
+    created_at=datetime.now(timezone.utc),
+):
+    """
+    Mock an alert data dictionary with necessary attributes.
+    """
+    obj = mock_alert_obj(
+        alert_id=alert_id,
+        alert_type=alert_type,
+        alert_model=alert_model,
+        alert_description=alert_description,
+        pod_id=pod_id,
+        node_id=node_id,
+        created_at=created_at,
+    )
+    return obj.to_dict()
+
