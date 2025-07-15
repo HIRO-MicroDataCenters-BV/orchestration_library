@@ -2,10 +2,10 @@
 This module tests the creation and retrieval of alerts through the API.
 """
 
+from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 from fastapi import status
-from unittest.mock import AsyncMock, patch
 
 from app.main import app
 from app.tests.utils.mock_objects import (

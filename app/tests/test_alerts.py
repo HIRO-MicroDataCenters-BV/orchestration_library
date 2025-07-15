@@ -4,8 +4,8 @@ This module tests the creation and retrieval of alerts in the database.
 """
 
 from uuid import uuid4
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 
 from app.repositories import alerts as alerts_repo
