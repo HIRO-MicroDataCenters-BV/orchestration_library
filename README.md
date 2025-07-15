@@ -210,3 +210,66 @@ If errors occur, review and fix the migration script before retrying.
 Once your pull request is merged, the migration changes will be applied automatically during deployment.
 
 > **Important:** Always back up critical data before applying destructive schema changes.
+
+## Insert Dummy Data (Optional)
+
+You can populate your database with sample/dummy data for development, testing, or demo purposes.  
+This is especially useful for local development or when you want to quickly verify API endpoints and UI features.
+
+### 1. Prepare the Dummy Data
+
+The dummy data SQL file is located at:
+
+```
+scripts/dummy_data.sql
+```
+
+This file contains `DELETE` statements to remove only the dummy rows (by unique IDs) and `INSERT` statements to add fresh sample data for all main tables.
+
+### 2. Run the Insertion Script
+
+A helper script is provided to insert the dummy data into your database, supporting both local Docker and kind cluster environments.
+
+#### Usage
+
+```bash
+bash scripts/insert_dummy_data.sh [DB_PORT] [CLUSTER_NAME] [--local]
+```
+
+- `DB_PORT` (default: `5432`) — The port your PostgreSQL instance is exposed on.
+- `CLUSTER_NAME` (default: `sample`) — The name of your kind cluster (if using Kubernetes).
+- `--local` — Use this flag if your database is running locally (e.g., via Docker Compose).
+
+#### Examples
+
+- **For a local kind cluster (default port/cluster):**
+  ```bash
+  bash scripts/insert_dummy_data.sh
+  ```
+
+- **For a custom port/cluster:**
+  ```bash
+  bash scripts/insert_dummy_data.sh 25432 my-cluster
+  ```
+
+- **For a local Docker setup:**
+  ```bash
+  bash scripts/insert_dummy_data.sh --local
+  ```
+
+### 3. What the Script Does
+
+- Removes only the dummy data rows (by unique IDs) to avoid affecting real data.
+- Inserts fresh dummy data for all main tables (`alerts`, `tuning_parameters`, `workload_action`, `workload_request_decision`).
+- Handles port-forwarding automatically if using a kind cluster.
+
+### 4. When to Use
+
+- After running migrations to verify schema and API endpoints.
+- Before running integration or UI tests that require known data.
+- For demos or development environments.
+
+> **Note:**  
+> The script is safe for development and test environments.  
+> **Do not run this on production
+
