@@ -183,6 +183,7 @@ async def test_get_tuning_parameters_with_start_and_end_date():
 
 @pytest.mark.asyncio
 async def test_create_tuning_parameter_integrity_error():
+    """Test creating a tuning parameter with integrity error."""
     db = AsyncMock()
     db.add = MagicMock()
     db.commit = AsyncMock(side_effect=IntegrityError("stmt", "params", "orig"))
@@ -196,6 +197,7 @@ async def test_create_tuning_parameter_integrity_error():
 
 @pytest.mark.asyncio
 async def test_create_tuning_parameter_sqlalchemy_error():
+    """Test creating a tuning parameter with SQLAlchemy error."""
     db = AsyncMock()
     db.add = MagicMock()
     db.commit = AsyncMock(side_effect=SQLAlchemyError("db error"))
@@ -209,6 +211,7 @@ async def test_create_tuning_parameter_sqlalchemy_error():
 
 @pytest.mark.asyncio
 async def test_create_tuning_parameter_unexpected_error():
+    """Test creating a tuning parameter with an unexpected error."""
     db = AsyncMock()
     db.add = MagicMock()
     db.commit = AsyncMock(side_effect=Exception("unexpected"))
@@ -222,6 +225,7 @@ async def test_create_tuning_parameter_unexpected_error():
 
 @pytest.mark.asyncio
 async def test_get_tuning_parameters_sqlalchemy_error():
+    """Test retrieving tuning parameters with SQLAlchemy error."""
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=SQLAlchemyError("db error"))
     with pytest.raises(DatabaseConnectionException) as exc:
@@ -230,6 +234,7 @@ async def test_get_tuning_parameters_sqlalchemy_error():
 
 @pytest.mark.asyncio
 async def test_get_tuning_parameters_unexpected_error():
+    """Test retrieving tuning parameters with an unexpected error."""
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=Exception("unexpected"))
     with pytest.raises(DatabaseConnectionException) as exc:
@@ -238,6 +243,7 @@ async def test_get_tuning_parameters_unexpected_error():
 
 @pytest.mark.asyncio
 async def test_get_latest_tuning_parameters_not_found():
+    """Test retrieving latest tuning parameters when none exist."""
     db = AsyncMock()
     mock_result = MagicMock()
     mock_scalars = MagicMock()
@@ -249,6 +255,7 @@ async def test_get_latest_tuning_parameters_not_found():
 
 @pytest.mark.asyncio
 async def test_get_latest_tuning_parameters_sqlalchemy_error():
+    """Test retrieving latest tuning parameters with SQLAlchemy error."""
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=SQLAlchemyError("db error"))
     with pytest.raises(DatabaseConnectionException) as exc:
@@ -257,6 +264,7 @@ async def test_get_latest_tuning_parameters_sqlalchemy_error():
 
 @pytest.mark.asyncio
 async def test_get_latest_tuning_parameters_unexpected_error():
+    """Test retrieving latest tuning parameters with an unexpected error."""
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=Exception("unexpected"))
     with pytest.raises(DatabaseConnectionException) as exc:
