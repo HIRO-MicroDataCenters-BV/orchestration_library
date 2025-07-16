@@ -43,10 +43,20 @@ class Alert(Base, BaseDictMixin):
     alert_description = Column(Text, nullable=False)
 
     # Pod ID - UUID
-    pod_id = Column(UUID, nullable=False, index=True)  # Index for pod queries
+    pod_id = Column(UUID, nullable=True, index=True)  # Index for pod queries
 
     # Node ID - UUID
-    node_id = Column(UUID, nullable=False, index=True)  # Index for node queries
+    node_id = Column(UUID, nullable=True, index=True)  # Index for node queries
+
+    source_ip = Column(Text, nullable=True)
+
+    source_port = Column(Text, nullable=True)
+
+    destination_ip = Column(Text, nullable=True)
+
+    destination_port = Column(Text, nullable=True)
+
+    protocol = Column(Text, nullable=True)
 
     # Created At - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
     created_at = Column(
@@ -67,6 +77,10 @@ class Alert(Base, BaseDictMixin):
             f"type={self.alert_type}, "
             f"pod={self.pod_id}, "
             f"node={self.node_id}, "
+            f"node={self.source_ip}, "
+            f"node={self.source_port}, "
+            f"node={self.destination_ip}, "
+            f"node={self.destination_port}, "
             f"created_at={self.created_at})>"
         )
 
