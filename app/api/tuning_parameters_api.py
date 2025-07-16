@@ -9,14 +9,13 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
 from starlette import status
 
 from app.repositories import tuning_parameter as tuning_parameter_crud
 from app.db.database import get_async_db
-from app.schemas.tuning_parameter_schema import TuningParameterCreate, TuningParameterResponse
-from app.utils.exceptions import (
-    DatabaseConnectionException,
+from app.schemas.tuning_parameter_schema import (
+    TuningParameterCreate,
+    TuningParameterResponse,
 )
 
 router = APIRouter(prefix="/tuning_parameters")
@@ -74,9 +73,10 @@ async def read_tuning_parameters(
         DatabaseConnectionException: If there's a database error
     """
     tuning_parameters = await tuning_parameter_crud.get_tuning_parameters(
-            db, skip=skip, limit=limit, start_date=start_date, end_date=end_date
-        )
+        db, skip=skip, limit=limit, start_date=start_date, end_date=end_date
+    )
     return tuning_parameters
+
 
 @router.get("/latest/{limit}", response_model=List[TuningParameterResponse])
 async def get_latest_tuning_parameters(
