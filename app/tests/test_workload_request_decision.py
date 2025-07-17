@@ -14,10 +14,7 @@ from app.repositories.workload_request_decision import (
     update_workload_decision,
     delete_workload_decision,
 )
-from app.schemas.workload_request_decision_schema import (
-    WorkloadRequestDecisionCreate,
-    WorkloadRequestDecisionUpdate,
-)
+from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionUpdate
 from app.utils.exceptions import (
     DBEntryNotFoundException,
     DBEntryUpdateException,
