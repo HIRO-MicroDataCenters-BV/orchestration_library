@@ -5,7 +5,7 @@ Schemas for the API requests and responses.
 from uuid import UUID
 from typing import Optional
 from datetime import datetime, timezone
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.utils.constants import PodParentTypeEnum
 
@@ -34,6 +34,13 @@ class WorkloadRequestDecisionSchema(BaseModel):
     created_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
 
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
+
 
 class WorkloadRequestDecisionUpdate(BaseModel):
     """
@@ -55,6 +62,13 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     pod_parent_name: Optional[str] = None
     pod_parent_kind: Optional[PodParentTypeEnum] = None
     deleted_at: Optional[datetime] = None
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
 
 
 class WorkloadRequestDecisionCreate(BaseModel):
@@ -79,3 +93,10 @@ class WorkloadRequestDecisionCreate(BaseModel):
     pod_parent_kind: PodParentTypeEnum
     created_at: Optional[datetime] = datetime.now(timezone.utc)
     deleted_at: Optional[datetime] = None
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
