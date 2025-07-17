@@ -96,9 +96,7 @@ class Alert(Base, BaseDictMixin):
         """
         return (
             f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} from {self.alert_model} model"
-
-            f"node {self.node_id} at {self.created_at} or the alert {self.id}: {self.alert_type}"
-
+            f"node {self.node_id} at {self.created_at} or"
             f"from ip {self.source_ip} with port {self.source_port} to ip {self.destination_ip} with port {self.destination_port}  "
-            f" , with {self.protocol} and from {self.alert_model} model"
+            f", with {self.protocol} and from {self.alert_model} model"
         )
