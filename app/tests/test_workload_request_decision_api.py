@@ -1,3 +1,4 @@
+""""Unit tests for workload request decision api."""
 import pytest
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -38,11 +39,12 @@ TEST_CREATE_PAYLOAD = {
     new_callable=AsyncMock,
 )
 async def test_create_workload_decision(mock_create):
+    """Test API endpoint for creating a workload decision."""
     mock_create.return_value = {**TEST_CREATE_PAYLOAD, "id": TEST_UUID}
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post(
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.post(
             "/workload_request_decision/", json=TEST_CREATE_PAYLOAD
         )
 
@@ -56,11 +58,12 @@ async def test_create_workload_decision(mock_create):
     new_callable=AsyncMock,
 )
 async def test_get_workload_decision(mock_get):
+    """Test API endpoint for retrieving a single workload decision."""
     mock_get.return_value = {**TEST_CREATE_PAYLOAD, "id": TEST_UUID}
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get(f"/workload_request_decision/{TEST_UUID}")
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.get(f"/workload_request_decision/{TEST_UUID}")
 
     assert response.status_code == 200
     assert response.json()["id"] == TEST_UUID
@@ -72,11 +75,12 @@ async def test_get_workload_decision(mock_get):
     new_callable=AsyncMock,
 )
 async def test_get_all_workload_decisions(mock_get_all):
+    """Test API endpoint for retrieving all workload decisions."""
     mock_get_all.return_value = [{**TEST_CREATE_PAYLOAD, "id": TEST_UUID}]
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/workload_request_decision/")
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.get("/workload_request_decision/")
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -89,12 +93,13 @@ async def test_get_all_workload_decisions(mock_get_all):
     new_callable=AsyncMock,
 )
 async def test_update_workload_decision(mock_update):
+    """Test API endpoint for updating a workload decision."""
     update_data = {"pod_name": "updated-pod"}
     mock_update.return_value = update_data
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.put(
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.put(
             f"/workload_request_decision/{TEST_UUID}", json=update_data
         )
 
@@ -108,11 +113,12 @@ async def test_update_workload_decision(mock_update):
     new_callable=AsyncMock,
 )
 async def test_delete_workload_decision(mock_delete):
+    """Test API endpoint for deleting a workload decision."""
     mock_delete.return_value = True
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.delete(f"/workload_request_decision/{TEST_UUID}")
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.delete(f"/workload_request_decision/{TEST_UUID}")
 
     assert response.status_code == 200
     assert response.json() is True

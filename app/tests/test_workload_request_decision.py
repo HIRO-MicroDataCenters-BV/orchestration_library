@@ -1,7 +1,8 @@
-import pytest
+"""Unit tests for workload request decision repository functions."""
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,8 +25,10 @@ from app.utils.exceptions import (
 )
 
 
+
 @pytest.fixture
 def sample_create_data():
+    """"Sample test data."""
     return WorkloadRequestDecisionCreate(
         pod_id=uuid4(),
         pod_name="test-pod",
@@ -49,6 +52,7 @@ def sample_create_data():
 
 @pytest.mark.asyncio
 async def test_create_workload_decision_success(sample_create_data):
+    """Test successful creation of a workload decision in DB."""
     mock_db = AsyncMock()
     mock_obj = MagicMock()
     mock_db.refresh = AsyncMock()
@@ -67,7 +71,8 @@ async def test_create_workload_decision_success(sample_create_data):
 
 @pytest.mark.asyncio
 async def test_get_workload_decision_success():
-    # Arrange
+    """Test fetching a workload decision by ID."""
+
     decision_id = uuid4()
     expected_decision = WorkloadRequestDecision(id=decision_id)
 
@@ -87,6 +92,7 @@ async def test_get_workload_decision_success():
 
 @pytest.mark.asyncio
 async def test_get_workload_decision_not_found():
+    """Test fetching a workload decision with non-existent ID."""
     decision_id = uuid4()
 
     mock_result = MagicMock()
@@ -103,6 +109,7 @@ async def test_get_workload_decision_not_found():
 
 @pytest.mark.asyncio
 async def test_get_all_workload_decisions_success():
+    """Test fetching all workload decisions."""
     # Arrange
     mock_session = AsyncMock()
     mock_result = MagicMock()
@@ -124,6 +131,7 @@ async def test_get_all_workload_decisions_success():
 
 @pytest.mark.asyncio
 async def test_update_workload_decision_success():
+    """Test successful update of workload decision."""
     decision_id = uuid4()
     update_data = WorkloadRequestDecisionUpdate(pod_name="updated_pod")  # adjust fields
 
@@ -146,6 +154,7 @@ async def test_update_workload_decision_success():
 
 @pytest.mark.asyncio
 async def test_update_workload_decision_not_found():
+    """Test update with non-existent workload decision."""
     decision_id = uuid4()
     update_data = WorkloadRequestDecisionUpdate(field1="updated_value")
 
@@ -160,6 +169,7 @@ async def test_update_workload_decision_not_found():
 
 @pytest.mark.asyncio
 async def test_update_workload_decision_integrity_error():
+    """Test update with IntegrityError during commit."""
     decision_id = uuid4()
     update_data = WorkloadRequestDecisionUpdate(pod_name="updated_value")
     existing_decision = WorkloadRequestDecision(id=decision_id, pod_name="old_value")
@@ -180,6 +190,7 @@ async def test_update_workload_decision_integrity_error():
 
 @pytest.mark.asyncio
 async def test_delete_workload_decision_success():
+    """Test successful deletion of workload decision."""
     decision_id = uuid4()
     decision_obj = WorkloadRequestDecision(id=decision_id)
 
@@ -197,6 +208,7 @@ async def test_delete_workload_decision_success():
 
 @pytest.mark.asyncio
 async def test_delete_workload_decision_not_found():
+    """Test deletion of non-existent workload decision."""
     decision_id = uuid4()
 
     mock_session = AsyncMock()
@@ -210,6 +222,7 @@ async def test_delete_workload_decision_not_found():
 
 @pytest.mark.asyncio
 async def test_delete_workload_decision_integrity_error():
+    """Test deletion with IntegrityError during commit."""
     decision_id = uuid4()
     decision_obj = WorkloadRequestDecision(id=decision_id)
 
