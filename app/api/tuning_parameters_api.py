@@ -9,14 +9,13 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
 from starlette import status
 
 from app.repositories import tuning_parameter as tuning_parameter_crud
 from app.db.database import get_async_db
-from app.schemas.tuning_parameter_schema import TuningParameterCreate, TuningParameterResponse
-from app.utils.exceptions import (
-    DatabaseConnectionException,
+from app.schemas.tuning_parameter_schema import (
+    TuningParameterCreate,
+    TuningParameterResponse,
 )
 
 router = APIRouter(prefix="/tuning_parameters")
@@ -44,15 +43,9 @@ async def create_tuning_parameter(
         TuningParameterResponse: The created tuning parameter
 
     Raises:
-        TuningParameterValidationError: If the input data is invalid
-        TuningParameterDatabaseError: If there's a database error
+        DatabaseConnectionException: If there's a database error
     """
-    try:
-        return await tuning_parameter_crud.create_tuning_parameter(db, tuning_parameter)
-    except SQLAlchemyError as e:
-        raise DatabaseConnectionException(
-            "Failed to create tuning parameter", details={"error": str(e)}
-        ) from e
+    return await tuning_parameter_crud.create_tuning_parameter(db, tuning_parameter)
 
 
 @router.get("/", response_model=List[TuningParameterResponse])
@@ -77,17 +70,12 @@ async def read_tuning_parameters(
         List[TuningParameterResponse]: List of tuning parameters
 
     Raises:
-        TuningParameterDatabaseError: If there's a database error
+        DatabaseConnectionException: If there's a database error
     """
-    try:
-        tuning_parameters = await tuning_parameter_crud.get_tuning_parameters(
-            db, skip=skip, limit=limit, start_date=start_date, end_date=end_date
-        )
-        return tuning_parameters
-    except SQLAlchemyError as e:
-        raise DatabaseConnectionException(
-            "Failed to retrieve tuning parameters", details={"error": str(e)}
-        ) from e
+    tuning_parameters = await tuning_parameter_crud.get_tuning_parameters(
+        db, skip=skip, limit=limit, start_date=start_date, end_date=end_date
+    )
+    return tuning_parameters
 
 
 @router.get("/latest/{limit}", response_model=List[TuningParameterResponse])
@@ -105,15 +93,9 @@ async def get_latest_tuning_parameters(
         List[TuningParameterResponse]: List of the N most recent tuning parameters
 
     Raises:
-        TuningParameterNotFoundError: If no tuning parameters are found
-        TuningParameterDatabaseError: If there's a database error
+        DatabaseConnectionException: If there's a database error
     """
-    try:
-        latest_parameters = await tuning_parameter_crud.get_latest_tuning_parameters(
-            db, limit=limit
-        )
-        return latest_parameters
-    except SQLAlchemyError as e:
-        raise DatabaseConnectionException(
-            "Failed to retrieve latest tuning parameters", details={"error": str(e)}
-        ) from e
+    latest_parameters = await tuning_parameter_crud.get_latest_tuning_parameters(
+        db, limit=limit
+    )
+    return latest_parameters
