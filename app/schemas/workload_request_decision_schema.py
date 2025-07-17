@@ -34,6 +34,31 @@ class WorkloadRequestDecisionSchema(BaseModel):
     created_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
 
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
+
 
 class WorkloadRequestDecisionUpdate(BaseModel):
     """
@@ -55,6 +80,31 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     pod_parent_name: Optional[str] = None
     pod_parent_kind: Optional[PodParentTypeEnum] = None
     deleted_at: Optional[datetime] = None
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
 
 
 class WorkloadRequestDecisionCreate(BaseModel):
@@ -79,3 +129,28 @@ class WorkloadRequestDecisionCreate(BaseModel):
     pod_parent_kind: PodParentTypeEnum
     created_at: Optional[datetime] = datetime.now(timezone.utc)
     deleted_at: Optional[datetime] = None
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
