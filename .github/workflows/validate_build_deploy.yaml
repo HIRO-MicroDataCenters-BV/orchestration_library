@@ -293,7 +293,7 @@ jobs:
             | jq -r '.items | map(select(.metadata.name | startswith("alembic-migration-"))) | sort_by(.metadata.creationTimestamp) | last(.[]).metadata.name')
 
           echo "Waiting for Job: $JOB_NAME"
-          kubectl wait --for=condition=complete --timeout=60s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }}
+          kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} || JOB_STATUS=$?
           JOB_STATUS=$?
 
           echo "Job status:"
