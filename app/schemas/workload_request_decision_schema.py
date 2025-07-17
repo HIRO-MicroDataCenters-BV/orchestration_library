@@ -5,7 +5,7 @@ Schemas for the API requests and responses.
 from uuid import UUID
 from typing import Optional
 from datetime import datetime, timezone
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from app.utils.constants import PodParentTypeEnum
 
@@ -70,6 +70,15 @@ class WorkloadRequestDecisionUpdate(BaseModel):
         """
         orm_mode = True
 
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
 
 class WorkloadRequestDecisionCreate(BaseModel):
     """
@@ -100,3 +109,12 @@ class WorkloadRequestDecisionCreate(BaseModel):
         Provides settings for model behavior and validation.
         """
         orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
