@@ -71,7 +71,7 @@ async def test_create_workload_decision_success(sample_create_data):
 
 @pytest.mark.asyncio
 async def test_get_workload_decision_success():
-    """Test fetching a workload decision by ID."""
+    """Test fetching a workload_decision by ID."""
 
     decision_id = uuid4()
     expected_decision = WorkloadRequestDecision(id=decision_id)
