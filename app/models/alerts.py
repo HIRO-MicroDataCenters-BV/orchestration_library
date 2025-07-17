@@ -75,12 +75,15 @@ class Alert(Base, BaseDictMixin):
         return (
             f"<Alert(id={self.id}, "
             f"type={self.alert_type}, "
+            f"type={self.alert_description}, "
+            f"type={self.alert_model}, "
             f"pod={self.pod_id}, "
             f"node={self.node_id}, "
             f"node={self.source_ip}, "
             f"node={self.source_port}, "
             f"node={self.destination_ip}, "
             f"node={self.destination_port}, "
+            f"node={self.protocol}, "
             f"created_at={self.created_at})>"
         )
 
@@ -92,6 +95,10 @@ class Alert(Base, BaseDictMixin):
             str: Human-readable string representation
         """
         return (
-            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
-            f"node {self.node_id} at {self.created_at}"
+            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} from {self.alert_model} model"
+
+            f"node {self.node_id} at {self.created_at} or the alert {self.id}: {self.alert_type}"
+
+            f"from ip {self.source_ip} with port {self.source_port} to ip {self.destination_ip} with port {self.destination_port}  "
+            f" , with {self.protocol} and from {self.alert_model} model"
         )
