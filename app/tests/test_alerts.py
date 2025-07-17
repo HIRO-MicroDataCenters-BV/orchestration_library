@@ -73,6 +73,11 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
         alert_description="Test alert",
         pod_id=uuid4(),
         node_id=uuid4(),
+        source_ip="",
+        source_port="",
+        destination_ip="",
+        destination_port="",
+        protocol=""
     )
     alert_obj = mock_alert_obj(
         alert_type=alert_data.alert_type,
@@ -80,6 +85,11 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
         alert_description=alert_data.alert_description,
         pod_id=alert_data.pod_id,
         node_id=alert_data.node_id,
+        source_ip=alert_data.source_ip,
+        source_port=alert_data.source_port,
+        destination_ip=alert_data.destination_ip,
+        destination_port=alert_data.destination_port,
+        protocol=alert_data.protocol,
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -101,6 +111,11 @@ async def test_create_alert_unexpected_exception():
         alert_description="Test alert",
         pod_id=uuid4(),
         node_id=uuid4(),
+        source_ip="",
+        source_port="",
+        destination_ip="",
+        destination_port="",
+        protocol=""
     )
     alert_obj = mock_alert_obj(
         alert_type=alert_data.alert_type,
@@ -108,6 +123,11 @@ async def test_create_alert_unexpected_exception():
         alert_description=alert_data.alert_description,
         pod_id=alert_data.pod_id,
         node_id=alert_data.node_id,
+        source_ip=alert_data.source_ip,
+        source_port=alert_data.source_port,
+        destination_ip=alert_data.destination_ip,
+        destination_port=alert_data.destination_port,
+        protocol=alert_data.protocol
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -126,13 +146,22 @@ async def test_get_alerts_success():
         alert_description="Test alert",
         pod_id=uuid4(),
         node_id=uuid4(),
+        source_ip="",
+        source_port="",
+        destination_ip="",
+        destination_port="",
+        protocol=""
     )
     alert_obj2 = mock_alert_obj(
         alert_type=AlertType.NETWORK_ATTACK,
         alert_model="AnotherModel",
-        alert_description="Test network attack alert",
-        pod_id=uuid4(),
-        node_id=uuid4(),
+        alert_description="",
+
+        source_ip="1.1.1.1",
+        source_port="443",
+        destination_ip="2.2.2.1",
+        destination_port="49",
+        protocol="TCP"
     )
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = [alert_obj1, alert_obj2]
