@@ -50,6 +50,15 @@ class WorkloadRequestDecisionSchema(BaseModel):
             """
             return self.orm_mode
 
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
+
 
 class WorkloadRequestDecisionUpdate(BaseModel):
     """
@@ -87,6 +96,15 @@ class WorkloadRequestDecisionUpdate(BaseModel):
                 bool: True if ORM mode is enabled
             """
             return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
 
 
 class WorkloadRequestDecisionCreate(BaseModel):
@@ -127,3 +145,12 @@ class WorkloadRequestDecisionCreate(BaseModel):
                 bool: True if ORM mode is enabled
             """
             return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value

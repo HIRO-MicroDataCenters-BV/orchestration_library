@@ -24,12 +24,7 @@ from app.utils.exceptions import (
     DBEntryDeletionException,
 )
 
-
-
-@pytest.fixture
-def sample_create_data():
-    """"Sample test data."""
-    return WorkloadRequestDecisionCreate(
+sample_data = WorkloadRequestDecisionCreate(
         pod_id=uuid4(),
         pod_name="test-pod",
         namespace="default",
@@ -51,7 +46,7 @@ def sample_create_data():
 
 
 @pytest.mark.asyncio
-async def test_create_workload_decision_success(sample_create_data):
+async def test_create_workload_decision_success():
     """Test successful creation of a workload decision in DB."""
     mock_db = AsyncMock()
     mock_obj = MagicMock()
@@ -61,7 +56,7 @@ async def test_create_workload_decision_success(sample_create_data):
         "app.repositories.workload_request_decision.WorkloadRequestDecision",
         return_value=mock_obj,
     ):
-        result = await create_workload_decision(mock_db, sample_create_data)
+        result = await create_workload_decision(mock_db, sample_data)
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()
@@ -156,7 +151,7 @@ async def test_update_workload_decision_success():
 async def test_update_workload_decision_not_found():
     """Test update with non-existent workload decision."""
     decision_id = uuid4()
-    update_data = WorkloadRequestDecisionUpdate(field1="updated_value")
+    update_data = WorkloadRequestDecisionUpdate(pod_name="updated_value")
 
     mock_session = AsyncMock()
     mock_result = MagicMock()
