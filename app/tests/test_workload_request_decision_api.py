@@ -1,7 +1,5 @@
-""""Unit tests for workload request decision api."""
+"""Unit tests for workload request decision api."""
 
-
-from datetime import datetime, timezone
 from uuid import uuid4
 from unittest.mock import AsyncMock, patch
 
@@ -9,30 +7,9 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
-from app.utils.constants import POD_PARENT_TYPE_ENUM
+from app.tests.utils.mock_objects import mock_mock_workload_request_decision_api
 
 TEST_UUID = str(uuid4())
-TEST_DATE = datetime.now(timezone.utc)
-
-TEST_CREATE_PAYLOAD = {
-    "pod_id": str(uuid4()),
-    "pod_name": "test-pod",
-    "namespace": "default",
-    "node_id": str(uuid4()),
-    "node_name": "node-1",
-    "is_elastic": True,
-    "queue_name": "queue-A",
-    "demand_cpu": 1.0,
-    "demand_memory": 512.0,
-    "demand_slack_cpu": 0.5,
-    "demand_slack_memory": 128.0,
-    "is_decision_status": True,
-    "pod_parent_id": str(uuid4()),
-    "pod_parent_name": "controller-1",
-    "pod_parent_kind": POD_PARENT_TYPE_ENUM[0],
-    "created_at": TEST_DATE.isoformat(),
-    "deleted_at": None,
-}
 
 
 @pytest.mark.asyncio
@@ -42,13 +19,12 @@ TEST_CREATE_PAYLOAD = {
 )
 async def test_create_workload_decision(mock_create):
     """Test API endpoint for creating a workload decision."""
-    mock_create.return_value = {**TEST_CREATE_PAYLOAD, "id": TEST_UUID}
+    payload = mock_mock_workload_request_decision_api()
+    mock_create.return_value = {**payload, "id": TEST_UUID}
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as async_client:
-        response = await async_client.post(
-            "/workload_request_decision/", json=TEST_CREATE_PAYLOAD
-        )
+        response = await async_client.post("/workload_request_decision/", json=payload)
 
     assert response.status_code == 200
     assert response.json()["id"] == TEST_UUID
@@ -61,7 +37,8 @@ async def test_create_workload_decision(mock_create):
 )
 async def test_get_workload_decision(mock_get):
     """Test API endpoint for retrieving a single workload decision."""
-    mock_get.return_value = {**TEST_CREATE_PAYLOAD, "id": TEST_UUID}
+    payload = mock_mock_workload_request_decision_api()
+    mock_get.return_value = {**payload, "id": TEST_UUID}
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as async_client:
@@ -78,7 +55,8 @@ async def test_get_workload_decision(mock_get):
 )
 async def test_get_all_workload_decisions(mock_get_all):
     """Test API endpoint for retrieving all workload decisions."""
-    mock_get_all.return_value = [{**TEST_CREATE_PAYLOAD, "id": TEST_UUID}]
+    payload = mock_mock_workload_request_decision_api()
+    mock_get_all.return_value = [{**payload, "id": TEST_UUID}]
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as async_client:

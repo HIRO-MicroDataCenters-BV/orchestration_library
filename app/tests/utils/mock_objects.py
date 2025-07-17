@@ -10,6 +10,11 @@ from app.schemas.workload_action_schema import (
     WorkloadActionCreate,
     WorkloadActionUpdate,
 )
+from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionCreate
+from app.utils.constants import POD_PARENT_TYPE_ENUM
+
+
+TEST_DATE = datetime.now(timezone.utc)
 
 
 def mock_version_info():
@@ -276,11 +281,12 @@ def mock_workload_action_obj(
 
 
 def mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL,
-        alert_model="TestModel",
-        alert_description="Test alert",
-        pod_id=uuid4(),
-        node_id=uuid4()):
+    alert_type=AlertType.ABNORMAL,
+    alert_model="TestModel",
+    alert_description="Test alert",
+    pod_id=uuid4(),
+    node_id=uuid4(),
+):
     """
     Mock an alert creation object with necessary attributes.
     """
@@ -291,6 +297,7 @@ def mock_alert_create_request_obj(
         pod_id=pod_id,
         node_id=node_id,
     )
+
 
 def mock_alert_create_request_data(
     alert_type=AlertType.ABNORMAL,
@@ -310,6 +317,7 @@ def mock_alert_create_request_data(
         "node_id": str(node_id),
     }
 
+
 def mock_alert_response_obj(
     alert_type=AlertType.ABNORMAL,
     alert_model="TestModel",
@@ -327,7 +335,7 @@ def mock_alert_response_obj(
         alert_description=alert_description,
         pod_id=pod_id,
         node_id=node_id,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
 
 
@@ -336,7 +344,7 @@ def mock_alert_obj(
     alert_model="TestModel",
     alert_description="Test alert",
     pod_id=uuid4(),
-    node_id=uuid4()
+    node_id=uuid4(),
 ):
     """
     Mock an alert object with necessary attributes.
@@ -348,5 +356,51 @@ def mock_alert_obj(
         alert_description=alert_description,
         pod_id=pod_id,
         node_id=node_id,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
+
+
+def mock_workload_request_decision_create() -> WorkloadRequestDecisionCreate:
+    """ "mock data for WorkloadRequestDecisionCreate."""
+    return WorkloadRequestDecisionCreate(
+        pod_id=uuid4(),
+        pod_name="test-pod",
+        namespace="default",
+        node_id=uuid4(),
+        node_name="node-01",
+        is_elastic=True,
+        queue_name="queue-x",
+        demand_cpu=0.5,
+        demand_memory=256,
+        demand_slack_cpu=0.1,
+        demand_slack_memory=64,
+        is_decision_status=True,
+        pod_parent_id=uuid4(),
+        pod_parent_name="controller",
+        pod_parent_kind="Deployment",
+        created_at="2024-07-01T12:00:00Z",
+        deleted_at=None,
+    )
+
+
+def mock_mock_workload_request_decision_api():
+    """ "Test data for testing API."""
+    return {
+        "pod_id": str(uuid4()),
+        "pod_name": "test-pod",
+        "namespace": "default",
+        "node_id": str(uuid4()),
+        "node_name": "node-1",
+        "is_elastic": True,
+        "queue_name": "queue-A",
+        "demand_cpu": 1.0,
+        "demand_memory": 512.0,
+        "demand_slack_cpu": 0.5,
+        "demand_slack_memory": 128.0,
+        "is_decision_status": True,
+        "pod_parent_id": str(uuid4()),
+        "pod_parent_name": "controller-1",
+        "pod_parent_kind": POD_PARENT_TYPE_ENUM[0],
+        "created_at": TEST_DATE.isoformat(),
+        "deleted_at": None,
+    }

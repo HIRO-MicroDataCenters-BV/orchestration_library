@@ -23,26 +23,7 @@ from app.utils.exceptions import (
     DBEntryUpdateException,
     DBEntryDeletionException,
 )
-
-sample_data = WorkloadRequestDecisionCreate(
-        pod_id=uuid4(),
-        pod_name="test-pod",
-        namespace="default",
-        node_id=uuid4(),
-        node_name="node-01",
-        is_elastic=True,
-        queue_name="queue-x",
-        demand_cpu=0.5,
-        demand_memory=256,
-        demand_slack_cpu=0.1,
-        demand_slack_memory=64,
-        is_decision_status=True,
-        pod_parent_id=uuid4(),
-        pod_parent_name="controller",
-        pod_parent_kind="Deployment",
-        created_at="2024-07-01T12:00:00Z",
-        deleted_at=None,
-    )
+from app.tests.utils.mock_objects import mock_workload_request_decision_create
 
 
 @pytest.mark.asyncio
@@ -56,7 +37,7 @@ async def test_create_workload_decision_success():
         "app.repositories.workload_request_decision.WorkloadRequestDecision",
         return_value=mock_obj,
     ):
-        result = await create_workload_decision(mock_db, sample_data)
+        result = await create_workload_decision(mock_db, mock_workload_request_decision_create())
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()
