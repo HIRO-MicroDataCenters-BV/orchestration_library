@@ -41,6 +41,15 @@ class WorkloadRequestDecisionSchema(BaseModel):
         """
         orm_mode = True
 
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
 
 class WorkloadRequestDecisionUpdate(BaseModel):
     """
