@@ -27,6 +27,11 @@ async def test_create_alert_success():
         alert_description="Test alert",
         pod_id=uuid4(),
         node_id=uuid4(),
+        source_ip="192.168.1.1",
+        source_port=80,
+        destination_ip="192.168.1.2",
+        destination_port=80,
+        protocol="TCP"
     )
     alert_obj = mock_alert_obj(
         alert_type=alert_data.alert_type,
@@ -34,6 +39,11 @@ async def test_create_alert_success():
         alert_description=alert_data.alert_description,
         pod_id=alert_data.pod_id,
         node_id=alert_data.node_id,
+        source_ip=alert_data.source_ip,
+        source_port=alert_data.source_port,
+        destination_ip=alert_data.destination_ip,
+        destination_port=alert_data.destination_port,
+        protocol=alert_data.protocol
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -49,6 +59,12 @@ async def test_create_alert_success():
     assert created_alert.alert_description == alert_data.alert_description
     assert created_alert.pod_id == alert_data.pod_id
     assert created_alert.node_id == alert_data.node_id
+    assert created_alert.source_ip is alert_data.source_ip
+    assert created_alert.source_port is alert_data.source_port
+    assert created_alert.destination_ip is alert_data.destination_ip
+    assert created_alert.destination_port is alert_data.destination_port
+    assert created_alert.protocol is alert_data.protocol
+    assert created_alert.created_at is not None
 
 
 @pytest.mark.asyncio
@@ -73,11 +89,11 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
         alert_description="Test alert",
         pod_id=uuid4(),
         node_id=uuid4(),
-        source_ip="",
-        source_port="",
-        destination_ip="",
-        destination_port="",
-        protocol=""
+        source_ip="192.168.1.1",
+        source_port=80,
+        destination_ip="192.168.1.2",
+        destination_port=80,
+        protocol="TCP"
     )
     alert_obj = mock_alert_obj(
         alert_type=alert_data.alert_type,
@@ -110,24 +126,14 @@ async def test_create_alert_unexpected_exception():
         alert_model="TestModel",
         alert_description="Test alert",
         pod_id=uuid4(),
-        node_id=uuid4(),
-        source_ip="",
-        source_port="",
-        destination_ip="",
-        destination_port="",
-        protocol=""
+        node_id=uuid4()
     )
     alert_obj = mock_alert_obj(
         alert_type=alert_data.alert_type,
         alert_model=alert_data.alert_model,
         alert_description=alert_data.alert_description,
         pod_id=alert_data.pod_id,
-        node_id=alert_data.node_id,
-        source_ip=alert_data.source_ip,
-        source_port=alert_data.source_port,
-        destination_ip=alert_data.destination_ip,
-        destination_port=alert_data.destination_port,
-        protocol=alert_data.protocol
+        node_id=alert_data.node_id
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -145,22 +151,16 @@ async def test_get_alerts_success():
         alert_model="TestModel",
         alert_description="Test alert",
         pod_id=uuid4(),
-        node_id=uuid4(),
-        source_ip="",
-        source_port="",
-        destination_ip="",
-        destination_port="",
-        protocol=""
+        node_id=uuid4()
     )
     alert_obj2 = mock_alert_obj(
         alert_type=AlertType.NETWORK_ATTACK,
         alert_model="AnotherModel",
         alert_description="",
-
         source_ip="1.1.1.1",
-        source_port="443",
+        source_port=443,
         destination_ip="2.2.2.1",
-        destination_port="49",
+        destination_port=49,
         protocol="TCP"
     )
     mock_result = MagicMock()

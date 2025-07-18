@@ -276,20 +276,37 @@ def mock_workload_action_obj(
 
 
 def mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL,
-        alert_model="TestModel",
-        alert_description="Test alert",
-        pod_id=uuid4(),
-        node_id=uuid4()):
+    alert_type=AlertType.ABNORMAL,
+    alert_model="TestModel",
+    alert_description="Test alert",
+    pod_id=uuid4(),
+    node_id=uuid4(),
+    source_ip="192.168.1.1",
+    source_port=1234,
+    destination_ip="192.168.1.2",
+    destination_port=80,
+    protocol="TCP"
+):
     """
     Mock an alert creation object with necessary attributes.
     """
+    if alert_type is AlertType.NETWORK_ATTACK:
+        return AlertCreateRequest(
+            alert_type=alert_type,
+            alert_model=alert_model,
+            alert_description=alert_description,
+            source_ip=source_ip,
+            source_port=source_port,
+            destination_ip=destination_ip,
+            destination_port=destination_port,
+            protocol=protocol
+        )
     return AlertCreateRequest(
         alert_type=alert_type,
         alert_model=alert_model,
         alert_description=alert_description,
         pod_id=pod_id,
-        node_id=node_id,
+        node_id=node_id
     )
 
 def mock_alert_create_request_data(
@@ -298,16 +315,37 @@ def mock_alert_create_request_data(
     alert_description="Test alert",
     pod_id=uuid4(),
     node_id=uuid4(),
+    source_ip="192.168.1.1",
+    source_port=1234,
+    destination_ip="192.168.1.2",
+    destination_port=80,
+    protocol="TCP"
 ):
     """
     Mock an alert creation request data dictionary with necessary attributes.
     """
+    if alert_type is AlertType.NETWORK_ATTACK:
+        return {
+            "alert_type": alert_type,
+            "alert_model": alert_model,
+            "alert_description": alert_description,
+            "source_ip": source_ip,
+            "source_port": source_port,
+            "destination_ip": destination_ip,
+            "destination_port": destination_port,
+            "protocol": protocol
+        }
     return {
         "alert_type": alert_type,
         "alert_model": alert_model,
         "alert_description": alert_description,
         "pod_id": str(pod_id),
         "node_id": str(node_id),
+        "source_ip": source_ip,
+        "source_port": source_port,
+        "destination_ip": destination_ip,
+        "destination_port": destination_port,
+        "protocol": protocol
     }
 
 def mock_alert_response_obj(
@@ -316,6 +354,11 @@ def mock_alert_response_obj(
     alert_description="Test alert",
     pod_id=uuid4(),
     node_id=uuid4(),
+    source_ip="192.168.1.1",
+    source_port=1234,
+    destination_ip="192.168.1.2",
+    destination_port=80,
+    protocol="TCP"
 ):
     """
     Mock an alert response object with necessary attributes.
@@ -327,6 +370,11 @@ def mock_alert_response_obj(
         alert_description=alert_description,
         pod_id=pod_id,
         node_id=node_id,
+        source_ip=source_ip,
+        source_port=source_port,
+        destination_ip=destination_ip,
+        destination_port=destination_port,
+        protocol=protocol,
         created_at=datetime.now(timezone.utc)
     )
 
@@ -336,7 +384,13 @@ def mock_alert_obj(
     alert_model="TestModel",
     alert_description="Test alert",
     pod_id=uuid4(),
-    node_id=uuid4()
+    node_id=uuid4(),
+    source_ip="192.168.1.1",
+    source_port=1234,
+    destination_ip="192.168.1.2",
+    destination_port=80,
+    protocol="TCP",
+    created_at=datetime.now(timezone.utc)
 ):
     """
     Mock an alert object with necessary attributes.
@@ -348,5 +402,10 @@ def mock_alert_obj(
         alert_description=alert_description,
         pod_id=pod_id,
         node_id=node_id,
-        created_at=datetime.now(timezone.utc)
+        source_ip=source_ip,
+        source_port=source_port,
+        destination_ip=destination_ip,
+        destination_port=destination_port,
+        protocol=protocol,
+        created_at=created_at
     )

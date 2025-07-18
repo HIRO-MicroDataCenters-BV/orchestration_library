@@ -14,6 +14,7 @@ class AlertType(str, Enum):
     """
     Enum for alert types.
     """
+
     ABNORMAL = "Abnormal"
     NETWORK_ATTACK = "Network-Attack"
     OTHER = "Other"
@@ -41,34 +42,54 @@ class AlertCreateRequest(BaseModel):
     """
     Pydantic model for creating a new alert.
     """
+
     alert_type: AlertType = Field(
         ...,
         description="Type of alert",
-        examples=["Abnormal", "Network-Attack", "Other"]
+        examples=["Abnormal", "Network-Attack", "Other"],
     )
     alert_model: str = Field(
         ...,
         description="Model used for the alert",
         min_length=1,
         max_length=1000,
-        examples=["SampleAnomalyDetectionModel"]
+        examples=["SampleAnomalyDetectionModel"],
     )
     alert_description: str = Field(
         ...,
         description="Description of the alert",
         min_length=1,
         max_length=1000,
-        examples=["High CPU usage detected on pod"]
+        examples=["High CPU usage detected on pod"],
     )
     pod_id: UUID = Field(
         ...,
         description="ID of the pod",
-        examples=["123e4567-e89b-12d3-a456-426614174000"]
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
     node_id: UUID = Field(
         ...,
         description="ID of the node",
-        examples=["123e4567-e89b-12d3-a456-426614174000"]
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
+    )
+    source_ip: str = Field(
+        None, description="Source IP address", examples=["192.168.1.1", "10.0.0.1"]
+    )
+    destination_ip: str = Field(
+        None, description="Destination IP address", examples=["192.168.1.2", "10.0.0.2"]
+    )
+    source_port: int = Field(
+        None, description="Source port number", ge=1, le=65535, examples=[80, 443]
+    )
+    destination_port: int = Field(
+        None, description="Destination port number", ge=1, le=65535, examples=[80, 443]
+    )
+    protocol: str = Field(
+        None,
+        description="Network protocol used",
+        examples=["TCP", "UDP", "ICMP"],
+        min_length=1,
+        max_length=10,
     )
 
     def __repr__(self) -> str:
@@ -100,13 +121,29 @@ class AlertResponse(BaseModel):
     """
     Pydantic model for alert response.
     """
+
     id: int = Field(..., description="Unique identifier for the alert")
     alert_type: AlertType = Field(..., description="Type of alert")
     alert_model: str = Field(..., description="Model used for the alert")
     alert_description: str = Field(..., description="Description of the alert")
     pod_id: UUID = Field(..., description="ID of the pod")
     node_id: UUID = Field(..., description="ID of the node")
-    created_at: datetime = Field(..., description="Timestamp when the alert was created")
+    source_ip: str = Field(None, description="Source IP address")
+    source_port: int = Field(None, description="Source port number", ge=1, le=65535)
+    destination_ip: str = Field(None, description="Destination IP address")
+    destination_port: int = Field(
+        None, description="Destination port number", ge=1, le=65535
+    )
+    protocol: str = Field(
+        None,
+        description="Network protocol used",
+        examples=["TCP", "UDP", "ICMP"],
+        min_length=1,
+        max_length=10,
+    )
+    created_at: datetime = Field(
+        ..., description="Timestamp when the alert was created"
+    )
 
     def __repr__(self) -> str:
         """
@@ -137,10 +174,9 @@ class AlertResponse(BaseModel):
         """
         Pydantic model configuration.
         """
+
         from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
         def __repr__(self) -> str:
             """

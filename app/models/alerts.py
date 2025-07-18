@@ -3,6 +3,7 @@ SQLAlchemy models for Alerts.
 This module defines the database models used for storing and retrieving Alerts.
 """
 
+import ipaddress
 from sqlalchemy import (
     TIMESTAMP,
     Column,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import validates
 
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
@@ -48,14 +50,20 @@ class Alert(Base, BaseDictMixin):
     # Node ID - UUID
     node_id = Column(UUID, nullable=True, index=True)  # Index for node queries
 
+    # Additional fields for network-related alerts
+    # Source IP - TEXT
     source_ip = Column(Text, nullable=True)
 
-    source_port = Column(Text, nullable=True)
+    # Source Port - INTEGER
+    source_port = Column(Integer, nullable=True)
 
+    # Destination IP - TEXT
     destination_ip = Column(Text, nullable=True)
 
-    destination_port = Column(Text, nullable=True)
+    # Destination Port - INTEGER
+    destination_port = Column(Integer, nullable=True)
 
+    # Protocol - TEXT
     protocol = Column(Text, nullable=True)
 
     # Created At - TIMESTAMP with DEFAULT CURRENT_TIMESTAMP
@@ -64,6 +72,22 @@ class Alert(Base, BaseDictMixin):
         server_default=text("CURRENT_TIMESTAMP"),
         index=True,  # Index for time-based queries
     )
+    
+    @validates('source_ip', 'destination_ip')
+    def validate_ip(self, key, address):
+        if address is not None:
+            try:
+                ipaddress.ip_address(address)
+            except ValueError:
+                raise ValueError(f"{key} must be a valid IPv4 or IPv6 address")
+        return address
+
+    @validates('source_port', 'destination_port')
+    def validate_port(self, key, port):
+        if port is not None:
+            if not (1 <= port <= 65535):
+                raise ValueError(f"{key} must be between 1 and 65535")
+        return port
 
     def __repr__(self) -> str:
         """
