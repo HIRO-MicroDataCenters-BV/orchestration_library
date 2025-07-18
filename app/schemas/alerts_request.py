@@ -5,6 +5,7 @@ This module defines the request and response models for the Alert API.
 
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -62,29 +63,29 @@ class AlertCreateRequest(BaseModel):
         max_length=1000,
         examples=["High CPU usage detected on pod"],
     )
-    pod_id: UUID = Field(
+    pod_id: Optional[UUID] = Field(
         ...,
         description="ID of the pod",
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
-    node_id: UUID = Field(
+    node_id: Optional[UUID] = Field(
         ...,
         description="ID of the node",
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
-    source_ip: str = Field(
+    source_ip: Optional[str] = Field(
         None, description="Source IP address", examples=["192.168.1.1", "10.0.0.1"]
     )
-    destination_ip: str = Field(
+    destination_ip: Optional[str] = Field(
         None, description="Destination IP address", examples=["192.168.1.2", "10.0.0.2"]
     )
-    source_port: int = Field(
+    source_port: Optional[int] = Field(
         None, description="Source port number", ge=1, le=65535, examples=[80, 443]
     )
-    destination_port: int = Field(
+    destination_port: Optional[int] = Field(
         None, description="Destination port number", ge=1, le=65535, examples=[80, 443]
     )
-    protocol: str = Field(
+    protocol: Optional[str] = Field(
         None,
         description="Network protocol used",
         examples=["TCP", "UDP", "ICMP"],
@@ -126,15 +127,15 @@ class AlertResponse(BaseModel):
     alert_type: AlertType = Field(..., description="Type of alert")
     alert_model: str = Field(..., description="Model used for the alert")
     alert_description: str = Field(..., description="Description of the alert")
-    pod_id: UUID = Field(..., description="ID of the pod")
-    node_id: UUID = Field(..., description="ID of the node")
-    source_ip: str = Field(None, description="Source IP address")
-    source_port: int = Field(None, description="Source port number", ge=1, le=65535)
-    destination_ip: str = Field(None, description="Destination IP address")
-    destination_port: int = Field(
+    pod_id: Optional[UUID] = Field(..., description="ID of the pod")
+    node_id: Optional[UUID] = Field(..., description="ID of the node")
+    source_ip: Optional[str] = Field(None, description="Source IP address")
+    source_port: Optional[int] = Field(None, description="Source port number", ge=1, le=65535)
+    destination_ip: Optional[str] = Field(None, description="Destination IP address")
+    destination_port: Optional[int] = Field(
         None, description="Destination port number", ge=1, le=65535
     )
-    protocol: str = Field(
+    protocol: Optional[str] = Field(
         None,
         description="Network protocol used",
         examples=["TCP", "UDP", "ICMP"],
