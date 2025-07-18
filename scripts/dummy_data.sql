@@ -34,10 +34,16 @@ WHERE pod_id IN (
 -- Now insert your dummy data as before...
 
 -- alerts table
-INSERT INTO alerts (alert_type, alert_model, alert_description, pod_id, node_id, created_at) VALUES
-('Abnormal', 'ModelA', 'CPU spike', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', NOW()),
-('Network-Attack', 'ModelB', 'Network anomaly', '33333333-3333-3333-3333-333333333333', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '1 day'),
-('Other', 'ModelC', 'SQL Injection', '55555555-5555-5555-5555-555555555555', '66666666-6666-6666-6666-666666666666', NOW() - INTERVAL '2 days');
+INSERT INTO alerts (
+    alert_type, alert_model, alert_description, pod_id, node_id,
+    source_ip, source_port, destination_ip, destination_port, protocol, created_at
+) VALUES
+('Abnormal', 'ModelA', 'CPU spike', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222',
+ '10.0.0.1', 8080, '10.0.0.2', 80, 'TCP', NOW()),
+('Network-Attack', 'ModelB', 'Network anomaly', '33333333-3333-3333-3333-333333333333', '44444444-4444-4444-4444-444444444444',
+ '192.168.1.10', 443, '192.168.1.20', 443, 'UDP', NOW() - INTERVAL '1 day'),
+('Other', 'ModelC', 'SQL Injection', '55555555-5555-5555-5555-555555555555', '66666666-6666-6666-6666-666666666666',
+ NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL '2 days');
 
 -- tuning_parameters table
 INSERT INTO tuning_parameters (id, output_1, output_2, output_3, alpha, beta, gamma, created_at) VALUES
