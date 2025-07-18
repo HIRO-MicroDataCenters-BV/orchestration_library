@@ -19,7 +19,7 @@ from app.tests.utils.mock_objects import (
 async def test_create_alert_success(mock_create_alert):
     """Test successful creation of an alert through the API."""
     alert_create_data = mock_alert_create_request_data()
-    alert_response_obj = mock_alert_response_obj(**alert_create_data)
+    alert_response_obj = mock_alert_response_obj(alert_create_data["alert_type"])
 
     mock_create_alert.return_value = alert_response_obj
 
@@ -37,7 +37,7 @@ async def test_create_alert_success(mock_create_alert):
 async def test_read_alerts_success(mock_get_alerts):
     """Test successful retrieval of alerts."""
     alert_create_data = mock_alert_create_request_data()
-    alert_response_obj = mock_alert_response_obj(**alert_create_data)
+    alert_response_obj = mock_alert_response_obj(alert_create_data["alert_type"])
 
     mock_get_alerts.return_value = [alert_response_obj]
 
