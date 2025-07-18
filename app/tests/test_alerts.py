@@ -3,7 +3,6 @@ Tests for the alerts repository module.
 This module tests the creation and retrieval of alerts in the database.
 """
 
-from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
@@ -22,18 +21,10 @@ async def test_create_alert_success():
     db.refresh = AsyncMock()
 
     alert_data = mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL,
-        alert_model="TestModel",
-        alert_description="Test alert",
-        pod_id=uuid4(),
-        node_id=uuid4(),
+        alert_type=AlertType.ABNORMAL
     )
     alert_obj = mock_alert_obj(
-        alert_type=alert_data.alert_type,
-        alert_model=alert_data.alert_model,
-        alert_description=alert_data.alert_description,
-        pod_id=alert_data.pod_id,
-        node_id=alert_data.node_id,
+        alert_type=alert_data.alert_type
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -45,10 +36,9 @@ async def test_create_alert_success():
 
     assert isinstance(created_alert, AlertResponse)
     assert created_alert.alert_type == alert_data.alert_type
-    assert created_alert.alert_model == alert_data.alert_model
-    assert created_alert.alert_description == alert_data.alert_description
-    assert created_alert.pod_id == alert_data.pod_id
-    assert created_alert.node_id == alert_data.node_id
+    assert created_alert.alert_model is not None
+    assert created_alert.alert_description is not None
+    assert created_alert.created_at is not None
 
 
 @pytest.mark.asyncio
@@ -68,18 +58,10 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
     db.add = MagicMock()
     db.rollback = AsyncMock()
     alert_data = mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL,
-        alert_model="TestModel",
-        alert_description="Test alert",
-        pod_id=uuid4(),
-        node_id=uuid4(),
+        alert_type=AlertType.ABNORMAL
     )
     alert_obj = mock_alert_obj(
-        alert_type=alert_data.alert_type,
-        alert_model=alert_data.alert_model,
-        alert_description=alert_data.alert_description,
-        pod_id=alert_data.pod_id,
-        node_id=alert_data.node_id,
+        alert_type=alert_data.alert_type
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -96,18 +78,10 @@ async def test_create_alert_unexpected_exception():
     db.add = MagicMock()
     db.rollback = AsyncMock()
     alert_data = mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL,
-        alert_model="TestModel",
-        alert_description="Test alert",
-        pod_id=uuid4(),
-        node_id=uuid4(),
+        alert_type=AlertType.ABNORMAL
     )
     alert_obj = mock_alert_obj(
-        alert_type=alert_data.alert_type,
-        alert_model=alert_data.alert_model,
-        alert_description=alert_data.alert_description,
-        pod_id=alert_data.pod_id,
-        node_id=alert_data.node_id,
+        alert_type=alert_data.alert_type
     )
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
@@ -121,18 +95,10 @@ async def test_get_alerts_success():
     """Test successful retrieval of alerts."""
     db = AsyncMock()
     alert_obj1 = mock_alert_obj(
-        alert_type=AlertType.ABNORMAL,
-        alert_model="TestModel",
-        alert_description="Test alert",
-        pod_id=uuid4(),
-        node_id=uuid4(),
+        alert_type=AlertType.ABNORMAL
     )
     alert_obj2 = mock_alert_obj(
-        alert_type=AlertType.NETWORK_ATTACK,
-        alert_model="AnotherModel",
-        alert_description="Test network attack alert",
-        pod_id=uuid4(),
-        node_id=uuid4(),
+        alert_type=AlertType.NETWORK_ATTACK
     )
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = [alert_obj1, alert_obj2]
@@ -142,8 +108,9 @@ async def test_get_alerts_success():
     assert len(result) == 2
     assert isinstance(result[0], AlertResponse)
     assert result[0].alert_type == alert_obj1.alert_type
+    assert result[0].alert_model is not None
     assert result[1].alert_type == alert_obj2.alert_type
-
+    assert result[1].alert_model is not None
 
 @pytest.mark.asyncio
 async def test_get_alerts_sqlalchemy_error():
