@@ -3,7 +3,6 @@ Tests for the alerts repository module.
 This module tests the creation and retrieval of alerts in the database.
 """
 
-from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError

@@ -72,20 +72,26 @@ class Alert(Base, BaseDictMixin):
         server_default=text("CURRENT_TIMESTAMP"),
         index=True,  # Index for time-based queries
     )
-    
-    @validates('source_ip', 'destination_ip')
+
+    @validates("source_ip", "destination_ip")
     def validate_ip(self, key, address):
+        """
+        Validate IP address format.
+        """
         if address is not None:
             try:
                 ipaddress.ip_address(address)
-            except ValueError:
-                raise ValueError(f"{key} must be a valid IPv4 or IPv6 address")
+            except ValueError as exc:
+                raise ValueError(f"{key} must be a valid IPv4 or IPv6 address") from exc
         return address
 
-    @validates('source_port', 'destination_port')
+    @validates("source_port", "destination_port")
     def validate_port(self, key, port):
+        """
+        Validate port number.
+        """
         if port is not None:
-            if not (1 <= port <= 65535):
+            if not 1 <= port <= 65535:
                 raise ValueError(f"{key} must be between 1 and 65535")
         return port
 
@@ -119,8 +125,10 @@ class Alert(Base, BaseDictMixin):
             str: Human-readable string representation
         """
         return (
-            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} from {self.alert_model} model"
+            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
+            f"from {self.alert_model} model"
             f"node {self.node_id} at {self.created_at} or"
-            f"from ip {self.source_ip} with port {self.source_port} to ip {self.destination_ip} with port {self.destination_port}  "
+            f"from ip {self.source_ip} with port {self.source_port} to "
+            f"ip {self.destination_ip} with port {self.destination_port}  "
             f", with {self.protocol} and from {self.alert_model} model"
         )
