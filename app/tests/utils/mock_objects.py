@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from uuid import uuid4
+import uuid
 
 from app.models.alerts import Alert
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse, AlertType
@@ -15,7 +16,19 @@ from app.utils.constants import POD_PARENT_TYPE_ENUM
 
 
 TEST_DATE = datetime.now(timezone.utc)
+TEST_UUID = str(uuid4())
 
+def to_jsonable(obj):
+    """Recursively convert UUIDs and datetimes in dicts to strings for JSON serialization."""
+    if isinstance(obj, dict):
+        return {k: to_jsonable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [to_jsonable(i) for i in obj]
+    elif isinstance(obj, uuid.UUID):
+        return str(obj)
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    return obj
 
 def mock_version_info():
     """
@@ -277,6 +290,8 @@ def mock_workload_action_obj(
         bound_pod_name=None,
         bound_pod_namespace=None,
         bound_node_name=None,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
 
 
