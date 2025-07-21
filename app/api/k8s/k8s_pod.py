@@ -3,9 +3,7 @@ List pods in the cluster
 """
 import logging
 from fastapi import APIRouter
-from kubernetes.client.exceptions import ApiException
 from app.repositories.k8s import k8s_pod
-from app.utils.exceptions import K8sAPIException
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/k8s_pod")
