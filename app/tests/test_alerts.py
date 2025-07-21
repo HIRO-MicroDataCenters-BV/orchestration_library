@@ -9,25 +9,26 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 
 from app.repositories import alerts as alerts_repo
 from app.schemas.alerts_request import AlertResponse, AlertType
-from app.tests.utils.mock_objects import mock_alert_create_request_obj, mock_alert_obj, mock_alert_response_obj
+from app.tests.utils.mock_objects import (
+    mock_alert_create_request_obj,
+    mock_alert_obj,
+    mock_alert_response_obj,
+)
 from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
 
 
 def test_alert_repr_and_str():
+    """Test __repr__ and __str__ methods of Alert and related schemas."""
     alert = mock_alert_obj()
-    alertReq = mock_alert_create_request_obj(
-        alert_type=alert.alert_type
-    )
-    alertRes = mock_alert_response_obj(
-        alert_type=alert.alert_type
-    )
+    alert_req = mock_alert_create_request_obj(alert_type=alert.alert_type)
+    alert_res = mock_alert_response_obj(alert_type=alert.alert_type)
     # __repr__ and __str__ should not raise
     a_r = repr(alert)
     a_s = str(alert)
-    a_req_r = repr(alertReq)
-    a_req_s = str(alertReq)
-    a_res_r = repr(alertRes)
-    a_res_s = str(alertRes)
+    a_req_r = repr(alert_req)
+    a_req_s = str(alert_req)
+    a_res_r = repr(alert_res)
+    a_res_s = str(alert_res)
     assert "Alert" in a_r
     assert "Alert" in a_s
     assert "AlertCreateRequest" in a_req_r
@@ -35,42 +36,63 @@ def test_alert_repr_and_str():
     assert "AlertResponse" in a_res_r
     assert "AlertResponse" in a_res_s
 
-@pytest.mark.parametrize("ip_field,ip", [
-    ("source_ip", "192.168.1.1"),
-    ("destination_ip", "10.0.0.2"),
-])
+
+@pytest.mark.parametrize(
+    "ip_field,ip",
+    [
+        ("source_ip", "192.168.1.1"),
+        ("destination_ip", "10.0.0.2"),
+    ],
+)
 def test_validate_ip_valid(ip_field, ip):
+    """Test valid IP addresses for source and destination fields."""
     alert = mock_alert_obj()
     setattr(alert, ip_field, ip)
     # Should not raise
     assert getattr(alert, ip_field) == ip
 
-@pytest.mark.parametrize("ip_field,ip", [
-    ("source_ip", "not-an-ip"),
-    ("destination_ip", "999.999.999.999"),
-])
+
+@pytest.mark.parametrize(
+    "ip_field,ip",
+    [
+        ("source_ip", "not-an-ip"),
+        ("destination_ip", "999.999.999.999"),
+    ],
+)
 def test_validate_ip_invalid(ip_field, ip):
+    """Test invalid IP addresses for source and destination fields."""
     alert = mock_alert_obj()
     with pytest.raises(ValueError):
         setattr(alert, ip_field, ip)
 
-@pytest.mark.parametrize("port_field,port", [
-    ("source_port", 80),
-    ("destination_port", 65535),
-])
+
+@pytest.mark.parametrize(
+    "port_field,port",
+    [
+        ("source_port", 80),
+        ("destination_port", 65535),
+    ],
+)
 def test_validate_port_valid(port_field, port):
+    """Test valid port numbers for source and destination fields."""
     alert = mock_alert_obj()
     setattr(alert, port_field, port)
     assert getattr(alert, port_field) == port
 
-@pytest.mark.parametrize("port_field,port", [
-    ("source_port", 0),
-    ("destination_port", 70000),
-])
+
+@pytest.mark.parametrize(
+    "port_field,port",
+    [
+        ("source_port", 0),
+        ("destination_port", 70000),
+    ],
+)
 def test_validate_port_invalid(port_field, port):
+    """Test invalid port numbers for source and destination fields."""
     alert = mock_alert_obj()
     with pytest.raises(ValueError):
         setattr(alert, port_field, port)
+
 
 @pytest.mark.asyncio
 async def test_create_alert_success():
@@ -79,12 +101,8 @@ async def test_create_alert_success():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
-    alert_data = mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL
-    )
-    alert_obj = mock_alert_obj(
-        alert_type=alert_data.alert_type
-    )
+    alert_data = mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL)
+    alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
         created_alert = await alerts_repo.create_alert(db, alert_data)
@@ -116,12 +134,8 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
     db.refresh = AsyncMock()
     db.add = MagicMock()
     db.rollback = AsyncMock()
-    alert_data = mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL
-    )
-    alert_obj = mock_alert_obj(
-        alert_type=alert_data.alert_type
-    )
+    alert_data = mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL)
+    alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
         with pytest.raises(expected_exception):
@@ -136,12 +150,8 @@ async def test_create_alert_unexpected_exception():
     db.refresh = AsyncMock()
     db.add = MagicMock()
     db.rollback = AsyncMock()
-    alert_data = mock_alert_create_request_obj(
-        alert_type=AlertType.ABNORMAL
-    )
-    alert_obj = mock_alert_obj(
-        alert_type=alert_data.alert_type
-    )
+    alert_data = mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL)
+    alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
         with pytest.raises(Exception):
@@ -153,12 +163,8 @@ async def test_create_alert_unexpected_exception():
 async def test_get_alerts_success():
     """Test successful retrieval of alerts."""
     db = AsyncMock()
-    alert_obj1 = mock_alert_obj(
-        alert_type=AlertType.ABNORMAL
-    )
-    alert_obj2 = mock_alert_obj(
-        alert_type=AlertType.NETWORK_ATTACK
-    )
+    alert_obj1 = mock_alert_obj(alert_type=AlertType.ABNORMAL)
+    alert_obj2 = mock_alert_obj(alert_type=AlertType.NETWORK_ATTACK)
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = [alert_obj1, alert_obj2]
     db.execute.return_value = mock_result
@@ -170,6 +176,7 @@ async def test_get_alerts_success():
     assert result[0].alert_model is not None
     assert result[1].alert_type == alert_obj2.alert_type
     assert result[1].alert_model is not None
+
 
 @pytest.mark.asyncio
 async def test_get_alerts_sqlalchemy_error():

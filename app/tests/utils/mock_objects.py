@@ -22,11 +22,11 @@ def to_jsonable(obj):
     """Recursively convert UUIDs and datetimes in dicts to strings for JSON serialization."""
     if isinstance(obj, dict):
         return {k: to_jsonable(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [to_jsonable(i) for i in obj]
-    elif isinstance(obj, uuid.UUID):
+    if isinstance(obj, uuid.UUID):
         return str(obj)
-    elif isinstance(obj, datetime):
+    if isinstance(obj, datetime):
         return obj.isoformat()
     return obj
 

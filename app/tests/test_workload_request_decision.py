@@ -311,6 +311,6 @@ async def test_create_workload_decision_db_errors(exc_cls, expected_exc):
     mock_db.refresh = AsyncMock()
     mock_db.add = MagicMock()
     data = mock_workload_request_decision_create()
-    
+
     with pytest.raises(expected_exc):
         await create_workload_decision(mock_db, data)

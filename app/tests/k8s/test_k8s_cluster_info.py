@@ -30,6 +30,7 @@ from app.utils.exceptions import K8sAPIException, K8sConfigException
     ],
 )
 def test_parse_cpu_and_memory(cpu_str, expected):
+    """Test parsing CPU strings into integer values."""
     assert k8s_cluster_info.parse_cpu(cpu_str) == expected
 
 
@@ -43,6 +44,7 @@ def test_parse_cpu_and_memory(cpu_str, expected):
     ],
 )
 def test_parse_memory(mem_str, expected):
+    """Test parsing memory strings into float values."""
     assert k8s_cluster_info.parse_memory(mem_str) == expected
 
 

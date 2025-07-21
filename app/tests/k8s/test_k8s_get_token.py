@@ -1,4 +1,8 @@
-import pytest
+"""Tests for the k8s_get_token module in the Kubernetes repository.
+This module tests the functionality of retrieving a read-only token 
+for a Kubernetes service account.
+"""
+
 from unittest.mock import patch, MagicMock
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
