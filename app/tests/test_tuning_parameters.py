@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.models.tuning_parameter import TuningParameter
 from app.repositories import tuning_parameter
-from app.schemas.tuning_parameter_schema import TuningParameterCreate
+from app.schemas.tuning_parameter_schema import TuningParameterBase, TuningParameterCreate, TuningParameterResponse
 from app.utils.exceptions import DatabaseConnectionException
 
 
@@ -44,6 +44,32 @@ def test_repr_returns_string():
     assert r.startswith("<TuningParameter(")
     assert f"id={param.id}" in r
     assert f"created_at={param.created_at}" in r
+    
+def test_tuning_parameter_base_and_create():
+    base = TuningParameterBase(
+        output_1=1.0, output_2=2.0, output_3=3.0,
+        alpha=0.1, beta=0.2, gamma=0.3
+    )
+    assert base.output_1 == 1.0
+    create = TuningParameterCreate(**base.model_dump())
+    assert create.alpha == 0.1
+    assert isinstance(create, TuningParameterCreate)
+
+def test_tuning_parameter_response_fields_and_config_methods():
+    now = datetime.datetime.utcnow()
+    resp = TuningParameterResponse(
+        id=123,
+        output_1=1.0, output_2=2.0, output_3=3.0,
+        alpha=0.1, beta=0.2, gamma=0.3,
+        created_at=now
+    )
+    assert resp.id == 123
+    assert resp.created_at == now
+    # Test Config methods
+    cfg = TuningParameterResponse.Config()
+    assert cfg.get_orm_mode() is True
+    cfg.set_orm_mode(False)
+    assert cfg.get_orm_mode() is False
 
 @pytest.mark.asyncio
 async def test_create_tuning_parameters():
