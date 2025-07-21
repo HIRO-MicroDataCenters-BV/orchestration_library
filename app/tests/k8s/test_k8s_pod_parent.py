@@ -5,10 +5,12 @@ Tests for the get_parent_controller_details_of_pod function.
 import json
 from unittest.mock import patch, MagicMock
 import pytest
+from kubernetes.client.rest import ApiException
+from kubernetes.config import ConfigException
 
 from app.repositories.k8s.k8s_pod_parent import get_parent_controller_details_of_pod
 from app.tests.utils.mock_objects import mock_user_pod, make_owner
-from app.utils.exceptions import K8sValueError
+from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
 
 
 # Mocking the Kubernetes client methods
@@ -231,3 +233,30 @@ def test_pod_by_id_found(_mock_batch, mock_apps, mock_core):
     assert result["kind"] == "DaemonSet"
     assert result["name"] == "ds-name"
     assert result["current_scale"] == 2
+
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_api_exception(mock_batch, mock_apps, mock_core):
+    """Test that ApiException is handled and raises K8sAPIException."""
+    mock_core.side_effect = ApiException("api error")
+    with pytest.raises(K8sAPIException):
+        get_parent_controller_details_of_pod(namespace="default", pod_name="pod", pod_id=None)
+
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_config_exception(mock_batch, mock_apps, mock_core):
+    """Test that ConfigException is handled and raises K8sConfigException."""
+    mock_core.side_effect = ConfigException("config error")
+    with pytest.raises(K8sConfigException):
+        get_parent_controller_details_of_pod(namespace="default", pod_name="pod", pod_id=None)
+
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_core_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod_parent.get_k8s_batch_v1_client")
+def test_value_error(mock_batch, mock_apps, mock_core):
+    """Test that ValueError is handled and raises K8sValueError."""
+    mock_core.side_effect = ValueError("bad value")
+    with pytest.raises(K8sValueError):
+        get_parent_controller_details_of_pod(namespace="default", pod_name="pod", pod_id=None)

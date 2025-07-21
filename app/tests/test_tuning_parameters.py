@@ -13,6 +13,38 @@ from app.schemas.tuning_parameter_schema import TuningParameterCreate
 from app.utils.exceptions import DatabaseConnectionException
 
 
+def make_tuning_param(**kwargs):
+    defaults = dict(
+        id=1,
+        output_1=1.1,
+        output_2=2.2,
+        output_3=3.3,
+        alpha=0.1,
+        beta=0.2,
+        gamma=0.3,
+        created_at="2024-07-21T12:00:00Z"
+    )
+    defaults.update(kwargs)
+    return TuningParameter(**defaults)
+
+def test_get_parameters_returns_dict():
+    param = make_tuning_param()
+    params = param.get_parameters()
+    assert isinstance(params, dict)
+    assert params["output_1"] == 1.1
+    assert params["output_2"] == 2.2
+    assert params["output_3"] == 3.3
+    assert params["alpha"] == 0.1
+    assert params["beta"] == 0.2
+    assert params["gamma"] == 0.3
+
+def test_repr_returns_string():
+    param = make_tuning_param()
+    r = repr(param)
+    assert r.startswith("<TuningParameter(")
+    assert f"id={param.id}" in r
+    assert f"created_at={param.created_at}" in r
+
 @pytest.mark.asyncio
 async def test_create_tuning_parameters():
     """Test the creation of a new tuning parameter."""

@@ -9,9 +9,68 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 
 from app.repositories import alerts as alerts_repo
 from app.schemas.alerts_request import AlertResponse, AlertType
-from app.tests.utils.mock_objects import mock_alert_create_request_obj, mock_alert_obj
+from app.tests.utils.mock_objects import mock_alert_create_request_obj, mock_alert_obj, mock_alert_response_obj
 from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
 
+
+def test_alert_repr_and_str():
+    alert = mock_alert_obj()
+    alertReq = mock_alert_create_request_obj(
+        alert_type=alert.alert_type
+    )
+    alertRes = mock_alert_response_obj(
+        alert_type=alert.alert_type
+    )
+    # __repr__ and __str__ should not raise
+    a_r = repr(alert)
+    a_s = str(alert)
+    a_req_r = repr(alertReq)
+    a_req_s = str(alertReq)
+    a_res_r = repr(alertRes)
+    a_res_s = str(alertRes)
+    assert "Alert" in a_r
+    assert "Alert" in a_s
+    assert "AlertCreateRequest" in a_req_r
+    assert "AlertCreateRequest" in a_req_s
+    assert "AlertResponse" in a_res_r
+    assert "AlertResponse" in a_res_s
+
+@pytest.mark.parametrize("ip_field,ip", [
+    ("source_ip", "192.168.1.1"),
+    ("destination_ip", "10.0.0.2"),
+])
+def test_validate_ip_valid(ip_field, ip):
+    alert = mock_alert_obj()
+    setattr(alert, ip_field, ip)
+    # Should not raise
+    assert getattr(alert, ip_field) == ip
+
+@pytest.mark.parametrize("ip_field,ip", [
+    ("source_ip", "not-an-ip"),
+    ("destination_ip", "999.999.999.999"),
+])
+def test_validate_ip_invalid(ip_field, ip):
+    alert = mock_alert_obj()
+    with pytest.raises(ValueError):
+        setattr(alert, ip_field, ip)
+
+@pytest.mark.parametrize("port_field,port", [
+    ("source_port", 80),
+    ("destination_port", 65535),
+])
+def test_validate_port_valid(port_field, port):
+    alert = mock_alert_obj()
+    setattr(alert, port_field, port)
+    assert getattr(alert, port_field) == port
+
+@pytest.mark.parametrize("port_field,port", [
+    ("source_port", 0),
+    ("destination_port", 70000),
+])
+def test_validate_port_invalid(port_field, port):
+    alert = mock_alert_obj()
+    with pytest.raises(ValueError):
+        setattr(alert, port_field, port)
 
 @pytest.mark.asyncio
 async def test_create_alert_success():
