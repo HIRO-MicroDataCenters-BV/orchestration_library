@@ -19,19 +19,6 @@ def list_all_pods(
     List all pods in the specified namespace.
     If no namespace is specified, list all pods in all namespaces.
     """
-    try:
-        return k8s_pod.list_k8s_pods(
-            namespace=namespace, name=name, pod_id=pod_id, status=status
-        )
-    except ApiException as exc:
-        logger.error("Kubernetes API error: %s", str(exc), exc_info=True)
-        raise K8sAPIException(
-            message="Failed to list Kubernetes pods due to API error.",
-            details={"error": exc.reason}
-        ) from exc
-    except Exception as exc:
-        logger.error("Unexpected error listing pods: %s", str(exc), exc_info=True)
-        raise K8sAPIException(
-            message="Unexpected error occurred while retrieving pods.",
-            details={"error": str(exc)}
-        ) from exc
+    return k8s_pod.list_k8s_pods(
+        namespace=namespace, name=name, pod_id=pod_id, status=status
+    )
