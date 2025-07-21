@@ -55,7 +55,7 @@ async def handle_db_exception(
         if exception_details
         else "Database operation failed"
     )
-    logger.error(message, str(exc))
+    logger.error("%s: %s", message, str(exc))
     if custom_exception_cls:
         raise custom_exception_cls(
             message=message,
