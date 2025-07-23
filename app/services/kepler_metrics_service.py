@@ -58,29 +58,30 @@ class KeplerMetricsService:
             labels = data['labels']
             metrics = data['metrics']
             
-            # Calculate power from joules if watts not available
-            cpu_power_watts = metrics.get('cpu_watts')
-            if cpu_power_watts is None and 'cpu_joules' in metrics:
-                # For joules, we would need previous measurements to calculate rate
-                # For now, use core_joules as fallback for CPU power estimation
-                if 'core_joules' in metrics:
-                    # This is a rough estimation - in production you'd want proper rate calculation
-                    cpu_power_watts = metrics['core_joules'] * 0.1  # Rough conversion factor
+            # CPU core power from core joules
+            cpu_core_watts = None
+            if 'core_joules' in metrics:
+                cpu_core_watts = metrics['core_joules'] * 0.1  # Rough conversion factor
+            
+            # CPU package power from package joules
+            cpu_package_watts = None
+            if 'package_joules' in metrics:
+                cpu_package_watts = metrics['package_joules'] * 0.08  # Rough conversion factor
             
             # Memory power from DRAM joules
             memory_power_watts = None
             if 'dram_joules' in metrics:
                 memory_power_watts = metrics['dram_joules'] * 0.05  # Rough conversion factor
             
-            # Platform power from package joules
+            # Platform power from platform joules
             platform_watts = None
-            if 'package_joules' in metrics:
-                platform_watts = metrics['package_joules'] * 0.08  # Rough conversion factor
+            if 'platform_joules' in metrics:
+                platform_watts = metrics['platform_joules'] * 0.07  # Rough conversion factor
             
-            # Other power from uncore
+            # Other power from other joules
             other_watts = None
-            if 'uncore_joules' in metrics:
-                other_watts = metrics['uncore_joules'] * 0.06  # Rough conversion factor
+            if 'other_joules' in metrics:
+                other_watts = metrics['other_joules'] * 0.06  # Rough conversion factor
             
             results.append(ContainerPowerMetricsCreate(
                 timestamp=datetime.now(timezone.utc),
@@ -89,7 +90,8 @@ class KeplerMetricsService:
                 namespace=labels.get("container_namespace", None),
                 node_name=labels.get("node_name", None),
                 metric_source="kepler",
-                cpu_power_watts=cpu_power_watts,
+                cpu_core_watts=cpu_core_watts,
+                cpu_package_watts=cpu_package_watts,
                 memory_power_watts=memory_power_watts,
                 platform_watts=platform_watts,
                 other_watts=other_watts,

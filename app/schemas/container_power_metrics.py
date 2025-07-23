@@ -13,7 +13,8 @@ class ContainerPowerMetricsBase(BaseModel):
     namespace: Optional[str] = Field(None, description="Namespace")
     node_name: Optional[str] = Field(None, description="Node name")
     metric_source: Optional[str] = Field(None, description="Source of the metrics (e.g., 'kepler', 'cadvisor')")
-    cpu_power_watts: Optional[float] = Field(None, description="CPU power in watts")
+    cpu_core_watts: Optional[float] = Field(None, description="CPU core power in watts")
+    cpu_package_watts: Optional[float] = Field(None, description="CPU package power in watts")
     memory_power_watts: Optional[float] = Field(None, description="Memory power in watts")
     platform_watts: Optional[float] = Field(None, description="Platform power in watts")
     other_watts: Optional[float] = Field(None, description="Other power in watts")
@@ -30,7 +31,8 @@ class ContainerPowerMetricsUpdate(BaseModel):
     namespace: Optional[str] = None
     node_name: Optional[str] = None
     metric_source: Optional[str] = None
-    cpu_power_watts: Optional[float] = None
+    cpu_core_watts: Optional[float] = None
+    cpu_package_watts: Optional[float] = None
     memory_power_watts: Optional[float] = None
     platform_watts: Optional[float] = None
     other_watts: Optional[float] = None
