@@ -10,9 +10,9 @@ class ContainerPowerMetrics(Base):
     __tablename__ = "container_power_metrics"
 
     # Primary key components
-    timestamp = Column(DateTime, primary_key=True, nullable=False)
-    container_name = Column(String(255), primary_key=True, nullable=False)
-    pod_name = Column(String(255), primary_key=True, nullable=False)
+    timestamp = Column(DateTime, nullable=False)
+    container_name = Column(String(255))
+    pod_name = Column(String(255))
 
     # Additional metadata
     namespace = Column(String(255))
@@ -33,6 +33,10 @@ class ContainerPowerMetrics(Base):
     network_io_rate_bytes_per_sec = Column(Float)
     disk_io_rate_bytes_per_sec = Column(Float)
 
+    __table_args__ = (
+        PrimaryKeyConstraint('timestamp', 'container_name', 'pod_name'),
+    )
+
     def __repr__(self):
         return (f"<ContainerPowerMetrics("
                 f"timestamp={self.timestamp}, "
@@ -50,7 +54,8 @@ class ContainerPowerMetrics(Base):
             'namespace': self.namespace,
             'node_name': self.node_name,
             'metric_source': self.metric_source,
-            'cpu_power_watts': self.cpu_power_watts,
+            'cpu_core_watts': self.cpu_core_watts,
+            'cpu_package_watts': self.cpu_package_watts,
             'memory_power_watts': self.memory_power_watts,
             'platform_watts': self.platform_watts,
             'other_watts': self.other_watts,

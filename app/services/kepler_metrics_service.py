@@ -84,7 +84,7 @@ class KeplerMetricsService:
                 other_watts = metrics['other_joules'] * 0.06  # Rough conversion factor
             
             results.append(ContainerPowerMetricsCreate(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.utcnow(),
                 container_name=labels.get("container_name", "unknown"),
                 pod_name=labels.get("pod_name", "unknown"),
                 namespace=labels.get("container_namespace", None),
