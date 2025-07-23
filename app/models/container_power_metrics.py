@@ -8,15 +8,16 @@ from app.db.database import Base
 class ContainerPowerMetrics(Base):
     __tablename__ = "container_power_metrics"
     timestamp = Column(DateTime(timezone=True), nullable=False)
-    container_name = Column(String(255), nullable=False)
-    pod_name = Column(String(255), nullable=False)
+    container_name = Column(String(255))
+    pod_name = Column(String(255))
     namespace = Column(String(255))
     node_name = Column(String(255))
+    metric_source = Column(String(255))
 
     cpu_power_watts = Column(Float)
     memory_power_watts = Column(Float)
+    platform_watts = Column(Float)
     other_watts = Column(Float)
-    total_watts = Column(Float)
 
     cpu_utilization_percent = Column(Float)
     memory_utilization_percent = Column(Float)

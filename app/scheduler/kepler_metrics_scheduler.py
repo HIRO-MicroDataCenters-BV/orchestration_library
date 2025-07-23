@@ -31,7 +31,7 @@ class KeplerMetricsScheduler:
         logging.info(f"KeplerMetricsScheduler: Scraped {len(metrics)} metrics from Kepler endpoint.")
         repo = ContainerPowerMetricsRepository(db)
         for metric in metrics:
-            logging.debug(f"Upserting metric: timestamp={metric.timestamp}, container_name={metric.container_name}, pod_name={metric.pod_name}, total_watts={metric.total_watts}")
+            logging.debug(f"Upserting metric: timestamp={metric.timestamp}, container_name={metric.container_name}, pod_name={metric.pod_name}, metric_source={metric.metric_source}")
             updated = await repo.update(metric.timestamp, metric.container_name, metric.pod_name, metric)
             if updated:
                 logging.info(f"Updated metric for container={metric.container_name}, pod={metric.pod_name}, timestamp={metric.timestamp}")
