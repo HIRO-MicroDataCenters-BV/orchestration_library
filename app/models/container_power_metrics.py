@@ -20,7 +20,8 @@ class ContainerPowerMetrics(Base):
     metric_source = Column(String(255))
 
     # Power metrics (in watts - converted from joules)
-    cpu_power_watts = Column(Float)
+    cpu_core_watts = Column(Float)
+    cpu_package_watts = Column(Float)
     memory_power_watts = Column(Float)
     platform_watts = Column(Float)
     other_watts = Column(Float)
