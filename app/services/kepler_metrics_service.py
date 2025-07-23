@@ -27,9 +27,10 @@ class KeplerMetricsService:
         # Parse various Kepler metrics
         metric_patterns = {
             'core_joules': r'kepler_container_core_joules_total\{([^}]*)\} ([0-9.eE+-]+)',
-            'dram_joules': r'kepler_container_dram_joules_total\{([^}]*)\} ([0-9.eE+-]+)',
             'package_joules': r'kepler_container_package_joules_total\{([^}]*)\} ([0-9.eE+-]+)',
-            'uncore_joules': r'kepler_container_uncore_joules_total\{([^}]*)\} ([0-9.eE+-]+)'
+            'dram_joules': r'kepler_container_dram_joules_total\{([^}]*)\} ([0-9.eE+-]+)',
+            'platform_joules': r'kepler_container_platform_joules_total\{([^}]*)\} ([0-9.eE+-]+)',
+            'other_joules': r'kepler_container_other_joules_total\{([^}]*)\} ([0-9.eE+-]+)',
         }
         
         # Extract metrics for each pattern
