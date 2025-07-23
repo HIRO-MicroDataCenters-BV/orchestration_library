@@ -4,6 +4,7 @@ FastAPI application entry point.
 
 import logging
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.k8s import (
@@ -20,8 +21,10 @@ from app.api import (
     alerts_api,
     workload_action_api,
     workload_request_decision_api,
-    wrokload_flow_api
+    wrokload_flow_api,
+    container_power_metrics
 )
+from app.scheduler.kepler_metrics_scheduler import KeplerMetricsScheduler
 
 from app.utils.exception_handlers import init_exception_handlers
 
@@ -49,8 +52,23 @@ app.include_router(workload_request_decision_api.router, tags=["Workload Request
 app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
 app.include_router(wrokload_flow_api.router, tags=["Workload Flow"])
+app.include_router(container_power_metrics.router, tags=["Container Power Metrics"])
 
 app.include_router(k8s_dashboard_api.router, tags=["Kubernetes Dashboard"])
 
 
 init_exception_handlers(app)
+
+kepler_scheduler = KeplerMetricsScheduler(interval_seconds=15)
+
+@app.on_event("startup")
+async def start_scheduler():
+    kepler_scheduler.start()
+
+@app.on_event("shutdown")
+async def stop_scheduler():
+    kepler_scheduler.stop()
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, port=8086, host='0.0.0.0')
