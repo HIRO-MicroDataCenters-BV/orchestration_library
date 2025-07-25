@@ -27,7 +27,7 @@ class WorkloadRequestDecisionSchema(BaseModel):
     demand_memory: float
     demand_slack_cpu: Optional[float] = None
     demand_slack_memory: Optional[float] = None
-    is_decision_status: bool
+    is_decision_status: Optional[bool] = None
     pod_parent_id: UUID
     pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
@@ -123,7 +123,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     demand_memory: float
     demand_slack_cpu: Optional[float] = None
     demand_slack_memory: Optional[float] = None
-    is_decision_status: bool
+    is_decision_status: Optional[bool] = None
     pod_parent_id: UUID
     pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum

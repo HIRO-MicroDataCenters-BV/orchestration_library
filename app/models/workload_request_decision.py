@@ -37,7 +37,7 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     demand_memory = Column(Float, nullable=False)
     demand_slack_cpu = Column(Float)
     demand_slack_memory = Column(Float)
-    is_decision_status = Column(Boolean, nullable=False)
+    is_decision_status = Column(Boolean)
     pod_parent_id = Column(UUID(as_uuid=True), nullable=False)
     pod_parent_name = Column(String(255), nullable=False)
     pod_parent_kind = Column(
