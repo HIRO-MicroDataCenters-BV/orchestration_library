@@ -20,6 +20,34 @@ from app.tests.utils.mock_objects import (
 from app.utils.exceptions import K8sAPIException, K8sConfigException
 
 
+@pytest.mark.parametrize(
+    "cpu_str,expected",
+    [
+        ("1000000n", 1.0),
+        ("1000u", 1.0),
+        ("250m", 250),
+        ("2", 2000),
+    ],
+)
+def test_parse_cpu_and_memory(cpu_str, expected):
+    """Test parsing CPU strings into integer values."""
+    assert k8s_cluster_info.parse_cpu(cpu_str) == expected
+
+
+@pytest.mark.parametrize(
+    "mem_str,expected",
+    [
+        ("1024Ki", 1.0),
+        ("2Mi", 2.0),
+        ("1Gi", 1024.0),
+        (str(1048576), 1.0),
+    ],
+)
+def test_parse_memory(mem_str, expected):
+    """Test parsing memory strings into float values."""
+    assert k8s_cluster_info.parse_memory(mem_str) == expected
+
+
 @contextmanager
 def k8s_cluster_info_mocks():
     """

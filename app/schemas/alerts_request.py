@@ -113,7 +113,7 @@ class AlertCreateRequest(BaseModel):
             str: Human-readable string representation
         """
         return (
-            f"Create alert: {self.alert_type} on pod {self.pod_id} "
+            f"AlertCreateRequest: {self.alert_type} on pod {self.pod_id} "
             f"node {self.node_id}"
         )
 
@@ -167,7 +167,7 @@ class AlertResponse(BaseModel):
             str: Human-readable string representation
         """
         return (
-            f"Alert {self.id}: {self.alert_type} on pod {self.pod_id} "
+            f"AlertResponse {self.id}: {self.alert_type} on pod {self.pod_id} "
             f"node {self.node_id} at {self.created_at} by model {self.alert_model}"
         )
 
