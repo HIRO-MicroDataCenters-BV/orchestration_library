@@ -1,4 +1,4 @@
-"""Make is_decision_status defauklt value to None
+"""Make is_decision_status default value to None
 
 Revision ID: aaa66689a4fe
 Revises: 586945147dca
