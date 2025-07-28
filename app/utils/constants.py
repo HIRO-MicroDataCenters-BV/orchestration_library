@@ -14,6 +14,11 @@ POD_PARENT_TYPE_ENUM = (
     "DaemonSet",
     "CronJob",
 )
+WORKLOAD_REQUEST_DECISION_STATUS_ENUM = (
+    "pending",
+    "successful",
+    "failed"
+)
 
 class WorkloadActionTypeEnum(str, Enum):
     """
@@ -44,3 +49,11 @@ class PodParentTypeEnum(str, Enum):
     DAEMONSET = "DaemonSet"
     CRONJOB = "CronJob"
     OTHER = "Other"
+
+class WorkloadRequestDecisionStatusEnum(str, Enum):
+    """
+    Enum for workload request decision statuses.
+    """
+    PENDING = "pending"
+    SUCCESSFUL = "successful"
+    FAILED = "failed"

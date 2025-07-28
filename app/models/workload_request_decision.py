@@ -15,7 +15,10 @@ from sqlalchemy import (
 )
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
-from app.utils.constants import POD_PARENT_TYPE_ENUM
+from app.utils.constants import (
+    POD_PARENT_TYPE_ENUM,
+    WORKLOAD_REQUEST_DECISION_STATUS_ENUM,
+)
 
 
 class WorkloadRequestDecision(Base, BaseDictMixin):
@@ -37,7 +40,12 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     demand_memory = Column(Float, nullable=False)
     demand_slack_cpu = Column(Float)
     demand_slack_memory = Column(Float)
-    is_decision_status = Column(Boolean)
+    decision_status = Column(
+        SAEnum(
+            *WORKLOAD_REQUEST_DECISION_STATUS_ENUM,
+            name="workload_request_decision_status_enum"
+        ), nullable=False
+    )
     pod_parent_id = Column(UUID(as_uuid=True), nullable=False)
     pod_parent_name = Column(String(255), nullable=False)
     pod_parent_kind = Column(
