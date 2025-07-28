@@ -51,18 +51,30 @@ async def create_workload_decision(db_session: AsyncSession, data: WorkloadReque
         logger.info("successfully created pod decision with %s", data.pod_name)
         return db_obj
     except IntegrityError as exc:
-        await db_session.rollback()
-        logger.error(
-            "Integrity error while creating pod decision %s %s", data.pod_name, str(exc)
-        )
-        raise DBEntryCreationException(
-            message=f"Failed to create pod decision"
-            f"'{data.pod_name}': Data constraint violation",
-            details={
-                "error_type": "pod_request_decision_database_integrity_error",
+        await handle_db_exception(
+            exc,
+            db_session,
+            logger,
+            exception_details={
+                "message": f"Failed to create workload_decision with name '{data.pod_name}'",
+                "pod_name": data.pod_name,
                 "error": str(exc),
+                "error_type": "pod_request_decision_database_integrity_error",
             },
-        ) from exc
+            custom_exception_cls=DBEntryCreationException,
+        )
+        # await db_session.rollback()
+        # logger.error(
+        #     "Integrity error while creating pod decision %s %s", data.pod_name, str(exc)
+        # )
+        # raise DBEntryCreationException(
+        #     message=f"Failed to create pod decision"
+        #     f"'{data.pod_name}': Data constraint violation",
+        #     details={
+        #         "error_type": "pod_request_decision_database_integrity_error",
+        #         "error": str(exc),
+        #     },
+        # ) from exc
     except OperationalError as exc:
         await handle_db_exception(
             exc,

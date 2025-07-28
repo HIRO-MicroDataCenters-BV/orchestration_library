@@ -9,8 +9,83 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.models.tuning_parameter import TuningParameter
 from app.repositories import tuning_parameter
-from app.schemas.tuning_parameter_schema import TuningParameterCreate
+from app.schemas.tuning_parameter_schema import (
+    TuningParameterBase,
+    TuningParameterCreate,
+    TuningParameterResponse,
+)
 from app.utils.exceptions import DatabaseConnectionException
+
+
+def make_tuning_param(**kwargs):
+    """Helper function to create a TuningParameter instance with default values."""
+    defaults = {
+        "id": 1,
+        "output_1": 1.1,
+        "output_2": 2.2,
+        "output_3": 3.3,
+        "alpha": 0.1,
+        "beta": 0.2,
+        "gamma": 0.3,
+        "created_at": "2024-07-21T12:00:00Z",
+    }
+    defaults.update(kwargs)
+    return TuningParameter(**defaults)
+
+
+def test_get_parameters_returns_dict():
+    """Test that get_parameters returns a dictionary of tuning parameters."""
+    param = make_tuning_param()
+    params = param.get_parameters()
+    assert isinstance(params, dict)
+    assert params["output_1"] == 1.1
+    assert params["output_2"] == 2.2
+    assert params["output_3"] == 3.3
+    assert params["alpha"] == 0.1
+    assert params["beta"] == 0.2
+    assert params["gamma"] == 0.3
+
+
+def test_repr_returns_string():
+    """Test that __repr__ returns a string representation of the tuning parameter."""
+    param = make_tuning_param()
+    r = repr(param)
+    assert r.startswith("<TuningParameter(")
+    assert f"id={param.id}" in r
+    assert f"created_at={param.created_at}" in r
+
+
+def test_tuning_parameter_base_and_create():
+    """Test TuningParameterBase and TuningParameterCreate schemas."""
+    base = TuningParameterBase(
+        output_1=1.0, output_2=2.0, output_3=3.0, alpha=0.1, beta=0.2, gamma=0.3
+    )
+    assert base.output_1 == 1.0
+    create = TuningParameterCreate(**base.model_dump())
+    assert create.alpha == 0.1
+    assert isinstance(create, TuningParameterCreate)
+
+
+def test_tuning_parameter_response_fields_and_config_methods():
+    """Test TuningParameterResponse fields and config methods."""
+    now = datetime.datetime.utcnow()
+    resp = TuningParameterResponse(
+        id=123,
+        output_1=1.0,
+        output_2=2.0,
+        output_3=3.0,
+        alpha=0.1,
+        beta=0.2,
+        gamma=0.3,
+        created_at=now,
+    )
+    assert resp.id == 123
+    assert resp.created_at == now
+    # Test Config methods
+    cfg = TuningParameterResponse.Config()
+    assert cfg.get_orm_mode() is True
+    cfg.set_orm_mode(False)
+    assert cfg.get_orm_mode() is False
 
 
 @pytest.mark.asyncio
