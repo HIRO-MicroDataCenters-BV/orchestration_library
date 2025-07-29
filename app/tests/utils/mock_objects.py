@@ -12,7 +12,7 @@ from app.schemas.workload_action_schema import (
     WorkloadActionUpdate,
 )
 from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionCreate
-from app.utils.constants import POD_PARENT_TYPE_ENUM
+from app.utils.constants import POD_PARENT_TYPE_ENUM, WorkloadRequestDecisionStatusEnum
 
 
 TEST_DATE = datetime.now(timezone.utc)
@@ -402,7 +402,7 @@ def mock_workload_request_decision_create() -> WorkloadRequestDecisionCreate:
         demand_memory=256,
         demand_slack_cpu=0.1,
         demand_slack_memory=64,
-        is_decision_status=True,
+        decision_status=WorkloadRequestDecisionStatusEnum.SUCCESSFUL,
         pod_parent_id=uuid4(),
         pod_parent_name="controller",
         pod_parent_kind="Deployment",
@@ -425,7 +425,7 @@ def mock_mock_workload_request_decision_api():
         "demand_memory": 512.0,
         "demand_slack_cpu": 0.5,
         "demand_slack_memory": 128.0,
-        "is_decision_status": True,
+        "decision_status": WorkloadRequestDecisionStatusEnum.SUCCESSFUL,
         "pod_parent_id": str(uuid4()),
         "pod_parent_name": "controller-1",
         "pod_parent_kind": POD_PARENT_TYPE_ENUM[0],

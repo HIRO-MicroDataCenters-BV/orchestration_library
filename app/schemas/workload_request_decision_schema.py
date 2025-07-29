@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from app.utils.constants import PodParentTypeEnum
+from app.utils.constants import WorkloadRequestDecisionStatusEnum
 
 
 class WorkloadRequestDecisionSchema(BaseModel):
@@ -27,7 +28,7 @@ class WorkloadRequestDecisionSchema(BaseModel):
     demand_memory: float
     demand_slack_cpu: Optional[float] = None
     demand_slack_memory: Optional[float] = None
-    is_decision_status: bool
+    decision_status: WorkloadRequestDecisionStatusEnum
     pod_parent_id: UUID
     pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
@@ -75,7 +76,7 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     demand_memory: Optional[float] = None
     demand_slack_cpu: Optional[float] = None
     demand_slack_memory: Optional[float] = None
-    is_decision_status: Optional[bool] = None
+    decision_status: Optional[WorkloadRequestDecisionStatusEnum] = None
     pod_parent_id: Optional[UUID] = None
     pod_parent_name: Optional[str] = None
     pod_parent_kind: Optional[PodParentTypeEnum] = None
@@ -123,7 +124,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     demand_memory: float
     demand_slack_cpu: Optional[float] = None
     demand_slack_memory: Optional[float] = None
-    is_decision_status: bool
+    decision_status: WorkloadRequestDecisionStatusEnum
     pod_parent_id: UUID
     pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
