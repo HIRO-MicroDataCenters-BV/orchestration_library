@@ -2,6 +2,7 @@
 List the pods in the Kubernetes cluster.
 """
 
+import logging
 import re
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
@@ -11,6 +12,8 @@ from app.repositories.k8s.k8s_common import (
     K8S_IN_USE_NAMESPACE_REGEX,
     get_k8s_core_v1_client,
 )
+
+logger = logging.getLogger(__name__)
 
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
@@ -23,7 +26,7 @@ def list_k8s_pods(
     """
     try:
         core_v1 = get_k8s_core_v1_client()
-        print("Listing pods with their IPs:")
+        logger.info("Listing pods with their IPs:")
 
         if namespace:
             pods = core_v1.list_namespaced_pod(namespace, watch=False)

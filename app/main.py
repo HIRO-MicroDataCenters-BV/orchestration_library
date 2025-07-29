@@ -3,6 +3,7 @@ FastAPI application entry point.
 """
 
 import logging
+from app.logger.logging_config import setup_logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,7 +36,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.basicConfig(level=logging.DEBUG)
+setup_logging(log_file="orchestration_app.log", level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 
 app.include_router(k8s_pod.router, tags=["Kubernetes"])
 app.include_router(k8s_pod_parent.router, tags=["Kubernetes"])

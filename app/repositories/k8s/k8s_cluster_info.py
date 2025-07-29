@@ -4,6 +4,7 @@ Get cluster information from Kubernetes.
 
 import logging
 import concurrent
+from math import log
 from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
@@ -195,6 +196,7 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=N
         }
         for key, future in futures.items():
             results[key] = future.result()
+    logger.info("Fetched resources for namespace %s: %s", ns, results)
     return results
 
 
@@ -292,6 +294,7 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         basic_info.update(cluster_resource_utilization)
 
         if not advanced:
+            logger.info("Fetched basic cluster information")
             return basic_info
 
         # Advanced info
@@ -300,7 +303,7 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
             core_v1, version_v1, apps_v1, batch_v1, namespaces
         )
         cluster_info = {**basic_info, **advanced_info}
-
+        logger.info("Fetched advanced cluster information")
         return JSONResponse(content=to_serializable(cluster_info))
     except ApiException as e:
         handle_k8s_exceptions(
@@ -370,5 +373,8 @@ def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:
         "cluster_cpu_utilization": cluster_cpu_utilization,
         "cluster_memory_utilization": cluster_memory_utilization,
     }
+    logger.info(
+        "Cluster resource utilization: %s", cluster_resource_utilization
+    )
 
     return cluster_resource_utilization

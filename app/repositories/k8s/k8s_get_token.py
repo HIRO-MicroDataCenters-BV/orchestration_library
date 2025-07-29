@@ -82,4 +82,7 @@ def create_token_for_sa(
             "spec": token_spec.to_dict(),
         },
     )
+    logger.info(
+        f"Generated read-only token for service account {sa_name} in namespace {namespace}"
+    )
     return token_response.status.token
