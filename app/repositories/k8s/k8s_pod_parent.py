@@ -1,6 +1,7 @@
 """
 Get the parent controller of a Kubernetes pod.
 """
+
 import logging
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
@@ -15,6 +16,7 @@ from app.utils.k8s import handle_k8s_exceptions
 
 
 logger = logging.getLogger(__name__)
+
 
 def get_pod_by_name_or_uid(core_v1, namespace, pod_name=None, pod_id=None):
     """
@@ -31,8 +33,9 @@ def get_pod_by_name_or_uid(core_v1, namespace, pod_name=None, pod_id=None):
         if pod.metadata.uid == pod_id:
             return pod
     logger.warning(
-        f"Pod with UID {pod_id} not found in namespace {namespace}. "
-        "Ensure the pod exists and the UID is correct."
+        "Pod with UID %s not found in namespace %s. Ensure the pod exists and the UID is correct.",
+        pod_id,
+        namespace,
     )
 
     return None
@@ -56,7 +59,9 @@ def get_deployment_from_replicaset(apps_v1, replicaset_name, namespace):
                 "current_scale": deployment.spec.replicas,
             }
     logger.warning(
-        f"ReplicaSet {replicaset_name} in namespace {namespace} has no owner of kind Deployment."
+        "ReplicaSet %s in namespace %s has no owner of kind Deployment.",
+        replicaset_name,
+        namespace,
     )
     return None
 
@@ -101,10 +106,13 @@ def get_controller_details(apps_v1, batch_v1, namespace, owner):
             "current_scale": job.spec.parallelism or 1,
         }
     logger.warning(
-        f"Owner {name} of kind {kind} not recognized or not supported in this context."
+        "Owner %s of kind %s not recognized or not supported in this context.",
+        name,
+        kind,
     )
 
     return None
+
 
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
@@ -145,7 +153,9 @@ def get_parent_controller_details_of_pod(
             if controller_details:
                 return JSONResponse(content=controller_details)
         logger.warning(
-            f"Pod {pod_name or pod_id} in namespace {namespace} has no recognized parent controller."
+            "Pod %s in namespace %s has no recognized parent controller.",
+            pod_name or pod_id,
+            namespace,
         )
         return {
             "message": "No known controller found (Deployment, StatefulSet, DaemonSet, or Job)"

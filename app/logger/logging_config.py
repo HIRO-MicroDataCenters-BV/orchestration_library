@@ -1,3 +1,7 @@
+"""Logging configuration for the orchestration application.
+This module sets up logging to both a file and the console, with rotation for the log file.
+It ensures that logs from the FastAPI application and Uvicorn server are captured.
+"""
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -7,6 +11,14 @@ def setup_logging(
     max_bytes: int = 10 * 1024 * 1024,  # 10 MB
     backup_count: int = 5,
 ):
+    """    Set up logging configuration.
+    Logs will be written to a file and also output to the console.
+    Args:
+        log_file (str): Path to the log file.
+        level (int): Logging level (default: logging.INFO).
+        max_bytes (int): Maximum size of the log file before rotation (default: 10 MB).
+        backup_count (int): Number of backup files to keep (default: 5).
+    """
     formatter = logging.Formatter(
         "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
     )

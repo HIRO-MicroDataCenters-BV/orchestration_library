@@ -4,7 +4,6 @@ Get cluster information from Kubernetes.
 
 import logging
 import concurrent
-from math import log
 from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config

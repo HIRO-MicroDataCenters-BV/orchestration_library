@@ -83,6 +83,6 @@ def create_token_for_sa(
         },
     )
     logger.info(
-        f"Generated read-only token for service account {sa_name} in namespace {namespace}"
+        "Generated read-only token for service account %s in namespace %s", sa_name, namespace
     )
     return token_response.status.token

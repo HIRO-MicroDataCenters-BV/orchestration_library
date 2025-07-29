@@ -3,7 +3,6 @@ FastAPI application entry point.
 """
 
 import logging
-from app.logger.logging_config import setup_logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +22,7 @@ from app.api import (
     workload_request_decision_api,
     wrokload_flow_api
 )
+from app.logger.logging_config import setup_logging
 
 from app.utils.exception_handlers import init_exception_handlers
 

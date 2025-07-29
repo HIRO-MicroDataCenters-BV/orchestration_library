@@ -88,5 +88,5 @@ def get_k8s_node_metric_map():
                 "Node metrics will be empty."
             )
         else:
-            logger.error(f"Failed to fetch node metrics: {e}")
+            logger.error("Failed to fetch node metrics: %s", e)
         return {}
