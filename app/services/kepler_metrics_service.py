@@ -6,6 +6,11 @@ import logging
 
 class KeplerMetricsService:
     KEPLER_METRICS_URL = "http://localhost:9102/metrics"
+    
+    def __init__(self):
+        # Store previous measurements for rate calculation
+        self._previous_metrics = {}
+        self._scrape_interval = 60  # Default 60 seconds between scrapes
 
     async def fetch_metrics(self) -> str:
         async with aiohttp.ClientSession() as session:
@@ -54,34 +59,28 @@ class KeplerMetricsService:
         
         # Convert to ContainerPowerMetricsCreate objects
         results = []
+        current_time = datetime.utcnow()
+        
         for container_key, data in container_metrics.items():
             labels = data['labels']
             metrics = data['metrics']
+            container_id = f"{container_key[0]}_{container_key[1]}_{container_key[2]}"  # unique container identifier
             
-            # CPU core power from core joules
-            cpu_core_watts = None
-            if 'core_joules' in metrics:
-                cpu_core_watts = metrics['core_joules'] * 0.1  # Rough conversion factor
+            # Get previous metrics for this container if they exist
+            previous_data = self._previous_metrics.get(container_id)
             
-            # CPU package power from package joules
-            cpu_package_watts = None
-            if 'package_joules' in metrics:
-                cpu_package_watts = metrics['package_joules'] * 0.08  # Rough conversion factor
+            # Calculate watts from joules using rate of change
+            cpu_core_watts = self._calculate_watts('core_joules', metrics, previous_data)
+            cpu_package_watts = self._calculate_watts('package_joules', metrics, previous_data)
+            memory_power_watts = self._calculate_watts('dram_joules', metrics, previous_data)
+            platform_watts = self._calculate_watts('platform_joules', metrics, previous_data)
+            other_watts = self._calculate_watts('other_joules', metrics, previous_data)
             
-            # Memory power from DRAM joules
-            memory_power_watts = None
-            if 'dram_joules' in metrics:
-                memory_power_watts = metrics['dram_joules'] * 0.05  # Rough conversion factor
-            
-            # Platform power from platform joules
-            platform_watts = None
-            if 'platform_joules' in metrics:
-                platform_watts = metrics['platform_joules'] * 0.07  # Rough conversion factor
-            
-            # Other power from other joules
-            other_watts = None
-            if 'other_joules' in metrics:
-                other_watts = metrics['other_joules'] * 0.06  # Rough conversion factor
+            # Store current metrics for next calculation
+            self._previous_metrics[container_id] = {
+                'timestamp': current_time,
+                'metrics': metrics.copy()
+            }
             
             results.append(ContainerPowerMetricsCreate(
                 timestamp=datetime.utcnow(),
@@ -104,6 +103,34 @@ class KeplerMetricsService:
         
         logging.info(f"KeplerMetricsService: Parsed {len(results)} container power metrics from Kepler.")
         return results
+
+    def _calculate_watts(self, metric_key: str, current_metrics: dict, previous_data: dict) -> float:
+        """
+        Calculate watts from joules using rate of change.
+        Watts = (current_joules - previous_joules) / time_diff_seconds
+        """
+        if metric_key not in current_metrics:
+            return 0.0
+            
+        current_joules = current_metrics[metric_key]
+        
+        # If no previous data, use a fallback estimation
+        if not previous_data or metric_key not in previous_data['metrics']:
+            # Fallback: assume a small time window and estimate based on cumulative value
+            # This is still an approximation but better than arbitrary factors
+            estimated_watts = current_joules / 3600  # Assume values accumulated over 1 hour
+            return max(0.0, estimated_watts)  # Ensure non-negative
+        
+        previous_joules = previous_data['metrics'][metric_key]
+        time_diff = (datetime.utcnow() - previous_data['timestamp']).total_seconds()
+        
+        # Calculate rate: joules per second = watts
+        if time_diff > 0:
+            joules_diff = current_joules - previous_joules
+            watts = joules_diff / time_diff
+            return max(0.0, watts)  # Ensure non-negative (handle counter resets)
+        
+        return 0.0
 
     async def scrape_and_transform(self) -> List[ContainerPowerMetricsCreate]:
         metrics_text = await self.fetch_metrics()
