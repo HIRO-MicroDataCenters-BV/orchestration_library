@@ -24,7 +24,7 @@ from app.api import (
     wrokload_flow_api,
     container_power_metrics
 )
-from app.scheduler.kepler_metrics_scheduler import KeplerMetricsScheduler
+from app.scheduler.metric_collector_scheduler import MetricCollectorScheduler
 
 from app.utils.exception_handlers import init_exception_handlers
 
@@ -59,15 +59,15 @@ app.include_router(k8s_dashboard_api.router, tags=["Kubernetes Dashboard"])
 
 init_exception_handlers(app)
 
-kepler_scheduler = KeplerMetricsScheduler(interval_seconds=15)
+metrics_scheduler = MetricCollectorScheduler(interval_seconds=10)
 
 @app.on_event("startup")
 async def start_scheduler():
-    kepler_scheduler.start()
+    metrics_scheduler.start()
 
 @app.on_event("shutdown")
 async def stop_scheduler():
-    kepler_scheduler.stop()
+    metrics_scheduler.stop()
 
 
 if __name__ == '__main__':

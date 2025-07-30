@@ -10,7 +10,6 @@ class KeplerMetricsService:
     def __init__(self):
         # Store previous measurements for rate calculation
         self._previous_metrics = {}
-        self._scrape_interval = 60  # Default 60 seconds between scrapes
 
     async def fetch_metrics(self) -> str:
         async with aiohttp.ClientSession() as session:
