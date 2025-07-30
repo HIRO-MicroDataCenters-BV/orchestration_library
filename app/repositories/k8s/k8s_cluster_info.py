@@ -154,37 +154,62 @@ def get_namespaces(core_v1):
     return namespaces
 
 
-def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=None):
+def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns=None, resource_types=None):
     """
     Fetches and returns basic information about specified resources in
     a specific namespace, in parallel.
+    If ns is None or empty, fetches resources from all namespaces.
     resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
     """
     if resource_types is None:
         resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
 
-    fetchers = {
-        "pods": lambda: [
-            get_pod_basic_info(pod)
-            for pod in core_v1.list_namespaced_pod(namespace=ns).items
-        ],
-        "deployments": lambda: [
-            get_deployment_basic_info(dep)
-            for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
-        ],
-        "jobs": lambda: [
-            get_job_basic_info(job)
-            for job in batch_v1.list_namespaced_job(namespace=ns).items
-        ],
-        "statefulsets": lambda: [
-            get_statefulset_basic_info(sts)
-            for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
-        ],
-        "daemonsets": lambda: [
-            get_daemonset_basic_info(ds)
-            for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
-        ],
-    }
+    if not ns:
+        fetchers = {
+            "pods": lambda: [
+                get_pod_basic_info(pod)
+                for pod in core_v1.list_pod_for_all_namespaces(watch=False).items
+            ],
+            "deployments": lambda: [
+                get_deployment_basic_info(dep)
+                for dep in apps_v1.list_deployment_for_all_namespaces(watch=False).items
+            ],
+            "jobs": lambda: [
+                get_job_basic_info(job)
+                for job in batch_v1.list_job_for_all_namespaces(watch=False).items
+            ],
+            "statefulsets": lambda: [
+                get_statefulset_basic_info(sts)
+                for sts in apps_v1.list_stateful_set_for_all_namespaces(watch=False).items
+            ],
+            "daemonsets": lambda: [
+                get_daemonset_basic_info(ds)
+                for ds in apps_v1.list_daemon_set_for_all_namespaces(watch=False).items
+            ],
+        }
+    else:
+        fetchers = {
+            "pods": lambda: [
+                get_pod_basic_info(pod)
+                for pod in core_v1.list_namespaced_pod(namespace=ns).items
+            ],
+            "deployments": lambda: [
+                get_deployment_basic_info(dep)
+                for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
+            ],
+            "jobs": lambda: [
+                get_job_basic_info(job)
+                for job in batch_v1.list_namespaced_job(namespace=ns).items
+            ],
+            "statefulsets": lambda: [
+                get_statefulset_basic_info(sts)
+                for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
+            ],
+            "daemonsets": lambda: [
+                get_daemonset_basic_info(ds)
+                for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
+            ],
+        }
 
     selected_fetchers = {k: v for k, v in fetchers.items() if k in resource_types}
 
@@ -196,10 +221,9 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=N
         for key, future in futures.items():
             results[key] = future.result()
     logger.info("Fetched resources for namespace %s: %s", ns, results)
-    return results
 
 
-def get_all_resources(core_v1, apps_v1, batch_v1, namespaces, resource_types=None):
+def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
     """
     Fetches and returns basic information about specified resources in all namespaces.
     resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
@@ -209,13 +233,13 @@ def get_all_resources(core_v1, apps_v1, batch_v1, namespaces, resource_types=Non
 
     all_resources = {key: [] for key in resource_types}
 
-    def fetch_ns_resources(ns):
+    def fetch_ns_resources():
         return get_resources_for_namespace(
-            core_v1, apps_v1, batch_v1, ns, resource_types=resource_types
+            core_v1, apps_v1, batch_v1, None, resource_types
         )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(fetch_ns_resources, namespaces))
+        results = list(executor.map(fetch_ns_resources))
 
     for ns_resources in results:
         for key in all_resources:
@@ -234,7 +258,8 @@ def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
             "cluster_name": executor.submit(get_cluster_name, core_v1),
             "nodes": executor.submit(get_nodes),
             "resources": executor.submit(
-                get_all_resources, core_v1, apps_v1, batch_v1, namespaces, ["pods"]
+                get_all_resources, core_v1, apps_v1, batch_v1, 
+                resource_types=["pods"]
             ),
         }
         results = {key: future.result() for key, future in futures.items()}
@@ -243,6 +268,7 @@ def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
         "cluster_name": results["cluster_name"],
         "nodes": results["nodes"],
         "pods": results["resources"]["pods"],
+        "namespaces": namespaces,
     }
 
 
