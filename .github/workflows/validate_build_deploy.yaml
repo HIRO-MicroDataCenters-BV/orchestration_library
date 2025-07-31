@@ -301,7 +301,7 @@ jobs:
           echo "Pods for job:"
           kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o wide || true
 
-          POD_NAME=$(kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o jsonpath="{.items[0].metadata.name}")
+          POD_NAME=$(kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o json | jq -r '.items[0].metadata.name // empty')
           if [ -z "$POD_NAME" ]; then
             echo "No pods found for Alembic migration job. Check job status above."
             exit 1
