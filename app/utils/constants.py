@@ -28,16 +28,16 @@ class WorkloadActionTypeEnum(str, Enum):
     CREATE = "create"
     DELETE = "delete"
     MOVE = "move"
-    SWAP = "swap"
+    SWAP_X = "swap_x"
+    SWAP_Y = "swap_y"
 
 class WorkloadActionStatusEnum(str, Enum):
     """
     Enum for action statuses.
     """
     PENDING = "pending"
-    SUCCESSFUL = "successful"
+    SUCCEEDED = "succeeded"
     FAILED = "failed"
-    PARTIAL = "partial"
 
 class PodParentTypeEnum(str, Enum):
     """Enum for pod parent types.

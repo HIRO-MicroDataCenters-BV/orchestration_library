@@ -17,6 +17,7 @@ from app.tests.utils.mock_objects import (
     mock_workload_action_update_obj,
     to_jsonable,
 )
+from app.utils.constants import WorkloadActionStatusEnum, WorkloadActionTypeEnum
 
 
 @pytest.mark.asyncio
@@ -41,7 +42,7 @@ async def test_create_workload_action_route(mock_create):
 async def test_get_workload_action_route(mock_get):
     """Test getting a workload action by ID."""
     mock_get.return_value = mock_workload_action_obj(
-        action_id=TEST_UUID, action_type="Bind"
+        action_id=TEST_UUID, action_type=WorkloadActionTypeEnum.BIND
     ).model_dump()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -57,9 +58,9 @@ async def test_get_all_workload_actions_route(mock_list):
     """Test listing all workload actions."""
     random_uuid = str(uuid4())
     mock_list.return_value = [
-        mock_workload_action_obj(action_id=TEST_UUID, action_type="Bind").model_dump(),
+        mock_workload_action_obj(action_id=TEST_UUID, action_type=WorkloadActionTypeEnum.BIND).model_dump(),
         mock_workload_action_obj(
-            action_id=random_uuid, action_type="Create"
+            action_id=random_uuid, action_type=WorkloadActionTypeEnum.CREATE
         ).model_dump(),
     ]
     transport = ASGITransport(app=app)
@@ -77,18 +78,18 @@ async def test_get_all_workload_actions_route(mock_list):
 async def test_update_workload_action_route(mock_update):
     """Test updating a workload action."""
     update_data = mock_workload_action_update_obj(
-        action_status="successful"
+        action_status=WorkloadActionStatusEnum.SUCCEEDED
     ).model_dump()
     update_data = to_jsonable(update_data)
     mock_update.return_value = mock_workload_action_obj(
-        action_id=TEST_UUID, action_status="successful"
-    )
+        action_id=TEST_UUID, action_status=WorkloadActionStatusEnum.SUCCEEDED
+    ).model_dump()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.put(f"/workload_action/{TEST_UUID}", json=update_data)
     assert response.status_code == 200
     assert response.json()["id"] == TEST_UUID
-    assert response.json()["action_status"] == "successful"
+    assert response.json()["action_status"] == WorkloadActionStatusEnum.SUCCEEDED
     mock_update.assert_awaited_once()
 
 

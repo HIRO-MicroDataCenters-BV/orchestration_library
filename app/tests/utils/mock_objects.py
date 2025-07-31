@@ -12,11 +12,18 @@ from app.schemas.workload_action_schema import (
     WorkloadActionUpdate,
 )
 from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionCreate
-from app.utils.constants import POD_PARENT_TYPE_ENUM, WorkloadRequestDecisionStatusEnum
+from app.utils.constants import (
+    POD_PARENT_TYPE_ENUM,
+    PodParentTypeEnum,
+    WorkloadActionStatusEnum,
+    WorkloadActionTypeEnum,
+    WorkloadRequestDecisionStatusEnum,
+)
 
 
 TEST_DATE = datetime.now(timezone.utc)
 TEST_UUID = str(uuid4())
+
 
 def to_jsonable(obj):
     """Recursively convert UUIDs and datetimes in dicts to strings for JSON serialization."""
@@ -29,6 +36,7 @@ def to_jsonable(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
     return obj
+
 
 def mock_version_info():
     """
@@ -224,13 +232,13 @@ def mock_workload_action_create_obj(
     """
     return WorkloadActionCreate(
         action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
-        action_type=action_type or "Create",
-        action_status=action_status or "pending",
+        action_type=action_type or WorkloadActionTypeEnum.CREATE,
+        action_status=action_status or WorkloadActionStatusEnum.PENDING,
         action_start_time=datetime.now(timezone.utc),
         action_end_time=None,
         action_reason=f"Test reason {count}",
         pod_parent_name=f"parent {count}",
-        pod_parent_type="Deployment",
+        pod_parent_type=PodParentTypeEnum.DEPLOYMENT,
         pod_parent_uid=uuid4(),
         created_pod_name=f"pod {count}",
         created_pod_namespace="default",
@@ -252,11 +260,11 @@ def mock_workload_action_update_obj(
     """
     return WorkloadActionUpdate(
         action_id=action_id or "123e4567-e89b-12d3-a456-426614174000",
-        action_type=action_type or "Swap",
-        action_status=action_status or "pending",
+        action_type=action_type or WorkloadActionTypeEnum.SWAP_X,
+        action_status=action_status or WorkloadActionStatusEnum.PENDING,
         action_reason=f"Updated reason {count}",
         pod_parent_name=f"parent {count}",
-        pod_parent_type="Deployment",
+        pod_parent_type=PodParentTypeEnum.DEPLOYMENT,
         pod_parent_uid=uuid4(),
         created_pod_name=f"pod {count}",
         created_pod_namespace="default",
@@ -273,13 +281,13 @@ def mock_workload_action_obj(
     """
     return WorkloadAction(
         id=action_id or "123e4567-e89b-12d3-a456-426614174000",
-        action_type=action_type or "Create",
-        action_status=action_status or "pending",
+        action_type=action_type or WorkloadActionTypeEnum.CREATE,
+        action_status=action_status or WorkloadActionStatusEnum.PENDING,
         action_start_time=datetime.now(timezone.utc),
         action_end_time=None,
         action_reason=f"Test reason {count}",
         pod_parent_name=f"parent {count}",
-        pod_parent_type="Deployment",
+        pod_parent_type=PodParentTypeEnum.DEPLOYMENT,
         pod_parent_uid=uuid4(),
         created_pod_name=f"pod {count}",
         created_pod_namespace="default",
@@ -291,7 +299,7 @@ def mock_workload_action_obj(
         bound_pod_namespace=None,
         bound_node_name=None,
         created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc)
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -308,7 +316,7 @@ def mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL):
             source_port=1234,
             destination_ip="192.168.1.2",
             destination_port=80,
-            protocol="TCP"
+            protocol="TCP",
         )
     return AlertCreateRequest(
         alert_type=alert_type,
@@ -332,7 +340,7 @@ def mock_alert_create_request_data(alert_type=AlertType.ABNORMAL):
             "source_port": 1234,
             "destination_ip": "192.168.1.2",
             "destination_port": 80,
-            "protocol": "TCP"
+            "protocol": "TCP",
         }
     return {
         "alert_type": alert_type,
@@ -344,7 +352,7 @@ def mock_alert_create_request_data(alert_type=AlertType.ABNORMAL):
         "source_port": 1234,
         "destination_ip": "192.168.1.2",
         "destination_port": 80,
-        "protocol": "TCP"
+        "protocol": "TCP",
     }
 
 
@@ -364,7 +372,7 @@ def mock_alert_response_obj(alert_type=AlertType.ABNORMAL):
         destination_ip="192.168.1.2",
         destination_port=80,
         protocol="TCP",
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
 
 
@@ -384,7 +392,7 @@ def mock_alert_obj(alert_type=AlertType.ABNORMAL):
         destination_ip="192.168.1.2",
         destination_port=80,
         protocol="TCP",
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
 
 
@@ -405,7 +413,7 @@ def mock_workload_request_decision_create() -> WorkloadRequestDecisionCreate:
         decision_status=WorkloadRequestDecisionStatusEnum.SUCCESSFUL,
         pod_parent_id=uuid4(),
         pod_parent_name="controller",
-        pod_parent_kind="Deployment",
+        pod_parent_kind=PodParentTypeEnum.DEPLOYMENT,
         created_at="2024-07-01T12:00:00Z",
         deleted_at=None,
     )
@@ -428,7 +436,7 @@ def mock_mock_workload_request_decision_api():
         "decision_status": WorkloadRequestDecisionStatusEnum.SUCCESSFUL,
         "pod_parent_id": str(uuid4()),
         "pod_parent_name": "controller-1",
-        "pod_parent_kind": POD_PARENT_TYPE_ENUM[0],
+        "pod_parent_kind": PodParentTypeEnum.DEPLOYMENT,
         "created_at": TEST_DATE.isoformat(),
         "deleted_at": None,
     }
