@@ -29,6 +29,7 @@ async def test_cadvisor_metrics():
             result.append({
                 "timestamp": metric.timestamp.isoformat(),
                 "container_name": metric.container_name,
+                "container_id": metric.container_id,
                 "pod_name": metric.pod_name,
                 "namespace": metric.namespace,
                 "node_name": metric.node_name,
@@ -181,6 +182,7 @@ async def test_kepler_metrics():
             result.append({
                 "timestamp": metric.timestamp.isoformat(),
                 "container_name": metric.container_name,
+                "container_id": metric.container_id,
                 "pod_name": metric.pod_name,
                 "namespace": metric.namespace,
                 "node_name": metric.node_name,
@@ -351,6 +353,7 @@ async def test_both_metrics():
             result["cadvisor"].append({
                 "timestamp": metric.timestamp.isoformat(),
                 "container_name": metric.container_name,
+                "container_id": metric.container_id,
                 "pod_name": metric.pod_name,
                 "namespace": metric.namespace,
                 "metric_source": metric.metric_source,
@@ -364,6 +367,7 @@ async def test_both_metrics():
             result["kepler"].append({
                 "timestamp": metric.timestamp.isoformat(),
                 "container_name": metric.container_name,
+                "container_id": metric.container_id,
                 "pod_name": metric.pod_name,
                 "namespace": metric.namespace,
                 "metric_source": metric.metric_source,

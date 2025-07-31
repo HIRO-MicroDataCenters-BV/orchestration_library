@@ -89,6 +89,7 @@ class KeplerMetricsService:
             results.append(ContainerPowerMetricsCreate(
                 timestamp=datetime.utcnow(),
                 container_name=labels.get("container_name", "unknown"),
+                container_id=labels.get("container_id", None),
                 pod_name=labels.get("pod_name", "unknown"),
                 namespace=labels.get("container_namespace", None),
                 node_name=labels.get("node_name", None),

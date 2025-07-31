@@ -119,6 +119,7 @@ class CadvisorMetricsService:
             results.append(ContainerPowerMetricsCreate(
                 timestamp=current_time,
                 container_name=container_name,
+                container_id=container_id,
                 pod_name=pod_name,
                 namespace=namespace,
                 node_name=labels.get("node", labels.get("node_name", None)),

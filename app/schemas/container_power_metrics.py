@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 class ContainerPowerMetricsBase(BaseModel):
     timestamp: datetime = Field(..., description="Timestamp (UTC, RFC3339)")
     container_name: Optional[str] = Field(None, description="Container name")
+    container_id: Optional[str] = Field(None, description="Container ID")
     pod_name: Optional[str] = Field(None, description="Pod name")
     namespace: Optional[str] = Field(None, description="Namespace")
     node_name: Optional[str] = Field(None, description="Node name")
