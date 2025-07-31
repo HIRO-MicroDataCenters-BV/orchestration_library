@@ -439,3 +439,27 @@ def mock_mock_workload_request_decision_api():
         "created_at": TEST_DATE.isoformat(),
         "deleted_at": None,
     }
+
+def mock_cluster_info_api():
+    """Mock a cluster info object similar to what get_basic_cluster_info returns."""
+    # Each node should have 'usage' and 'allocatable' keys with cpu/memory strings
+    nodes = [
+        {
+            "usage": {"cpu": "1000m", "memory": "1024Mi"},
+            "allocatable": {"cpu": "2000m", "memory": "2048Mi"},
+        },
+        {
+            "usage": {"cpu": "500m", "memory": "512Mi"},
+            "allocatable": {"cpu": "1000m", "memory": "1024Mi"},
+        },
+    ]
+    return {
+        "cluster_id": "test-cluster-id",
+        "cluster_name": "test-cluster",
+        "nodes": nodes,
+        "pods": [
+            {"name": "pod1", "namespace": "default"},
+            {"name": "pod2", "namespace": "kube-system"},
+            {"name": "pod3", "namespace": "kube-system"},
+        ],
+    }
