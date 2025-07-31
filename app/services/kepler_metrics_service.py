@@ -43,9 +43,10 @@ class KeplerMetricsService:
                 labels_str, value = match.groups()
                 labels = dict(re.findall(r'(\w+)="([^"]*)"', labels_str))
                 
-                # Filter for specific namespace only
+                # Filter out system namespaces - collect from all except kernel, kube-system, and system
                 container_namespace = labels.get("container_namespace", "default")
-                if container_namespace != "energy-metrics":
+                excluded_namespaces = {"kernel", "kube-system", "system"}
+                if container_namespace in excluded_namespaces:
                     continue
                 
                 # Create unique key for container

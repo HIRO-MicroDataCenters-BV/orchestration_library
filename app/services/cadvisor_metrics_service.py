@@ -48,9 +48,9 @@ class CadvisorMetricsService:
                 # Extract actual container ID (last part after final /)
                 container_id = container_id_path.split("/")[-1] if "/" in container_id_path else container_id_path
                 
-                # Filter for specific container ID only
-                if container_id != "248680a72041fe702eb8b0357cb64ebc6d5f73fffe6fe6d4838e07e1e7345e26":
-                    continue
+                # # Filter for specific container ID only
+                # if container_id != "248680a72041fe702eb8b0357cb64ebc6d5f73fffe6fe6d4838e07e1e7345e26":
+                #     continue
 
                 # Parse pod name and namespace from name label
                 # Format: k8s_{CONTAINER_TYPE}_{POD_NAME}_{NAMESPACE}_{POD_UID}_{RESTART_COUNT}

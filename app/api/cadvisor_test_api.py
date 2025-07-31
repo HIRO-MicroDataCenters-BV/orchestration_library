@@ -4,8 +4,10 @@ Test API for CadvisorMetricsService
 
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any
+from datetime import datetime
 from app.services.cadvisor_metrics_service import CadvisorMetricsService
 from app.services.kepler_metrics_service import KeplerMetricsService
+from app.services.unified_container_metrics_service import UnifiedContainerMetricsService
 import logging
 
 router = APIRouter(prefix="/test")
@@ -13,6 +15,7 @@ router = APIRouter(prefix="/test")
 # Shared service instances to persist previous metrics between API calls
 _shared_cadvisor_service = CadvisorMetricsService()
 _shared_kepler_service = KeplerMetricsService()
+_shared_unified_service = UnifiedContainerMetricsService()
 
 @router.get("/cadvisor/metrics", response_model=List[Dict[str, Any]])
 async def test_cadvisor_metrics():
@@ -419,3 +422,140 @@ async def test_overall_health():
         },
         "overall_status": "healthy" if "healthy" in cadvisor_status and "healthy" in kepler_status else "partial"
     }
+
+
+# Unified service test endpoints
+@router.get("/unified/collect-and-store")
+async def test_collect_and_store_metrics():
+    """
+    Test endpoint to run collect_and_store_metrics function.
+    This will collect from both cAdvisor and Kepler, merge them, and store in database.
+    Returns the number of records stored and processing details.
+    """
+    try:
+        logging.info("Starting collect_and_store_metrics test...")
+        
+        # Run the collect and store process
+        stored_count = await _shared_unified_service.collect_and_store_metrics()
+        
+        result = {
+            "status": "success",
+            "stored_records": stored_count,
+            "message": f"Successfully processed and stored {stored_count} unified container metrics",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        logging.info(f"UnifiedTestAPI: {result['message']}")
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error in collect_and_store_metrics test: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to collect and store metrics: {str(e)}")
+
+
+@router.get("/unified/latest-metrics")
+async def test_get_latest_metrics(
+    container_name: str = None,
+    pod_name: str = None,
+    namespace: str = None,
+    limit: int = 10
+):
+    """
+    Test endpoint to retrieve latest unified metrics from database.
+    Optional filters: container_name, pod_name, namespace
+    """
+    try:
+        metrics = await _shared_unified_service.get_latest_metrics(
+            container_name=container_name,
+            pod_name=pod_name,
+            namespace=namespace,
+            limit=limit
+        )
+        
+        result = {
+            "status": "success",
+            "count": len(metrics),
+            "filters": {
+                "container_name": container_name,
+                "pod_name": pod_name,
+                "namespace": namespace,
+                "limit": limit
+            },
+            "metrics": metrics
+        }
+        
+        logging.info(f"UnifiedTestAPI: Retrieved {len(metrics)} metrics from database")
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error retrieving latest metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve metrics: {str(e)}")
+
+
+@router.get("/unified/debug-merge")
+async def test_debug_merge_process():
+    """
+    Test endpoint to debug the merge process without storing to database.
+    Shows raw metrics from both sources and the merged result.
+    """
+    try:
+        # Collect metrics from both sources
+        cadvisor_metrics = await _shared_unified_service.cadvisor_service.scrape_and_transform()
+        kepler_metrics = await _shared_unified_service.kepler_service.scrape_and_transform()
+        
+        # Merge them (but don't store)
+        unified_metrics = _shared_unified_service._merge_metrics(cadvisor_metrics, kepler_metrics)
+        
+        result = {
+            "status": "success",
+            "cadvisor": {
+                "count": len(cadvisor_metrics),
+                "sample": [
+                    {
+                        "container_name": m.container_name,
+                        "pod_name": m.pod_name,
+                        "namespace": m.namespace,
+                        "cpu_utilization_percent": m.cpu_utilization_percent,
+                        "memory_usage_bytes": m.memory_usage_bytes,
+                        "metric_source": m.metric_source
+                    } for m in cadvisor_metrics[:3]  # Show first 3
+                ]
+            },
+            "kepler": {
+                "count": len(kepler_metrics),
+                "sample": [
+                    {
+                        "container_name": m.container_name,
+                        "pod_name": m.pod_name,
+                        "namespace": m.namespace,
+                        "cpu_core_watts": m.cpu_core_watts,
+                        "cpu_package_watts": m.cpu_package_watts,
+                        "memory_power_watts": m.memory_power_watts,
+                        "metric_source": m.metric_source
+                    } for m in kepler_metrics[:3]  # Show first 3
+                ]
+            },
+            "unified": {
+                "count": len(unified_metrics),
+                "sample": [
+                    {
+                        "container_name": m.container_name,
+                        "pod_name": m.pod_name,
+                        "namespace": m.namespace,
+                        "cpu_utilization_percent": m.cpu_utilization_percent,
+                        "memory_usage_bytes": m.memory_usage_bytes,
+                        "cpu_core_watts": m.cpu_core_watts,
+                        "cpu_package_watts": m.cpu_package_watts,
+                        "memory_power_watts": m.memory_power_watts,
+                        "metric_source": m.metric_source
+                    } for m in unified_metrics[:3]  # Show first 3
+                ]
+            }
+        }
+        
+        logging.info(f"UnifiedTestAPI: Debug merge - cAdvisor:{len(cadvisor_metrics)}, Kepler:{len(kepler_metrics)}, Unified:{len(unified_metrics)}")
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error in debug merge process: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to debug merge process: {str(e)}")
