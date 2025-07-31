@@ -47,6 +47,10 @@ class CadvisorMetricsService:
 
                 # Extract actual container ID (last part after final /)
                 container_id = container_id_path.split("/")[-1] if "/" in container_id_path else container_id_path
+                
+                # Filter for specific container ID only
+                if container_id != "248680a72041fe702eb8b0357cb64ebc6d5f73fffe6fe6d4838e07e1e7345e26":
+                    continue
 
                 # Parse pod name and namespace from name label
                 # Format: k8s_{CONTAINER_TYPE}_{POD_NAME}_{NAMESPACE}_{POD_UID}_{RESTART_COUNT}
@@ -130,7 +134,7 @@ class CadvisorMetricsService:
                 network_io_rate_bytes_per_sec=None,  # Could be added if needed
                 disk_io_rate_bytes_per_sec=None,  # Could be added if needed
             ))
-
+        print(results)
         logging.info(f"CadvisorMetricsService: Parsed {len(results)} container metrics from cAdvisor.")
         return results
 
@@ -142,6 +146,7 @@ class CadvisorMetricsService:
         cpu_usage_total = current_metrics.get('cpu_usage_seconds_total', 0)
 
         if not previous_data or 'cpu_usage_seconds_total' not in previous_data['metrics']:
+            logging.debug(f"No previous CPU data - first measurement. Current: {cpu_usage_total}")
             return 0.0
 
         previous_cpu_usage = previous_data['metrics']['cpu_usage_seconds_total']
@@ -150,6 +155,10 @@ class CadvisorMetricsService:
         if time_diff > 0:
             cpu_usage_diff = cpu_usage_total - previous_cpu_usage
             cpu_utilization = (cpu_usage_diff / time_diff) * 100
+            
+            logging.info(f"CPU calculation: current={cpu_usage_total:.6f}, previous={previous_cpu_usage:.6f}, "
+                        f"diff={cpu_usage_diff:.6f}, time={time_diff:.2f}s, utilization={cpu_utilization:.2f}%")
+            
             return max(0.0, min(100.0, cpu_utilization))  # Clamp between 0-100%
 
         return 0.0

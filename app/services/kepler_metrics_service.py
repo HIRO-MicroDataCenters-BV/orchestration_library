@@ -1,4 +1,6 @@
 import aiohttp
+import re
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import List
 from app.schemas.container_power_metrics import ContainerPowerMetricsCreate
@@ -22,8 +24,6 @@ class KeplerMetricsService:
         Parse Prometheus metrics text and extract container energy metrics.
         Returns a list of ContainerPowerMetricsCreate objects.
         """
-        import re
-        from collections import defaultdict
         
         # Dictionary to group metrics by container
         container_metrics = defaultdict(dict)
@@ -43,11 +43,16 @@ class KeplerMetricsService:
                 labels_str, value = match.groups()
                 labels = dict(re.findall(r'(\w+)="([^"]*)"', labels_str))
                 
+                # Filter for specific namespace only
+                container_namespace = labels.get("container_namespace", "default")
+                if container_namespace != "energy-metrics":
+                    continue
+                
                 # Create unique key for container
                 container_key = (
                     labels.get("container_name", "unknown"),
                     labels.get("pod_name", "unknown"),
-                    labels.get("container_namespace", "default")
+                    container_namespace
                 )
                 
                 # Store the metric value and labels
@@ -133,5 +138,5 @@ class KeplerMetricsService:
 
     async def scrape_and_transform(self) -> List[ContainerPowerMetricsCreate]:
         metrics_text = await self.fetch_metrics()
-        logging.info("First 20 lines of Kepler metrics:\n" + '\n'.join(metrics_text.splitlines()[:20]))
+        logging.info("First 11 lines of Kepler metrics:\n" + '\n'.join(metrics_text.splitlines()[:2]))
         return self.parse_metrics(metrics_text) 
