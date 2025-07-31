@@ -17,7 +17,9 @@ class ContainerPowerMetricsRepository:
         self.db = db
 
     async def create(self, metrics: ContainerPowerMetricsCreate) -> ContainerPowerMetrics:
-        db_metrics = ContainerPowerMetrics(**metrics.model_dump())
+        # Exclude container_id as it's not stored in database, only used for internal processing
+        metrics_data = metrics.model_dump(exclude={'container_id'})
+        db_metrics = ContainerPowerMetrics(**metrics_data)
         self.db.add(db_metrics)
         await self.db.commit()
         await self.db.refresh(db_metrics)
