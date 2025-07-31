@@ -163,4 +163,4 @@ INSERT INTO workload_request_decision (
 ),
 ('66666666-7777-8888-9999-000000000000', 'aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-2', 'ns-pending', 'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-2', 'pending', 'queue-pending-2',
  1.0, 1024, 0.2, 128, FALSE,
- 'ccccccc2-cccc-cccc-cccc-cccccccccccc', 'parent-pending-2', 'statefulset', '2024-07-31 12:00:00', NULL
+ 'ccccccc2-cccc-cccc-cccc-cccccccccccc', 'parent-pending-2', 'statefulset', '2024-07-31 12:00:00', NULL);
