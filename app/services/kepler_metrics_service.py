@@ -50,9 +50,7 @@ class KeplerMetricsService:
                 
                 # Create unique key for container
                 container_key = (
-                    labels.get("container_name", "unknown"),
-                    labels.get("pod_name", "unknown"),
-                    container_namespace
+                    labels.get("container_id", "unknown")
                 )
                 
                 # Store the metric value and labels
@@ -68,7 +66,7 @@ class KeplerMetricsService:
         for container_key, data in container_metrics.items():
             labels = data['labels']
             metrics = data['metrics']
-            container_id = f"{container_key[0]}_{container_key[1]}_{container_key[2]}"  # unique container identifier
+            container_id = f"{container_key[0]}"  # unique container identifier
             
             # Get previous metrics for this container if they exist
             previous_data = self._previous_metrics.get(container_id)

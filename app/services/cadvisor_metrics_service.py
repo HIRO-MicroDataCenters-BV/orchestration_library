@@ -135,7 +135,6 @@ class CadvisorMetricsService:
                 network_io_rate_bytes_per_sec=None,  # Could be added if needed
                 disk_io_rate_bytes_per_sec=None,  # Could be added if needed
             ))
-        print(results)
         logging.info(f"CadvisorMetricsService: Parsed {len(results)} container metrics from cAdvisor.")
         return results
 
