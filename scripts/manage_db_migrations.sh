@@ -87,11 +87,12 @@ rename_latest_revision_file() {
 echo "Choose an Alembic action:"
 echo "1) Create new revision"
 echo "2) Upgrade to latest"
-echo "3) Downgrade last migration"
-echo "4) Show current revision"
-echo "5) History"
-echo "6) Stamp head"
-read -rp "Enter your choice [1-6]: " choice
+echo "3) Upgrade one migration"
+echo "4) Downgrade last migration"
+echo "5) Show current revision"
+echo "6) History"
+echo "7) Stamp head"
+read -rp "Enter your choice [1-7]: " choice
 
 case $choice in
   1)
@@ -103,15 +104,18 @@ case $choice in
     alembic upgrade head
     ;;
   3)
-    alembic downgrade -1
+    alembic upgrade +1
     ;;
   4)
-    alembic current
+    alembic downgrade -1
     ;;
   5)
-    alembic history --verbose
+    alembic current
     ;;
   6)
+    alembic history --verbose
+    ;;
+  7)
     alembic stamp head
     ;;
   *)

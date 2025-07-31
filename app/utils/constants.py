@@ -12,7 +12,7 @@ POD_PARENT_TYPE_ENUM = (
     "replicaset",
     "job",
     "daemonset",
-    "cronjob",
+    "cronjob"
 )
 WORKLOAD_REQUEST_DECISION_STATUS_ENUM = (
     "pending",
@@ -48,7 +48,6 @@ class PodParentTypeEnum(str, Enum):
     JOB = "job"
     DAEMONSET = "daemonset"
     CRONJOB = "cronjob"
-    OTHER = "other"
 
 class WorkloadRequestDecisionStatusEnum(str, Enum):
     """
