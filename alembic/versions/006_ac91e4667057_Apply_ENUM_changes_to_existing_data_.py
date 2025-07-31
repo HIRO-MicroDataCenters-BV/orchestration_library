@@ -217,11 +217,6 @@ def downgrade():
                'deployment', 'statefulset', 'replicaset', 'job', 'daemonset', 'cronjob'
         );
     """)
-    # op.execute("""
-    #     ALTER TABLE workload_action
-    #     ALTER COLUMN pod_parent_type TYPE pod_parent_type_enum
-    #     USING INITCAP(pod_parent_type::text)::pod_parent_type_enum;
-    # """)
     op.execute("""
     ALTER TABLE workload_action
     ALTER COLUMN pod_parent_type TYPE pod_parent_type_enum
