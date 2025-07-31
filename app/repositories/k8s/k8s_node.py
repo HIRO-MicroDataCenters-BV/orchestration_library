@@ -3,6 +3,7 @@ Operations on Kubernetes nodes.
 This module provides functions to list nodes in the cluster.
 """
 
+import logging
 from fastapi.responses import JSONResponse
 from kubernetes import client
 from kubernetes.config import ConfigException
@@ -14,6 +15,7 @@ from app.repositories.k8s.k8s_common import (
 )
 from app.utils.k8s import get_node_details, handle_k8s_exceptions
 
+logger = logging.getLogger(__name__)
 
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
@@ -43,7 +45,7 @@ def get_k8s_nodes(name=None, node_id=None, status=None):
     If no filters are specified, list all nodes.
     """
     core_v1 = get_k8s_core_v1_client()
-    print("Listing nodes with their details:")
+    logger.info("Listing nodes with their details:")
 
     # Get node metrics from metrics.k8s.io API
     node_metrics_map = get_k8s_node_metric_map()
@@ -81,10 +83,10 @@ def get_k8s_node_metric_map():
         return {item["metadata"]["name"]: item for item in node_metrics["items"]}
     except client.rest.ApiException as e:
         if e.status == 404:
-            print(
+            logger.warning(
                 "Warning: Metrics server not installed or not available. "
                 "Node metrics will be empty."
             )
         else:
-            print(f"Failed to fetch node metrics: {e}")
+            logger.error("Failed to fetch node metrics: %s", e)
         return {}

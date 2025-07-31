@@ -1,6 +1,8 @@
 """
 Get the parent controller of a Kubernetes pod.
 """
+
+import logging
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
@@ -11,6 +13,9 @@ from app.repositories.k8s.k8s_common import (
 )
 from app.utils.exceptions import K8sValueError
 from app.utils.k8s import handle_k8s_exceptions
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_pod_by_name_or_uid(core_v1, namespace, pod_name=None, pod_id=None):
@@ -27,6 +32,11 @@ def get_pod_by_name_or_uid(core_v1, namespace, pod_name=None, pod_id=None):
     for pod in pod_list.items:
         if pod.metadata.uid == pod_id:
             return pod
+    logger.warning(
+        "Pod with UID %s not found in namespace %s. Ensure the pod exists and the UID is correct.",
+        pod_id,
+        namespace,
+    )
 
     return None
 
@@ -48,6 +58,11 @@ def get_deployment_from_replicaset(apps_v1, replicaset_name, namespace):
                 "kind": "Deployment",
                 "current_scale": deployment.spec.replicas,
             }
+    logger.warning(
+        "ReplicaSet %s in namespace %s has no owner of kind Deployment.",
+        replicaset_name,
+        namespace,
+    )
     return None
 
 
@@ -90,8 +105,14 @@ def get_controller_details(apps_v1, batch_v1, namespace, owner):
             "kind": "Job",
             "current_scale": job.spec.parallelism or 1,
         }
+    logger.warning(
+        "Owner %s of kind %s not recognized or not supported in this context.",
+        name,
+        kind,
+    )
 
     return None
+
 
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
@@ -131,6 +152,11 @@ def get_parent_controller_details_of_pod(
             )
             if controller_details:
                 return JSONResponse(content=controller_details)
+        logger.warning(
+            "Pod %s in namespace %s has no recognized parent controller.",
+            pod_name or pod_id,
+            namespace,
+        )
         return {
             "message": "No known controller found (Deployment, StatefulSet, DaemonSet, or Job)"
         }

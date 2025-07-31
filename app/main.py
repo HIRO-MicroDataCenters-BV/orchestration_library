@@ -22,6 +22,7 @@ from app.api import (
     workload_request_decision_api,
     wrokload_flow_api
 )
+from app.logger.logging_config import setup_logging
 
 from app.utils.exception_handlers import init_exception_handlers
 
@@ -35,7 +36,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.basicConfig(level=logging.DEBUG)
+setup_logging(log_file="orchestration_app.log", level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 
 app.include_router(k8s_pod.router, tags=["Kubernetes"])
 app.include_router(k8s_pod_parent.router, tags=["Kubernetes"])
