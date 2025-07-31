@@ -1,6 +1,6 @@
 """
 Test cases for the workload action API endpoints.
-This module tests the creation, retrieval, listing, updating, 
+This module tests the creation, retrieval, listing, updating,
 and deletion of workload actions through the API.
 """
 
@@ -58,7 +58,9 @@ async def test_get_all_workload_actions_route(mock_list):
     """Test listing all workload actions."""
     random_uuid = str(uuid4())
     mock_list.return_value = [
-        mock_workload_action_obj(action_id=TEST_UUID, action_type=WorkloadActionTypeEnum.BIND).model_dump(),
+        mock_workload_action_obj(
+            action_id=TEST_UUID, action_type=WorkloadActionTypeEnum.BIND
+        ).model_dump(),
         mock_workload_action_obj(
             action_id=random_uuid, action_type=WorkloadActionTypeEnum.CREATE
         ).model_dump(),

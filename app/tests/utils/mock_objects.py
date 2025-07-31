@@ -13,7 +13,6 @@ from app.schemas.workload_action_schema import (
 )
 from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionCreate
 from app.utils.constants import (
-    POD_PARENT_TYPE_ENUM,
     PodParentTypeEnum,
     WorkloadActionStatusEnum,
     WorkloadActionTypeEnum,
