@@ -18,8 +18,9 @@ WHERE id IN (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     'cccccccc-cccc-cccc-cccc-cccccccccccc',
     'dddddddd-dddd-dddd-dddd-dddddddddddd',
-    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-    'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy',
+    '12345678-1234-1234-1234-123456789abc',
+    '77777777-7777-7777-7777-777777777777',
+    '11111111-2222-3333-4444-555555555555',
     '22222222-3333-4444-5555-666666666666'
 );
 
@@ -71,7 +72,7 @@ INSERT INTO workload_action (
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Create, successful
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'create', 'successful', '2024-07-31 11:00:00', '2024-07-31 12:00:00', 'Created pod',
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'create', 'succeeded', '2024-07-31 11:00:00', '2024-07-31 12:00:00', 'Created pod',
  'parent-rs', 'replicaset', 'cccccccc-cccc-cccc-cccc-cccccccccccc',
  'pod-y', 'ns-y', 'node-y',
  NULL, NULL, NULL,
@@ -86,8 +87,8 @@ INSERT INTO workload_action (
  NULL, NULL, NULL,
  '2024-07-31 10:00:00', '2024-07-31 11:00:00'
 ),
--- Move, partial
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'move', 'partial', '2024-07-31 12:00:00', NULL, 'Moving pod',
+-- Move, pending
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'move', 'pending', '2024-07-31 12:00:00', NULL, 'Moving pod',
  'parent-sts', 'statefulset', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
  NULL, NULL, NULL,
  NULL, NULL, NULL,
@@ -95,7 +96,7 @@ INSERT INTO workload_action (
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Swap_x, successful, parent type Job
-('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', 'swap_x', 'successful', '2024-07-31 12:00:00', '2024-07-31 12:00:00', 'Swapped pods for balancing',
+('12345678-1234-1234-1234-123456789abc', 'swap_x', 'succeeded', '2024-07-31 12:00:00', '2024-07-31 12:00:00', 'Swapped pods for balancing',
  'parent-job', 'job', 'ffffffff-ffff-ffff-ffff-ffffffffffff',
  'pod-swap', 'ns-swap', 'node-swap',
  'pod-old', 'ns-old', 'node-old',
@@ -103,7 +104,7 @@ INSERT INTO workload_action (
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Swap_y, successful, parent type Job
-('yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy', 'swap_y', 'successful', '2024-07-31 12:00:00', '2024-07-31 12:00:00', 'Swapped pods for balancing',
+('77777777-7777-7777-7777-777777777777', 'swap_y', 'succeeded', '2024-07-31 12:00:00', '2024-07-31 12:00:00', 'Swapped pods for balancing',
  'parent-job', 'job', 'ffffffff-ffff-ffff-ffff-ffffffffffff',
  'pod-swap', 'ns-swap', 'node-swap',
  'pod-old', 'ns-old', 'node-old',
@@ -133,34 +134,34 @@ INSERT INTO workload_request_decision (
     demand_cpu, demand_memory, demand_slack_cpu, demand_slack_memory, decision_status,
     pod_parent_id, pod_parent_name, pod_parent_kind, created_at, deleted_at
 ) VALUES
-('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'pod-x', 'ns-x', '22222222-2222-2222-2222-222222222222', 'node-x', 'successful', 'queue-x',
- 2.0, 4096, 0.5, 512, TRUE,
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'pod-x', 'ns-x', '22222222-2222-2222-2222-222222222222', 'node-x', FALSE, 'queue-x',
+ 2.0, 4096, 0.5, 512, 'successful',
  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'parent-deploy', 'deployment', '2024-07-31 12:00:00', NULL
 ),
-('ffffffff-ffff-ffff-ffff-ffffffffffff', '33333333-3333-3333-3333-333333333333', 'pod-y', 'ns-y', '44444444-4444-4444-4444-444444444444', 'node-y', 'failed', 'queue-y',
- 1.0, 2048, 0.2, 256, FALSE,
- 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'parent-rs', 'replicaSet', '2024-07-30 12:00:00', '2024-07-31 12:00:00'
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '33333333-3333-3333-3333-333333333333', 'pod-y', 'ns-y', '44444444-4444-4444-4444-444444444444', 'node-y', FALSE, 'queue-y',
+ 1.0, 2048, 0.2, 256, 'failed',
+ 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'parent-rs', 'replicaset', '2024-07-30 12:00:00', '2024-07-31 12:00:00'
 ),
-('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555', 'pod-w', 'ns-w', '66666666-6666-6666-6666-666666666666', 'node-w', 'successful', 'queue-z',
- 0.0, 0.0, NULL, NULL, TRUE,
+('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555', 'pod-w', 'ns-w', '66666666-6666-6666-6666-666666666666', 'node-w', TRUE, 'queue-z',
+ 0.0, 0.0, NULL, NULL, 'successful',
  'dddddddd-dddd-dddd-dddd-dddddddddddd', 'parent-sts', 'statefulset', '2024-07-31 12:00:00', NULL
 ),
-('88888888-8888-8888-8888-888888888888', '77777777-7777-7777-7777-777777777777', 'pod-null', 'ns-null', '88888888-8888-8888-8888-888888888888', 'node-null', 'failed', 'queue-null',
- 0.0, 0.0, NULL, NULL, FALSE,
+('88888888-8888-8888-8888-888888888888', '77777777-7777-7777-7777-777777777777', 'pod-null', 'ns-null', '88888888-8888-8888-8888-888888888888', 'node-null', FALSE, 'queue-null',
+ 0.0, 0.0, NULL, NULL, 'failed',
  'ffffffff-ffff-ffff-ffff-ffffffffffff', 'parent-null', 'job', '2024-07-31 12:00:00', NULL
 ),
-('33333333-4444-5555-6666-777777777777', '99999999-8888-7777-6666-555555555555', 'pod-daemon', 'ns-daemon', '11111111-2222-3333-4444-555555555555', 'node-daemon', 'successful', 'queue-daemon',
- 4.0, 8192, 1.0, 1024, TRUE,
+('33333333-4444-5555-6666-777777777777', '99999999-8888-7777-6666-555555555555', 'pod-daemon', 'ns-daemon', '11111111-2222-3333-4444-555555555555', 'node-daemon', TRUE, 'queue-daemon',
+ 4.0, 8192, 1.0, 1024, 'successful',
  '11111111-2222-3333-4444-555555555555', 'parent-daemon', 'daemonset', '2024-07-31 12:00:00', NULL
 ),
-('44444444-5555-6666-7777-888888888888', '22222222-3333-4444-5555-666666666666', 'pod-cron', 'ns-cron', '33333333-4444-5555-6666-777777777777', 'node-cron', 'failed', 'queue-cron',
- 0.5, 1024, 0.1, 128, FALSE,
+('44444444-5555-6666-7777-888888888888', '22222222-3333-4444-5555-666666666666', 'pod-cron', 'ns-cron', '33333333-4444-5555-6666-777777777777', 'node-cron', FALSE, 'queue-cron',
+ 0.5, 1024, 0.1, 128, 'failed',
  '22222222-3333-4444-5555-666666666666', 'parent-cron', 'cronjob', '2024-07-31 12:00:00', NULL
 ),
-('55555555-6666-7777-8888-999999999999', 'aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-1', 'ns-pending', 'bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-1', 'pending', 'queue-pending-1',
- 0.5, 512, 0.1, 64, TRUE,
+('55555555-6666-7777-8888-999999999999', 'aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-1', 'ns-pending', 'bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-1', TRUE, 'queue-pending-1',
+ 0.5, 512, 0.1, 64, 'pending',
  'ccccccc1-cccc-cccc-cccc-cccccccccccc', 'parent-pending-1', 'deployment', '2024-07-31 12:00:00', NULL
 ),
-('66666666-7777-8888-9999-000000000000', 'aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-2', 'ns-pending', 'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-2', 'pending', 'queue-pending-2',
- 1.0, 1024, 0.2, 128, FALSE,
+('66666666-7777-8888-9999-000000000000', 'aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-2', 'ns-pending', 'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-2', FALSE, 'queue-pending-2',
+ 1.0, 1024, 0.2, 128, 'pending',
  'ccccccc2-cccc-cccc-cccc-cccccccccccc', 'parent-pending-2', 'statefulset', '2024-07-31 12:00:00', NULL);
