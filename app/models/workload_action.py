@@ -37,7 +37,7 @@ class WorkloadAction(Base, BaseDictMixin):
     )
 
     action_status = Column(
-        SAEnum(*WORKLOAD_ACTION_STATUS_ENUM, name="action_status_enum"),
+        SAEnum(*WORKLOAD_ACTION_STATUS_ENUM, name="workload_action_status_enum"),
         nullable=True,
         doc="Status of the action",
     )

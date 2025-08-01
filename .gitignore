@@ -175,3 +175,7 @@ cython_debug/
 
 # .vscode
 .vscode/*
+
+# Ignore macOS system files
+.DS_Store
+app/.DS_Store
