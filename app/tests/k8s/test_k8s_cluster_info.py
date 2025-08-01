@@ -81,16 +81,15 @@ def k8s_cluster_info_mocks():
             "mock_config": mock_config,
         }
 
-
 def test_get_cluster_info_success():
     """
     Test the get_cluster_info function with mocked Kubernetes API responses.
     This test checks if the function correctly aggregates information about nodes,
     components, pods, and other resources in the cluster.
     """
-    with patch("kubernetes.config.load_kube_config", return_value=None), patch(
-        "kubernetes.config.load_incluster_config", return_value=None
-    ), k8s_cluster_info_mocks() as mocks:
+    with patch("kubernetes.config.load_kube_config", return_value=None), \
+        patch("kubernetes.config.load_incluster_config", return_value=None), \
+        k8s_cluster_info_mocks() as mocks:
         # Mock version API
         mocks["mock_version"].return_value.get_code.return_value = mock_version_info()
 
@@ -100,6 +99,7 @@ def test_get_cluster_info_success():
         mock_core.read_namespaced_config_map.return_value = mock_configmap()
         mock_core.list_component_status.return_value.items = [mock_component()]
         mock_core.list_namespaced_pod.return_value.items = [mock_pod()]
+        mock_core.list_pod_for_all_namespaces.return_value.items = [mock_pod()]
         # Patch read_namespace to return an object with metadata.uid
         mock_namespace_metadata = MagicMock()
         mock_namespace_metadata.uid = "abcdef123456"
@@ -148,6 +148,7 @@ def test_get_cluster_info_success():
 
         response = k8s_cluster_info.get_cluster_info(advanced=True)
         result = json.loads(response.body.decode())
+        print(result)  # For debugging purposes
         assert result["kubernetes_version"] == "v1.25.0-test-10.0.0.1"
         assert result["nodes"][0]["name"] == "test-node"
         assert result["components"][0]["name"] == "scheduler"

@@ -4,6 +4,7 @@ Get cluster information from Kubernetes.
 
 import logging
 import concurrent
+import time
 from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
@@ -67,8 +68,11 @@ def get_nodes():
     """
     Fetches and returns the list of Kubernetes nodes.
     """
+    start = time.time()
     nodes = get_k8s_nodes()
-    logger.info("Fetched %s", nodes)
+    logger.info("Fetched nodes: %s", nodes)
+    end = time.time()
+    logger.info("Time taken to fetch nodes: %.2f seconds", end - start)
     return nodes
 
 
@@ -154,37 +158,65 @@ def get_namespaces(core_v1):
     return namespaces
 
 
-def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=None):
+def get_resources_for_namespace(
+    core_v1, apps_v1, batch_v1, ns=None, resource_types=None
+):
     """
     Fetches and returns basic information about specified resources in
     a specific namespace, in parallel.
+    If ns is None or empty, fetches resources from all namespaces.
     resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
     """
     if resource_types is None:
         resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
 
-    fetchers = {
-        "pods": lambda: [
-            get_pod_basic_info(pod)
-            for pod in core_v1.list_namespaced_pod(namespace=ns).items
-        ],
-        "deployments": lambda: [
-            get_deployment_basic_info(dep)
-            for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
-        ],
-        "jobs": lambda: [
-            get_job_basic_info(job)
-            for job in batch_v1.list_namespaced_job(namespace=ns).items
-        ],
-        "statefulsets": lambda: [
-            get_statefulset_basic_info(sts)
-            for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
-        ],
-        "daemonsets": lambda: [
-            get_daemonset_basic_info(ds)
-            for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
-        ],
-    }
+    start = time.time()
+    if not ns:
+        fetchers = {
+            "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_pod_basic_info,
+                core_v1.list_pod_for_all_namespaces(watch=False).items
+            )),
+            "deployments": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_deployment_basic_info,
+                apps_v1.list_deployment_for_all_namespaces(watch=False).items
+            )),
+            "jobs": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_job_basic_info,
+                batch_v1.list_job_for_all_namespaces(watch=False).items
+            )),
+            "statefulsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_statefulset_basic_info,
+                apps_v1.list_stateful_set_for_all_namespaces(watch=False).items
+            )),
+            "daemonsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_daemonset_basic_info,
+                apps_v1.list_daemon_set_for_all_namespaces(watch=False).items
+            )),
+        }
+    else:
+        fetchers = {
+            "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_pod_basic_info,
+                core_v1.list_namespaced_pod(namespace=ns).items
+            )),
+            "deployments": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_deployment_basic_info,
+                apps_v1.list_namespaced_deployment(namespace=ns).items
+            )),
+            "jobs": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_job_basic_info,
+                batch_v1.list_namespaced_job(namespace=ns).items
+            )),
+            "statefulsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_statefulset_basic_info,
+                apps_v1.list_namespaced_stateful_set(namespace=ns).items
+            )),
+            "daemonsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_daemonset_basic_info,
+                apps_v1.list_namespaced_daemon_set(namespace=ns).items
+            )),
+        }
 
     selected_fetchers = {k: v for k, v in fetchers.items() if k in resource_types}
 
@@ -195,11 +227,16 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns, resource_types=N
         }
         for key, future in futures.items():
             results[key] = future.result()
-    logger.info("Fetched resources for namespace %s: %s", ns, results)
+    if ns is None:
+        logger.info("Fetched resources for all namespaces: %s", results)
+    else:
+        logger.info("Fetched resources for namespace %s: %s", ns, results)
+    end = time.time()
+    logger.info("Total time taken to fetch resources: %.2f seconds", end - start)
     return results
 
 
-def get_all_resources(core_v1, apps_v1, batch_v1, namespaces, resource_types=None):
+def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
     """
     Fetches and returns basic information about specified resources in all namespaces.
     resource_types: list of resource names to fetch (e.g., ["pods", "deployments"])
@@ -207,24 +244,25 @@ def get_all_resources(core_v1, apps_v1, batch_v1, namespaces, resource_types=Non
     if resource_types is None:
         resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
 
-    all_resources = {key: [] for key in resource_types}
+    # Directly call get_resources_for_namespace for all namespaces (ns=None)
+    ns_resources = get_resources_for_namespace(
+        core_v1, apps_v1, batch_v1, ns=None, resource_types=resource_types
+    )
 
-    def fetch_ns_resources(ns):
-        return get_resources_for_namespace(
-            core_v1, apps_v1, batch_v1, ns, resource_types=resource_types
-        )
+    if ns_resources is None:
+        ns_resources = {}
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(fetch_ns_resources, namespaces))
+    # Ensure all expected keys are present and values are lists
+    all_resources = {}
+    for key in resource_types:
+        all_resources[key] = ns_resources.get(key, [])
 
-    for ns_resources in results:
-        for key in all_resources:
-            all_resources[key] += ns_resources.get(key, [])
-
+    logger.info("Fetched all resources: %s", all_resources)
+    # Return the dictionary containing all resources
     return all_resources
 
 
-def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
+def get_basic_cluster_info(core_v1, apps_v1, batch_v1):
     """
     Fetches only cluster_id, cluster_name, nodes, and pods.
     """
@@ -234,7 +272,7 @@ def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
             "cluster_name": executor.submit(get_cluster_name, core_v1),
             "nodes": executor.submit(get_nodes),
             "resources": executor.submit(
-                get_all_resources, core_v1, apps_v1, batch_v1, namespaces, ["pods"]
+                get_all_resources, core_v1, apps_v1, batch_v1, resource_types=["pods"]
             ),
         }
         results = {key: future.result() for key, future in futures.items()}
@@ -257,7 +295,11 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
             "components": executor.submit(get_component_status, core_v1),
             "kube_system_pods": executor.submit(get_kube_system_pods_info, core_v1),
             "resources": executor.submit(
-                get_all_resources, core_v1, apps_v1, batch_v1, namespaces
+                get_all_resources,
+                core_v1,
+                apps_v1,
+                batch_v1,
+                resource_types=["deployments", "jobs", "statefulsets", "daemonsets"],
             ),
         }
         results = {key: future.result() for key, future in futures.items()}
@@ -273,6 +315,7 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
         "namespaces": namespaces,
     }
 
+
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
 def get_cluster_info(advanced: bool = False) -> JSONResponse:
@@ -286,7 +329,7 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         namespaces = get_namespaces(core_v1)
 
         # Always get basic info
-        basic_info = get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces)
+        basic_info = get_basic_cluster_info(core_v1, apps_v1, batch_v1)
         cluster_resource_utilization = summarize_cluster_resource_utilization(
             basic_info
         )
@@ -372,8 +415,6 @@ def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:
         "cluster_cpu_utilization": cluster_cpu_utilization,
         "cluster_memory_utilization": cluster_memory_utilization,
     }
-    logger.info(
-        "Cluster resource utilization: %s", cluster_resource_utilization
-    )
+    logger.info("Cluster resource utilization: %s", cluster_resource_utilization)
 
     return cluster_resource_utilization
