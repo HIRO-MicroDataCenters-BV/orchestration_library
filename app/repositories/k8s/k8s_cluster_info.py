@@ -167,12 +167,7 @@ def get_resources_for_namespace(
     if resource_types is None:
         resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
 
-    import time
     start = time.time()
-    pods = core_v1.list_pod_for_all_namespaces(watch=False).items
-    end = time.time()
-    logger.info("Fetched pods in %.2f seconds", end - start)
-
     if not ns:
         fetchers = {
             "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
@@ -233,6 +228,8 @@ def get_resources_for_namespace(
         logger.info("Fetched resources for all namespaces: %s", results)
     else:
         logger.info("Fetched resources for namespace %s: %s", ns, results)
+    end = time.time()
+    logger.info("Total time taken to fetch resources: %.2f seconds", end - start)
     return results
 
 
