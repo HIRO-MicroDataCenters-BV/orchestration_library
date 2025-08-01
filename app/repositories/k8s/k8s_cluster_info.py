@@ -154,7 +154,9 @@ def get_namespaces(core_v1):
     return namespaces
 
 
-def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns=None, resource_types=None):
+def get_resources_for_namespace(
+    core_v1, apps_v1, batch_v1, ns=None, resource_types=None
+):
     """
     Fetches and returns basic information about specified resources in
     a specific namespace, in parallel.
@@ -180,7 +182,9 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns=None, resource_ty
             ],
             "statefulsets": lambda: [
                 get_statefulset_basic_info(sts)
-                for sts in apps_v1.list_stateful_set_for_all_namespaces(watch=False).items
+                for sts in apps_v1.list_stateful_set_for_all_namespaces(
+                    watch=False
+                ).items
             ],
             "daemonsets": lambda: [
                 get_daemonset_basic_info(ds)
@@ -220,7 +224,10 @@ def get_resources_for_namespace(core_v1, apps_v1, batch_v1, ns=None, resource_ty
         }
         for key, future in futures.items():
             results[key] = future.result()
-    logger.info("Fetched resources for namespace %s: %s", ns, results)
+    if ns is None:
+        logger.info("Fetched resources for all namespaces: %s", results)
+    else:
+        logger.info("Fetched resources for namespace %s: %s", ns, results)
 
 
 def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
@@ -235,7 +242,7 @@ def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
 
     def fetch_ns_resources():
         return get_resources_for_namespace(
-            core_v1, apps_v1, batch_v1, None, resource_types
+            core_v1, apps_v1, batch_v1, ns=None, resource_types=resource_types
         )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -248,7 +255,7 @@ def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
     return all_resources
 
 
-def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
+def get_basic_cluster_info(core_v1, apps_v1, batch_v1):
     """
     Fetches only cluster_id, cluster_name, nodes, and pods.
     """
@@ -258,8 +265,7 @@ def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
             "cluster_name": executor.submit(get_cluster_name, core_v1),
             "nodes": executor.submit(get_nodes),
             "resources": executor.submit(
-                get_all_resources, core_v1, apps_v1, batch_v1, 
-                resource_types=["pods"]
+                get_all_resources, core_v1, apps_v1, batch_v1, resource_types=["pods"]
             ),
         }
         results = {key: future.result() for key, future in futures.items()}
@@ -268,7 +274,6 @@ def get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces):
         "cluster_name": results["cluster_name"],
         "nodes": results["nodes"],
         "pods": results["resources"]["pods"],
-        "namespaces": namespaces,
     }
 
 
@@ -283,7 +288,11 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
             "components": executor.submit(get_component_status, core_v1),
             "kube_system_pods": executor.submit(get_kube_system_pods_info, core_v1),
             "resources": executor.submit(
-                get_all_resources, core_v1, apps_v1, batch_v1, namespaces
+                get_all_resources,
+                core_v1,
+                apps_v1,
+                batch_v1,
+                resource_types=["deployments", "jobs", "statefulsets", "daemonsets"],
             ),
         }
         results = {key: future.result() for key, future in futures.items()}
@@ -299,6 +308,7 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
         "namespaces": namespaces,
     }
 
+
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
 def get_cluster_info(advanced: bool = False) -> JSONResponse:
@@ -312,7 +322,7 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         namespaces = get_namespaces(core_v1)
 
         # Always get basic info
-        basic_info = get_basic_cluster_info(core_v1, apps_v1, batch_v1, namespaces)
+        basic_info = get_basic_cluster_info(core_v1, apps_v1, batch_v1)
         cluster_resource_utilization = summarize_cluster_resource_utilization(
             basic_info
         )
@@ -398,8 +408,6 @@ def summarize_cluster_resource_utilization(cluster_info: dict) -> dict:
         "cluster_cpu_utilization": cluster_cpu_utilization,
         "cluster_memory_utilization": cluster_memory_utilization,
     }
-    logger.info(
-        "Cluster resource utilization: %s", cluster_resource_utilization
-    )
+    logger.info("Cluster resource utilization: %s", cluster_resource_utilization)
 
     return cluster_resource_utilization
