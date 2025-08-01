@@ -5,11 +5,11 @@ kind: Job
 metadata:
   name: alembic-migration-{{ now | unixEpoch }}
 spec:
-  backoffLimit: 0
+  backoffLimit: 1
   ttlSecondsAfterFinished: 600
   template:
     spec:
-      restartPolicy: OnFailure
+      restartPolicy: Never
       containers:
         - name: alembic
           image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"

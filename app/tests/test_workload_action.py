@@ -19,6 +19,7 @@ from app.tests.utils.mock_objects import (
     mock_workload_action_obj,
     mock_workload_action_update_obj,
 )
+from app.utils.constants import WorkloadActionStatusEnum, WorkloadActionTypeEnum
 from app.utils.exceptions import (
     DBEntryCreationException,
     DBEntryUpdateException,
@@ -38,15 +39,16 @@ async def test_create_workload_action():
 
     # Create
     data = mock_workload_action_create_obj(
-        action_type="Create", action_status="pending"
+        action_type=WorkloadActionTypeEnum.CREATE,
+        action_status=WorkloadActionStatusEnum.PENDING,
     )
     created = await create_workload_action(db, data)
     db.add.assert_called_once()
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
     assert isinstance(created, WorkloadAction)
-    assert created.action_type == "Create"
-    assert created.action_status == "pending"
+    assert created.action_type == WorkloadActionTypeEnum.CREATE
+    assert created.action_status == WorkloadActionStatusEnum.PENDING
 
 
 @pytest.mark.asyncio
@@ -55,7 +57,9 @@ async def test_get_workload_action_by_id():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.DELETE,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
 
     # Create a mock result object with scalar_one_or_none method
@@ -74,7 +78,9 @@ async def test_update_workload_action():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Bind", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.BIND,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
 
     mock_result = MagicMock()
@@ -82,12 +88,12 @@ async def test_update_workload_action():
     db.execute.return_value = mock_result
 
     update_data = mock_workload_action_update_obj(
-        action_id=action_id, action_status="pending"
+        action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     updated_action = await update_workload_action(db, action_id, update_data)
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
-    assert updated_action.action_status == "pending"
+    assert updated_action.action_status == WorkloadActionStatusEnum.PENDING
     assert updated_action.id == action_id
 
 
@@ -98,7 +104,9 @@ async def test_delete_workload_action():
     action_id = uuid4()
 
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.DELETE,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
 
     db.execute.return_value.scalars.return_value.one_or_none.return_value = mock_action
@@ -112,10 +120,14 @@ async def test_list_workload_actions():
     """Test for listing workload actions with filters."""
     db = AsyncMock()
     mock_action1 = mock_workload_action_obj(
-        action_id=uuid4(), action_type="Bind", action_status="successful"
+        action_id=uuid4(),
+        action_type=WorkloadActionTypeEnum.BIND,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_action2 = mock_workload_action_obj(
-        action_id=uuid4(), action_type="Bind", action_status="pending"
+        action_id=uuid4(),
+        action_type=WorkloadActionTypeEnum.BIND,
+        action_status=WorkloadActionStatusEnum.PENDING,
     )
 
     # Setup the scalars().all() chain
@@ -126,14 +138,14 @@ async def test_list_workload_actions():
     db.execute.return_value = mock_result
 
     actions = await list_workload_actions(
-        db, filters={"action_type": "Bind", "action_status": None}
+        db, filters={"action_type": "bind", "action_status": None}
     )
     db.execute.assert_called_once()
     assert len(actions) == 2
-    assert actions[0].action_type == "Bind"
-    assert actions[1].action_type == "Bind"
-    assert actions[0].action_status == "successful"
-    assert actions[1].action_status == "pending"
+    assert actions[0].action_type == WorkloadActionTypeEnum.BIND
+    assert actions[1].action_type == WorkloadActionTypeEnum.BIND
+    assert actions[0].action_status == WorkloadActionStatusEnum.SUCCEEDED
+    assert actions[1].action_status == WorkloadActionStatusEnum.PENDING
 
 
 @pytest.mark.asyncio
@@ -147,7 +159,8 @@ async def test_create_workload_action_integrity_error():
     db.add = MagicMock()
     db.rollback = AsyncMock()
     data = mock_workload_action_create_obj(
-        action_type="Create", action_status="pending"
+        action_type=WorkloadActionTypeEnum.CREATE,
+        action_status=WorkloadActionStatusEnum.PENDING,
     )
     with pytest.raises(DBEntryCreationException):
         await create_workload_action(db, data)
@@ -164,7 +177,8 @@ async def test_create_workload_action_operational_error():
     db.add = MagicMock()
     db.rollback = AsyncMock()
     data = mock_workload_action_create_obj(
-        action_type="Create", action_status="pending"
+        action_type=WorkloadActionTypeEnum.CREATE,
+        action_status=WorkloadActionStatusEnum.PENDING,
     )
     with pytest.raises(DBEntryCreationException):
         await create_workload_action(db, data)
@@ -179,7 +193,8 @@ async def test_create_workload_action_sqlalchemy_error():
     db.add = MagicMock()
     db.rollback = AsyncMock()
     data = mock_workload_action_create_obj(
-        action_type="Create", action_status="pending"
+        action_type=WorkloadActionTypeEnum.CREATE,
+        action_status=WorkloadActionStatusEnum.PENDING,
     )
     with pytest.raises(DBEntryCreationException):
         await create_workload_action(db, data)
@@ -236,7 +251,9 @@ async def test_update_workload_action_integrity_error():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Bind", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.BIND,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_action
@@ -246,7 +263,7 @@ async def test_update_workload_action_integrity_error():
     )
     db.refresh = AsyncMock()
     update_data = mock_workload_action_update_obj(
-        action_id=action_id, action_status="pending"
+        action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     with pytest.raises(DBEntryUpdateException):
         await update_workload_action(db, action_id, update_data)
@@ -258,7 +275,9 @@ async def test_update_workload_action_operational_error():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Bind", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.BIND,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_action
@@ -268,7 +287,7 @@ async def test_update_workload_action_operational_error():
     )
     db.refresh = AsyncMock()
     update_data = mock_workload_action_update_obj(
-        action_id=action_id, action_status="pending"
+        action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     with pytest.raises(DBEntryUpdateException):
         await update_workload_action(db, action_id, update_data)
@@ -280,7 +299,9 @@ async def test_update_workload_action_sqlalchemy_error():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Bind", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.BIND,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_action
@@ -288,7 +309,7 @@ async def test_update_workload_action_sqlalchemy_error():
     db.commit = AsyncMock(side_effect=sqlalchemy.exc.SQLAlchemyError("error"))
     db.refresh = AsyncMock()
     update_data = mock_workload_action_update_obj(
-        action_id=action_id, action_status="pending"
+        action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     with pytest.raises(DBEntryUpdateException):
         await update_workload_action(db, action_id, update_data)
@@ -312,7 +333,9 @@ async def test_delete_workload_action_integrity_error():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.DELETE,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_action
@@ -331,7 +354,9 @@ async def test_delete_workload_action_operational_error():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.DELETE,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_action
@@ -350,7 +375,9 @@ async def test_delete_workload_action_sqlalchemy_error():
     db = AsyncMock()
     action_id = uuid4()
     mock_action = mock_workload_action_obj(
-        action_id=action_id, action_type="Delete", action_status="successful"
+        action_id=action_id,
+        action_type=WorkloadActionTypeEnum.DELETE,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
     )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_action
@@ -367,4 +394,6 @@ async def test_list_workload_actions_sqlalchemy_error():
     db = AsyncMock()
     db.execute.side_effect = sqlalchemy.exc.SQLAlchemyError("error")
     with pytest.raises(DatabaseConnectionException):
-        await list_workload_actions(db, filters={"action_type": "Bind"})
+        await list_workload_actions(
+            db, filters={"action_type": WorkloadActionTypeEnum.BIND}
+        )
