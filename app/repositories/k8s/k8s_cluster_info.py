@@ -4,6 +4,7 @@ Get cluster information from Kubernetes.
 
 import logging
 import concurrent
+import time
 from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
 from kubernetes import config
@@ -165,6 +166,12 @@ def get_resources_for_namespace(
     """
     if resource_types is None:
         resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
+
+    import time
+    start = time.time()
+    pods = core_v1.list_pod_for_all_namespaces(watch=False).items
+    end = time.time()
+    logger.info("Fetched pods in %.2f seconds", end - start)
 
     if not ns:
         fetchers = {
