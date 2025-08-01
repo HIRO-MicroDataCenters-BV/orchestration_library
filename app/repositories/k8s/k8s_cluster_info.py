@@ -68,8 +68,11 @@ def get_nodes():
     """
     Fetches and returns the list of Kubernetes nodes.
     """
+    start = time.time()
     nodes = get_k8s_nodes()
     logger.info("Fetched nodes: %s", nodes)
+    end = time.time()
+    logger.info("Time taken to fetch nodes: %.2f seconds", end - start)
     return nodes
 
 
