@@ -156,8 +156,8 @@ def test_get_cluster_info_success():
         assert result["cluster_id"] == "abcdef123456"
         assert result["cluster_name"] == "test-cluster"
         assert result["namespaces"] == ["default"]
-        assert len(result["pods"]) == 0
-        # assert result["pods"][0]["name"] == "kube-proxy"
+        assert len(result["pods"]) == 1
+        assert result["pods"][0]["name"] == "kube-proxy"
         assert result["deployments"] == []
         assert result["jobs"] == []
         assert result["statefulsets"] == []

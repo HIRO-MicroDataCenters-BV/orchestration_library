@@ -68,7 +68,7 @@ def get_nodes():
     Fetches and returns the list of Kubernetes nodes.
     """
     nodes = get_k8s_nodes()
-    logger.info("Fetched %s", nodes)
+    logger.info("Fetched nodes: %s", nodes)
     return nodes
 
 
@@ -168,51 +168,49 @@ def get_resources_for_namespace(
 
     if not ns:
         fetchers = {
-            "pods": lambda: [
-                get_pod_basic_info(pod)
-                for pod in core_v1.list_pod_for_all_namespaces(watch=False).items
-            ],
-            "deployments": lambda: [
-                get_deployment_basic_info(dep)
-                for dep in apps_v1.list_deployment_for_all_namespaces(watch=False).items
-            ],
-            "jobs": lambda: [
-                get_job_basic_info(job)
-                for job in batch_v1.list_job_for_all_namespaces(watch=False).items
-            ],
-            "statefulsets": lambda: [
-                get_statefulset_basic_info(sts)
-                for sts in apps_v1.list_stateful_set_for_all_namespaces(
-                    watch=False
-                ).items
-            ],
-            "daemonsets": lambda: [
-                get_daemonset_basic_info(ds)
-                for ds in apps_v1.list_daemon_set_for_all_namespaces(watch=False).items
-            ],
+            "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_pod_basic_info,
+                core_v1.list_pod_for_all_namespaces(watch=False).items
+            )),
+            "deployments": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_deployment_basic_info,
+                apps_v1.list_deployment_for_all_namespaces(watch=False).items
+            )),
+            "jobs": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_job_basic_info,
+                batch_v1.list_job_for_all_namespaces(watch=False).items
+            )),
+            "statefulsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_statefulset_basic_info,
+                apps_v1.list_stateful_set_for_all_namespaces(watch=False).items
+            )),
+            "daemonsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_daemonset_basic_info,
+                apps_v1.list_daemon_set_for_all_namespaces(watch=False).items
+            )),
         }
     else:
         fetchers = {
-            "pods": lambda: [
-                get_pod_basic_info(pod)
-                for pod in core_v1.list_namespaced_pod(namespace=ns).items
-            ],
-            "deployments": lambda: [
-                get_deployment_basic_info(dep)
-                for dep in apps_v1.list_namespaced_deployment(namespace=ns).items
-            ],
-            "jobs": lambda: [
-                get_job_basic_info(job)
-                for job in batch_v1.list_namespaced_job(namespace=ns).items
-            ],
-            "statefulsets": lambda: [
-                get_statefulset_basic_info(sts)
-                for sts in apps_v1.list_namespaced_stateful_set(namespace=ns).items
-            ],
-            "daemonsets": lambda: [
-                get_daemonset_basic_info(ds)
-                for ds in apps_v1.list_namespaced_daemon_set(namespace=ns).items
-            ],
+            "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_pod_basic_info,
+                core_v1.list_namespaced_pod(namespace=ns).items
+            )),
+            "deployments": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_deployment_basic_info,
+                apps_v1.list_namespaced_deployment(namespace=ns).items
+            )),
+            "jobs": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_job_basic_info,
+                batch_v1.list_namespaced_job(namespace=ns).items
+            )),
+            "statefulsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_statefulset_basic_info,
+                apps_v1.list_namespaced_stateful_set(namespace=ns).items
+            )),
+            "daemonsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
+                get_daemonset_basic_info,
+                apps_v1.list_namespaced_daemon_set(namespace=ns).items
+            )),
         }
 
     selected_fetchers = {k: v for k, v in fetchers.items() if k in resource_types}
@@ -228,6 +226,7 @@ def get_resources_for_namespace(
         logger.info("Fetched resources for all namespaces: %s", results)
     else:
         logger.info("Fetched resources for namespace %s: %s", ns, results)
+    return results
 
 
 def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
@@ -238,20 +237,21 @@ def get_all_resources(core_v1, apps_v1, batch_v1, resource_types=None):
     if resource_types is None:
         resource_types = ["pods", "deployments", "jobs", "statefulsets", "daemonsets"]
 
-    all_resources = {key: [] for key in resource_types}
+    # Directly call get_resources_for_namespace for all namespaces (ns=None)
+    ns_resources = get_resources_for_namespace(
+        core_v1, apps_v1, batch_v1, ns=None, resource_types=resource_types
+    )
 
-    def fetch_ns_resources():
-        return get_resources_for_namespace(
-            core_v1, apps_v1, batch_v1, ns=None, resource_types=resource_types
-        )
+    if ns_resources is None:
+        ns_resources = {}
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(fetch_ns_resources))
+    # Ensure all expected keys are present and values are lists
+    all_resources = {}
+    for key in resource_types:
+        all_resources[key] = ns_resources.get(key, [])
 
-    for ns_resources in results:
-        for key in all_resources:
-            all_resources[key] += ns_resources.get(key, [])
-
+    logger.info("Fetched all resources: %s", all_resources)
+    # Return the dictionary containing all resources
     return all_resources
 
 
