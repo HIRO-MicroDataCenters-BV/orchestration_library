@@ -22,7 +22,9 @@ from app.api import (
     workload_action_api,
     workload_request_decision_api,
     wrokload_flow_api,
-    container_power_metrics
+    container_power_metrics,
+    cadvisor_test_api,
+    node_power_metrics
 )
 from app.scheduler.metric_collector_scheduler import MetricCollectorScheduler
 
@@ -53,17 +55,20 @@ app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
 app.include_router(wrokload_flow_api.router, tags=["Workload Flow"])
 app.include_router(container_power_metrics.router, tags=["Container Power Metrics"])
+app.include_router(node_power_metrics.router, tags=["Node Power Metrics"])
+app.include_router(cadvisor_test_api.router, tags=["Test APIs"])
 
 app.include_router(k8s_dashboard_api.router, tags=["Kubernetes Dashboard"])
 
-
 init_exception_handlers(app)
 
-metrics_scheduler = MetricCollectorScheduler(interval_seconds=10)
+metrics_scheduler = MetricCollectorScheduler(interval_seconds=60)
+
 
 @app.on_event("startup")
 async def start_scheduler():
     metrics_scheduler.start()
+
 
 @app.on_event("shutdown")
 async def stop_scheduler():
