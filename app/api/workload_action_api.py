@@ -5,6 +5,7 @@ This module defines the API endpoints for managing workload actions in the datab
 It includes routes for creating, retrieving, updating, and deleting workload actions.
 """
 
+import time
 from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,7 +41,14 @@ async def create_workload_action_route(
     Returns:
         WorkloadAction: The newly created workload action.
     """
-    return await create_workload_action(db_session, data)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "POST",
+        "endpoint": "/workload_action",
+    }
+    return await create_workload_action(
+        db_session, data, metrics_details=metrics_details
+    )
 
 
 @router.get("/{action_id}", response_model=WorkloadAction)
@@ -57,7 +65,14 @@ async def get_workload_action_route(
     Returns:
         WorkloadAction: The workload action with the given ID.
     """
-    return await get_workload_action_by_id(db_session, action_id)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": f"/workload_action/{action_id}",
+    }
+    return await get_workload_action_by_id(
+        db_session, action_id, metrics_details=metrics_details
+    )
 
 
 @router.get("/", response_model=list[WorkloadAction])
@@ -75,8 +90,15 @@ async def get_all_workload_actions_route(
     Returns:
         list[WorkloadAction]: List of workload actions matching the filters.
     """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": "/workload_action",
+    }
     return await list_workload_actions(
-        db_session, filters=filters.model_dump(exclude_none=True)
+        db_session,
+        filters=filters.model_dump(exclude_none=True),
+        metrics_details=metrics_details,
     )
 
 
@@ -97,7 +119,14 @@ async def update_workload_action_route(
     Returns:
         WorkloadAction: The updated workload action.
     """
-    return await update_workload_action(db_session, action_id, data)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "PUT",
+        "endpoint": f"/workload_action/{action_id}",
+    }
+    return await update_workload_action(
+        db_session, action_id, data, metrics_details=metrics_details
+    )
 
 
 @router.delete("/{action_id}", response_model=None)
@@ -114,4 +143,11 @@ async def delete_workload_action_route(
     Returns:
         None
     """
-    return await delete_workload_action(db_session, action_id)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "DELETE",
+        "endpoint": f"/workload_action/{action_id}",
+    }
+    return await delete_workload_action(
+        db_session, action_id, metrics_details=metrics_details
+    )

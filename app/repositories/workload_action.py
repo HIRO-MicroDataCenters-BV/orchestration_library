@@ -13,6 +13,7 @@ from sqlalchemy import and_, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 
+from app.metrics.helper import record_workload_action_metrics
 from app.models.workload_action import WorkloadAction
 from app.schemas.workload_action_schema import (
     WorkloadActionCreate,
@@ -30,8 +31,25 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
+def get_custom_db_entry_not_found_exception(
+    action_id: int,
+) -> DBEntryNotFoundException:
+    """
+    Create a custom DBEntryNotFoundException for a workload action.
+
+    Args:
+        action_id (int): The ID of the workload action that was not found
+
+    Returns:
+        DBEntryNotFoundException: The custom exception
+    """
+    return DBEntryNotFoundException(f"Workload action with ID {action_id} not found")
+
+
 async def create_workload_action(
-    db: AsyncSession, workload_action: WorkloadActionCreate
+    db: AsyncSession,
+    workload_action: WorkloadActionCreate,
+    metrics_details: Dict[str, Any],
 ) -> WorkloadAction:
     """
     Create a new workload action in the database.
@@ -44,8 +62,9 @@ async def create_workload_action(
         WorkloadAction: The created workload action object
 
     Raises:
-        DatabaseConnectionException: If there's a database error
+        DBEntryCreationException: If there's a database error during creation
     """
+    exception = None
     try:
         logger.debug(
             "Creating workload action with data: %s", workload_action.model_dump()
@@ -55,30 +74,43 @@ async def create_workload_action(
         await db.commit()
         await db.refresh(db_workload_action)
         logger.debug("Added workload action to session")
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return db_workload_action
 
     except IntegrityError as e:
+        exception = e
         logger.error("Integrity error while creating workload action: %s", str(e))
         await db.rollback()
         raise DBEntryCreationException(
             "Invalid workload action data", details={"error": str(e)}
         ) from e
     except OperationalError as e:
+        exception = e
         logger.error("Operational error while creating workload action: %s", str(e))
         await db.rollback()
         raise DBEntryCreationException(
             "Database connection error", details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while creating workload action: %s", str(e))
         await db.rollback()
         raise DBEntryCreationException(
             "Failed to create workload action", details={"error": str(e)}
         ) from e
+    finally:
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=400,  # All above exceptions are thrown with 400 status code
+            exception=exception,
+        )
 
 
 async def get_workload_action_by_id(
-    db: AsyncSession, action_id: int
+    db: AsyncSession, action_id: int, metrics_details: Dict[str, Any]
 ) -> Optional[WorkloadAction]:
     """
     Retrieve a workload action by its ID.
@@ -93,6 +125,7 @@ async def get_workload_action_by_id(
     Raises:
         OrchestrationBaseException: If there's a database error
     """
+    exception = None
     try:
         logger.debug("Retrieving workload action with ID: %d", action_id)
         result = await db.execute(
@@ -100,25 +133,42 @@ async def get_workload_action_by_id(
         )
         workload_action = result.scalar_one_or_none()
         if not workload_action:
-            raise DBEntryNotFoundException(
-                f"Workload action with ID {action_id} not found"
+            custom_exception = get_custom_db_entry_not_found_exception(action_id)
+            record_workload_action_metrics(
+                metrics_details=metrics_details,
+                status_code=404,  # Not found
+                exception=custom_exception,
             )
+            raise custom_exception
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=200,  # Explicitly set
+        )
         return workload_action
 
     except OperationalError as e:
+        exception = e
         logger.error("Operational error while retrieving workload action: %s", str(e))
         raise OrchestrationBaseException(
             "Database connection error", details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while retrieving workload action: %s", str(e))
         raise OrchestrationBaseException(
             "Failed to retrieve workload action", details={"error": str(e)}
         ) from e
+    finally:
+        record_workload_action_metrics(
+            metrics_details=metrics_details, status_code=500, exception=exception
+        )
 
 
 async def update_workload_action(
-    db: AsyncSession, action_id: int, workload_action_update: WorkloadActionUpdate
+    db: AsyncSession,
+    action_id: int,
+    workload_action_update: WorkloadActionUpdate,
+    metrics_details: Dict[str, Any],
 ) -> Optional[WorkloadAction]:
     """
     Update an existing workload action.
@@ -134,6 +184,7 @@ async def update_workload_action(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
+    exception = None
     try:
         logger.debug("Updating workload action with ID: %d", action_id)
         result = await db.execute(
@@ -142,9 +193,13 @@ async def update_workload_action(
         workload_action = result.scalar_one_or_none()
 
         if not workload_action:
-            raise DBEntryNotFoundException(
-                f"Workload action with ID {action_id} not found"
+            custom_exception = get_custom_db_entry_not_found_exception(action_id)
+            record_workload_action_metrics(
+                metrics_details=metrics_details,
+                status_code=404,  # Not found
+                exception=custom_exception,
             )
+            raise custom_exception
 
         for key, value in workload_action_update.model_dump(exclude_unset=True).items():
             setattr(workload_action, key, value)
@@ -152,30 +207,43 @@ async def update_workload_action(
         await db.commit()
         await db.refresh(workload_action)
         logger.debug("Updated workload action with ID: %d", action_id)
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return workload_action
 
     except IntegrityError as e:
+        exception = e
         logger.error("Integrity error while updating workload action: %s", str(e))
         await db.rollback()
         raise DBEntryUpdateException(
             "Invalid workload action data", details={"error": str(e)}
         ) from e
     except OperationalError as e:
+        exception = e
         logger.error("Operational error while updating workload action: %s", str(e))
         await db.rollback()
         raise DBEntryUpdateException(
             "Database connection error", details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while updating workload action: %s", str(e))
         await db.rollback()
         raise DBEntryUpdateException(
             "Failed to update workload action", details={"error": str(e)}
         ) from e
+    finally:
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=400,  # All above exceptions are thrown with 400 status code
+            exception=exception,
+        )
 
 
 async def delete_workload_action(
-    db: AsyncSession, action_id: int
+    db: AsyncSession, action_id: int, metrics_details: Dict[str, Any]
 ) -> Optional[WorkloadAction]:
     """
     Delete a workload action by its ID.
@@ -190,6 +258,7 @@ async def delete_workload_action(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
+    exception = None
     try:
         logger.debug("Deleting workload action with ID: %d", action_id)
         result = await db.execute(
@@ -198,16 +267,24 @@ async def delete_workload_action(
         workload_action = result.scalar_one_or_none()
 
         if not workload_action:
-            raise DBEntryNotFoundException(
-                f"Workload action with ID {action_id} not found"
+            custom_exception = get_custom_db_entry_not_found_exception(action_id)
+            record_workload_action_metrics(
+                metrics_details=metrics_details,
+                status_code=404,  # Not found
             )
+            raise custom_exception
 
         await db.delete(workload_action)
         await db.commit()
         logger.debug("Deleted workload action with ID: %d", action_id)
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=200,  # Explicitly set
+        )
         return workload_action
 
     except IntegrityError as e:
+        exception = e
         logger.error("Integrity error while deleting workload action: %s", str(e))
         await db.rollback()
         raise DBEntryDeletionException(
@@ -215,21 +292,28 @@ async def delete_workload_action(
             details={"error": str(e)},
         ) from e
     except OperationalError as e:
+        exception = e
         logger.error("Operational error while deleting workload action: %s", str(e))
         await db.rollback()
         raise DBEntryDeletionException(
             "Database connection error", details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while deleting workload action: %s", str(e))
         await db.rollback()
         raise DBEntryDeletionException(
             "Failed to delete workload action", details={"error": str(e)}
         ) from e
+    finally:
+        record_workload_action_metrics(
+            metrics_details=metrics_details, status_code=400, exception=exception
+        )
 
 
 async def list_workload_actions(
     db: AsyncSession,
+    metrics_details: Dict[str, Any],
     filters: Optional[Dict[str, Any]] = None,
 ) -> Sequence[WorkloadAction]:
     """
@@ -245,6 +329,7 @@ async def list_workload_actions(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
+    exception = None
     try:
         query = select(WorkloadAction).order_by(desc(WorkloadAction.action_start_time))
         filter_clauses = []
@@ -284,10 +369,19 @@ async def list_workload_actions(
 
         result = await db.execute(query)
         workload_actions = result.scalars().all()
+        record_workload_action_metrics(
+            metrics_details=metrics_details,
+            status_code=200,  # Explicitly set
+        )
         return workload_actions
 
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while listing workload actions: %s", str(e))
         raise DatabaseConnectionException(
             "Failed to list workload actions", details={"error": str(e)}
         ) from e
+    finally:
+        record_workload_action_metrics(
+            metrics_details=metrics_details, status_code=503, exception=exception
+        )
