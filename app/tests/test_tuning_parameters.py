@@ -14,6 +14,7 @@ from app.schemas.tuning_parameter_schema import (
     TuningParameterCreate,
     TuningParameterResponse,
 )
+from app.tests.utils.mock_objects import mock_metrics_details
 from app.utils.exceptions import DatabaseConnectionException
 
 
@@ -98,7 +99,11 @@ async def test_create_tuning_parameters():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
 
-    result = await tuning_parameter.create_tuning_parameter(db, tuning_parameter_create)
+    result = await tuning_parameter.create_tuning_parameter(
+        db,
+        tuning_parameter_create,
+        metrics_details=mock_metrics_details("POST", "/tuning_parameters"),
+    )
     db.add.assert_called_once()
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
@@ -126,7 +131,9 @@ async def test_get_tuning_parameters():
     db = AsyncMock()
     db.execute.return_value = mock_result
 
-    result = await tuning_parameter.get_tuning_parameters(db)
+    result = await tuning_parameter.get_tuning_parameters(
+        db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+    )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
@@ -156,7 +163,9 @@ async def test_get_latest_tuning_parameters():
     db = AsyncMock()
     db.execute.return_value = mock_result
 
-    result = await tuning_parameter.get_latest_tuning_parameters(db)
+    result = await tuning_parameter.get_latest_tuning_parameters(
+        db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+    )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
@@ -177,7 +186,9 @@ async def test_get_tuning_parameters_empty():
     db = AsyncMock()
     db.execute.return_value = mock_result
 
-    result = await tuning_parameter.get_tuning_parameters(db)
+    result = await tuning_parameter.get_tuning_parameters(
+        db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+    )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
@@ -200,7 +211,11 @@ async def test_get_tuning_parameters_with_start_date():
     db.execute.return_value = mock_result
 
     start_date = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
-    result = await tuning_parameter.get_tuning_parameters(db, start_date=start_date)
+    result = await tuning_parameter.get_tuning_parameters(
+        db,
+        start_date=start_date,
+        metrics_details=mock_metrics_details("GET", "/tuning_parameters"),
+    )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
@@ -223,7 +238,11 @@ async def test_get_tuning_parameters_with_end_date():
     db.execute.return_value = mock_result
 
     end_date = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
-    result = await tuning_parameter.get_tuning_parameters(db, end_date=end_date)
+    result = await tuning_parameter.get_tuning_parameters(
+        db,
+        end_date=end_date,
+        metrics_details=mock_metrics_details("GET", "/tuning_parameters"),
+    )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
@@ -248,7 +267,10 @@ async def test_get_tuning_parameters_with_start_and_end_date():
     start_date = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
     end_date = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
     result = await tuning_parameter.get_tuning_parameters(
-        db, start_date=start_date, end_date=end_date
+        db,
+        start_date=start_date,
+        end_date=end_date,
+        metrics_details=mock_metrics_details("GET", "/tuning_parameters"),
     )
 
     db.execute.assert_called_once()
@@ -268,7 +290,11 @@ async def test_create_tuning_parameter_integrity_error():
         output_1=1, output_2=1, output_3=1, alpha=1, beta=1, gamma=1
     )
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.create_tuning_parameter(db, param)
+        await tuning_parameter.create_tuning_parameter(
+            db,
+            param,
+            metrics_details=mock_metrics_details("POST", "/tuning_parameters"),
+        )
     db.rollback.assert_awaited()
     assert "Invalid tuning parameter data" in str(exc.value)
 
@@ -285,7 +311,11 @@ async def test_create_tuning_parameter_sqlalchemy_error():
         output_1=1, output_2=1, output_3=1, alpha=1, beta=1, gamma=1
     )
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.create_tuning_parameter(db, param)
+        await tuning_parameter.create_tuning_parameter(
+            db,
+            param,
+            metrics_details=mock_metrics_details("POST", "/tuning_parameters"),
+        )
     db.rollback.assert_awaited()
     assert "Failed to create tuning parameter" in str(exc.value)
 
@@ -302,7 +332,11 @@ async def test_create_tuning_parameter_unexpected_error():
         output_1=1, output_2=1, output_3=1, alpha=1, beta=1, gamma=1
     )
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.create_tuning_parameter(db, param)
+        await tuning_parameter.create_tuning_parameter(
+            db,
+            param,
+            metrics_details=mock_metrics_details("POST", "/tuning_parameters"),
+        )
     db.rollback.assert_awaited()
     assert "An unexpected error occurred" in str(exc.value)
 
@@ -313,7 +347,9 @@ async def test_get_tuning_parameters_sqlalchemy_error():
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=SQLAlchemyError("db error"))
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.get_tuning_parameters(db)
+        await tuning_parameter.get_tuning_parameters(
+            db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+        )
     assert "Failed to retrieve tuning parameters" in str(exc.value)
 
 
@@ -323,7 +359,9 @@ async def test_get_tuning_parameters_unexpected_error():
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=Exception("unexpected"))
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.get_tuning_parameters(db)
+        await tuning_parameter.get_tuning_parameters(
+            db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+        )
     assert "An unexpected error occurred" in str(exc.value)
 
 
@@ -337,7 +375,9 @@ async def test_get_latest_tuning_parameters_not_found():
     mock_result.scalars.return_value = mock_scalars
     db.execute.return_value = mock_result
     with pytest.raises(DatabaseConnectionException):
-        await tuning_parameter.get_latest_tuning_parameters(db)
+        await tuning_parameter.get_latest_tuning_parameters(
+            db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+        )
 
 
 @pytest.mark.asyncio
@@ -346,7 +386,9 @@ async def test_get_latest_tuning_parameters_sqlalchemy_error():
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=SQLAlchemyError("db error"))
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.get_latest_tuning_parameters(db)
+        await tuning_parameter.get_latest_tuning_parameters(
+            db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+        )
     assert "Failed to retrieve latest tuning parameters" in str(exc.value)
 
 
@@ -356,5 +398,7 @@ async def test_get_latest_tuning_parameters_unexpected_error():
     db = AsyncMock()
     db.execute = AsyncMock(side_effect=Exception("unexpected"))
     with pytest.raises(DatabaseConnectionException) as exc:
-        await tuning_parameter.get_latest_tuning_parameters(db)
+        await tuning_parameter.get_latest_tuning_parameters(
+            db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+        )
     assert "An unexpected error occurred" in str(exc.value)

@@ -5,6 +5,7 @@ It includes routes for creating, retrieving Tuning Parameter records.
 """
 
 from datetime import datetime
+import time
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
@@ -45,7 +46,14 @@ async def create_tuning_parameter(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
-    return await tuning_parameter_crud.create_tuning_parameter(db, tuning_parameter)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "POST",
+        "endpoint": "/tuning_parameters",
+    }
+    return await tuning_parameter_crud.create_tuning_parameter(
+        db, tuning_parameter, metrics_details=metrics_details
+    )
 
 
 @router.get("/", response_model=List[TuningParameterResponse])
@@ -72,8 +80,18 @@ async def read_tuning_parameters(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": "/tuning_parameters",
+    }
     tuning_parameters = await tuning_parameter_crud.get_tuning_parameters(
-        db, skip=skip, limit=limit, start_date=start_date, end_date=end_date
+        db,
+        skip=skip,
+        limit=limit,
+        start_date=start_date,
+        end_date=end_date,
+        metrics_details=metrics_details,
     )
     return tuning_parameters
 
@@ -95,7 +113,12 @@ async def get_latest_tuning_parameters(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": f"/tuning_parameters/latest/{limit}",
+    }
     latest_parameters = await tuning_parameter_crud.get_latest_tuning_parameters(
-        db, limit=limit
+        db, limit=limit, metrics_details=metrics_details
     )
     return latest_parameters

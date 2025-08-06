@@ -31,7 +31,9 @@ def mock_db():
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.tuning_parameter.create_tuning_parameter", new_callable=AsyncMock)
+@patch(
+    "app.repositories.tuning_parameter.create_tuning_parameter", new_callable=AsyncMock
+)
 async def test_create_tuning_parameters_success(mock_create):
     """Test successful creation of tuning parameters."""
     request_data = {
@@ -58,7 +60,9 @@ async def test_create_tuning_parameters_success(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.tuning_parameter.create_tuning_parameter", new_callable=AsyncMock)
+@patch(
+    "app.repositories.tuning_parameter.create_tuning_parameter", new_callable=AsyncMock
+)
 async def test_create_tuning_parameters_validation_error(mock_create):
     """Test creation of tuning parameters with invalid data."""
     invalid_data = {
@@ -79,7 +83,10 @@ async def test_create_tuning_parameters_validation_error(mock_create):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.tuning_parameter.get_latest_tuning_parameters", new_callable=AsyncMock)
+@patch(
+    "app.repositories.tuning_parameter.get_latest_tuning_parameters",
+    new_callable=AsyncMock,
+)
 async def test_get_latest_tuning_parameter_success(mock_get_latest):
     """Test successful retrieval of latest tuning parameter."""
     mock_get_latest.return_value = [SAMPLE_TUNING_PARAM]
@@ -93,12 +100,17 @@ async def test_get_latest_tuning_parameter_success(mock_get_latest):
     expected = [SAMPLE_TUNING_PARAM.copy()]
     actual[0]["created_at"] = actual[0]["created_at"].replace("+00:00", "Z")
     expected[0]["created_at"] = expected[0]["created_at"].replace("+00:00", "Z")
-    assert actual == expected # Expecting a list with one item
-    mock_get_latest.assert_called_once_with(ANY, limit=1)  # ANY for db session
+    assert actual == expected  # Expecting a list with one item
+    mock_get_latest.assert_called_once_with(
+        ANY, limit=1, metrics_details=ANY
+    )  # ANY for db session
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.tuning_parameter.get_latest_tuning_parameters", new_callable=AsyncMock)
+@patch(
+    "app.repositories.tuning_parameter.get_latest_tuning_parameters",
+    new_callable=AsyncMock,
+)
 async def test_get_latest_tuning_parameter_not_found(mock_get_latest):
     """Test retrieval of latest tuning parameter when none exist."""
 
@@ -107,11 +119,15 @@ async def test_get_latest_tuning_parameter_not_found(mock_get_latest):
         response = await ac.get("/tuning_parameters/latest/1")
 
     assert response.status_code == status.HTTP_200_OK
-    mock_get_latest.assert_called_once_with(ANY, limit=1)  # ANY for db session
+    mock_get_latest.assert_called_once_with(
+        ANY, limit=1, metrics_details=ANY
+    )  # ANY for db session
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.tuning_parameter.get_tuning_parameters", new_callable=AsyncMock)
+@patch(
+    "app.repositories.tuning_parameter.get_tuning_parameters", new_callable=AsyncMock
+)
 async def test_get_all_tuning_parameters_success(mock_get_all):
     """Test successful retrieval of all tuning parameters."""
     mock_get_all.return_value = [SAMPLE_TUNING_PARAM]
@@ -130,7 +146,9 @@ async def test_get_all_tuning_parameters_success(mock_get_all):
 
 
 @pytest.mark.asyncio
-@patch("app.repositories.tuning_parameter.get_tuning_parameters", new_callable=AsyncMock)
+@patch(
+    "app.repositories.tuning_parameter.get_tuning_parameters", new_callable=AsyncMock
+)
 async def test_get_tuning_parameters_with_filters(mock_get_all):
     """Test retrieval of tuning parameters with date filters."""
     mock_get_all.return_value = [SAMPLE_TUNING_PARAM]
