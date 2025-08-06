@@ -15,6 +15,7 @@ from app.repositories.workload_action import (
     list_workload_actions,
 )
 from app.tests.utils.mock_objects import (
+    mock_metrics_details,
     mock_workload_action_create_obj,
     mock_workload_action_obj,
     mock_workload_action_update_obj,
@@ -42,7 +43,8 @@ async def test_create_workload_action():
         action_type=WorkloadActionTypeEnum.CREATE,
         action_status=WorkloadActionStatusEnum.PENDING,
     )
-    created = await create_workload_action(db, data)
+    metrics_details = mock_metrics_details("POST", "/workload_action")
+    created = await create_workload_action(db, data, metrics_details=metrics_details)
     db.add.assert_called_once()
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
@@ -67,7 +69,10 @@ async def test_get_workload_action_by_id():
     mock_result.scalar_one_or_none.return_value = mock_action
     db.execute.return_value = mock_result
 
-    result = await get_workload_action_by_id(db, action_id)
+    metrics_details = mock_metrics_details("GET", f"/workload_action/{action_id}")
+    result = await get_workload_action_by_id(
+        db, action_id, metrics_details=metrics_details
+    )
     db.execute.assert_called_once()
     assert result == mock_action
 
@@ -90,7 +95,10 @@ async def test_update_workload_action():
     update_data = mock_workload_action_update_obj(
         action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
-    updated_action = await update_workload_action(db, action_id, update_data)
+    metrics_details = mock_metrics_details("PUT", f"/workload_action/{action_id}")
+    updated_action = await update_workload_action(
+        db, action_id, update_data, metrics_details=metrics_details
+    )
     db.commit.assert_called_once()
     db.refresh.assert_called_once()
     assert updated_action.action_status == WorkloadActionStatusEnum.PENDING
@@ -111,7 +119,8 @@ async def test_delete_workload_action():
 
     db.execute.return_value.scalars.return_value.one_or_none.return_value = mock_action
 
-    await delete_workload_action(db, action_id)
+    metrics_details = mock_metrics_details("DELETE", f"/workload_action/{action_id}")
+    await delete_workload_action(db, action_id, metrics_details=metrics_details)
     db.commit.assert_called_once()
 
 
@@ -137,8 +146,11 @@ async def test_list_workload_actions():
     mock_result.scalars.return_value = mock_scalars
     db.execute.return_value = mock_result
 
+    metrics_details = mock_metrics_details("GET", "/workload_action")
     actions = await list_workload_actions(
-        db, filters={"action_type": "bind", "action_status": None}
+        db,
+        filters={"action_type": "bind", "action_status": None},
+        metrics_details=metrics_details,
     )
     db.execute.assert_called_once()
     assert len(actions) == 2
@@ -163,7 +175,8 @@ async def test_create_workload_action_integrity_error():
         action_status=WorkloadActionStatusEnum.PENDING,
     )
     with pytest.raises(DBEntryCreationException):
-        await create_workload_action(db, data)
+        metrics_details = mock_metrics_details("POST", "/workload_action")
+        await create_workload_action(db, data, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -181,7 +194,8 @@ async def test_create_workload_action_operational_error():
         action_status=WorkloadActionStatusEnum.PENDING,
     )
     with pytest.raises(DBEntryCreationException):
-        await create_workload_action(db, data)
+        metrics_details = mock_metrics_details("POST", "/workload_action")
+        await create_workload_action(db, data, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -197,7 +211,8 @@ async def test_create_workload_action_sqlalchemy_error():
         action_status=WorkloadActionStatusEnum.PENDING,
     )
     with pytest.raises(DBEntryCreationException):
-        await create_workload_action(db, data)
+        metrics_details = mock_metrics_details("POST", "/workload_action")
+        await create_workload_action(db, data, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -209,7 +224,8 @@ async def test_get_workload_action_by_id_not_found():
     mock_result.scalar_one_or_none.return_value = None
     db.execute.return_value = mock_result
     with pytest.raises(DBEntryNotFoundException):
-        await get_workload_action_by_id(db, action_id)
+        metrics_details = mock_metrics_details("GET", f"/workload_action/{action_id}")
+        await get_workload_action_by_id(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -218,7 +234,9 @@ async def test_get_workload_action_by_id_operational_error():
     db = AsyncMock()
     db.execute.side_effect = sqlalchemy.exc.OperationalError("stmt", "params", "orig")
     with pytest.raises(OrchestrationBaseException):
-        await get_workload_action_by_id(db, uuid4())
+        action_id = uuid4()
+        metrics_details = mock_metrics_details("GET", f"/workload_action/{action_id}")
+        await get_workload_action_by_id(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -227,7 +245,9 @@ async def test_get_workload_action_by_id_sqlalchemy_error():
     db = AsyncMock()
     db.execute.side_effect = sqlalchemy.exc.SQLAlchemyError("error")
     with pytest.raises(OrchestrationBaseException):
-        await get_workload_action_by_id(db, uuid4())
+        action_id = uuid4()
+        metrics_details = mock_metrics_details("GET", f"/workload_action/{action_id}")
+        await get_workload_action_by_id(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -242,7 +262,10 @@ async def test_update_workload_action_not_found():
         action_id=action_id, action_status="pending"
     )
     with pytest.raises(DBEntryNotFoundException):
-        await update_workload_action(db, action_id, update_data)
+        metrics_details = mock_metrics_details("PUT", f"/workload_action/{action_id}")
+        await update_workload_action(
+            db, action_id, update_data, metrics_details=metrics_details
+        )
 
 
 @pytest.mark.asyncio
@@ -266,7 +289,10 @@ async def test_update_workload_action_integrity_error():
         action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     with pytest.raises(DBEntryUpdateException):
-        await update_workload_action(db, action_id, update_data)
+        metrics_details = mock_metrics_details("PUT", f"/workload_action/{action_id}")
+        await update_workload_action(
+            db, action_id, update_data, metrics_details=metrics_details
+        )
 
 
 @pytest.mark.asyncio
@@ -290,7 +316,10 @@ async def test_update_workload_action_operational_error():
         action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     with pytest.raises(DBEntryUpdateException):
-        await update_workload_action(db, action_id, update_data)
+        metrics_details = mock_metrics_details("PUT", f"/workload_action/{action_id}")
+        await update_workload_action(
+            db, action_id, update_data, metrics_details=metrics_details
+        )
 
 
 @pytest.mark.asyncio
@@ -312,7 +341,10 @@ async def test_update_workload_action_sqlalchemy_error():
         action_id=action_id, action_status=WorkloadActionStatusEnum.PENDING
     )
     with pytest.raises(DBEntryUpdateException):
-        await update_workload_action(db, action_id, update_data)
+        metrics_details = mock_metrics_details("PUT", f"/workload_action/{action_id}")
+        await update_workload_action(
+            db, action_id, update_data, metrics_details=metrics_details
+        )
 
 
 @pytest.mark.asyncio
@@ -324,7 +356,10 @@ async def test_delete_workload_action_not_found():
     mock_result.scalar_one_or_none.return_value = None
     db.execute.return_value = mock_result
     with pytest.raises(DBEntryNotFoundException):
-        await delete_workload_action(db, action_id)
+        metrics_details = mock_metrics_details(
+            "DELETE", f"/workload_action/{action_id}"
+        )
+        await delete_workload_action(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -345,7 +380,10 @@ async def test_delete_workload_action_integrity_error():
         side_effect=sqlalchemy.exc.IntegrityError("stmt", "params", "orig")
     )
     with pytest.raises(DBEntryDeletionException):
-        await delete_workload_action(db, action_id)
+        metrics_details = mock_metrics_details(
+            "DELETE", f"/workload_action/{action_id}"
+        )
+        await delete_workload_action(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -366,7 +404,10 @@ async def test_delete_workload_action_operational_error():
         side_effect=sqlalchemy.exc.OperationalError("stmt", "params", "orig")
     )
     with pytest.raises(DBEntryDeletionException):
-        await delete_workload_action(db, action_id)
+        metrics_details = mock_metrics_details(
+            "DELETE", f"/workload_action/{action_id}"
+        )
+        await delete_workload_action(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -385,7 +426,10 @@ async def test_delete_workload_action_sqlalchemy_error():
     db.delete = AsyncMock()
     db.commit = AsyncMock(side_effect=sqlalchemy.exc.SQLAlchemyError("error"))
     with pytest.raises(DBEntryDeletionException):
-        await delete_workload_action(db, action_id)
+        metrics_details = mock_metrics_details(
+            "DELETE", f"/workload_action/{action_id}"
+        )
+        await delete_workload_action(db, action_id, metrics_details=metrics_details)
 
 
 @pytest.mark.asyncio
@@ -394,6 +438,9 @@ async def test_list_workload_actions_sqlalchemy_error():
     db = AsyncMock()
     db.execute.side_effect = sqlalchemy.exc.SQLAlchemyError("error")
     with pytest.raises(DatabaseConnectionException):
+        metrics_details = mock_metrics_details("GET", "/workload_actions")
         await list_workload_actions(
-            db, filters={"action_type": WorkloadActionTypeEnum.BIND}
+            db,
+            filters={"action_type": WorkloadActionTypeEnum.BIND},
+            metrics_details=metrics_details,
         )

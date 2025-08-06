@@ -222,6 +222,15 @@ def make_owner(kind, name):
     owner.name = name
     return owner
 
+def mock_metrics_details(method, endpoint):
+    """
+    Mock metrics details dictionary for a workload action.
+    """
+    return {
+        "start_time": 1720000000.0,  # Example fixed timestamp
+        "method": method,
+        "endpoint": endpoint
+    }
 
 def mock_workload_action_create_obj(
     action_id=None, action_type=None, action_status=None, count=1

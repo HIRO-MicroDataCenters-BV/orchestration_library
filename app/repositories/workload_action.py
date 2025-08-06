@@ -31,7 +31,7 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-async def get_custom_db_entry_not_found_exception(
+def get_custom_db_entry_not_found_exception(
     action_id: int,
 ) -> DBEntryNotFoundException:
     """
