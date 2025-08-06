@@ -16,7 +16,7 @@ POD_PARENT_TYPE_ENUM = (
 )
 WORKLOAD_REQUEST_DECISION_STATUS_ENUM = (
     "pending",
-    "successful",
+    "succeeded",
     "failed"
 )
 
