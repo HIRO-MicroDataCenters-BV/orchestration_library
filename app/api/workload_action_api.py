@@ -41,12 +41,14 @@ async def create_workload_action_route(
     Returns:
         WorkloadAction: The newly created workload action.
     """
-    metrics_details  = {
+    metrics_details = {
         "start_time": time.time(),
         "method": "POST",
-        "endpoint": "/workload_action"
+        "endpoint": "/workload_action",
     }
-    return await create_workload_action(db_session, data, metrics_details=metrics_details)
+    return await create_workload_action(
+        db_session, data, metrics_details=metrics_details
+    )
 
 
 @router.get("/{action_id}", response_model=WorkloadAction)
@@ -66,9 +68,11 @@ async def get_workload_action_route(
     metrics_details = {
         "start_time": time.time(),
         "method": "GET",
-        "endpoint": f"/workload_action/{action_id}"
+        "endpoint": f"/workload_action/{action_id}",
     }
-    return await get_workload_action_by_id(db_session, action_id, metrics_details=metrics_details)
+    return await get_workload_action_by_id(
+        db_session, action_id, metrics_details=metrics_details
+    )
 
 
 @router.get("/", response_model=list[WorkloadAction])
@@ -89,10 +93,12 @@ async def get_all_workload_actions_route(
     metrics_details = {
         "start_time": time.time(),
         "method": "GET",
-        "endpoint": "/workload_action"
+        "endpoint": "/workload_action",
     }
     return await list_workload_actions(
-        db_session, filters=filters.model_dump(exclude_none=True), metrics_details=metrics_details
+        db_session,
+        filters=filters.model_dump(exclude_none=True),
+        metrics_details=metrics_details,
     )
 
 
@@ -116,9 +122,11 @@ async def update_workload_action_route(
     metrics_details = {
         "start_time": time.time(),
         "method": "PUT",
-        "endpoint": f"/workload_action/{action_id}"
+        "endpoint": f"/workload_action/{action_id}",
     }
-    return await update_workload_action(db_session, action_id, data, metrics_details=metrics_details)
+    return await update_workload_action(
+        db_session, action_id, data, metrics_details=metrics_details
+    )
 
 
 @router.delete("/{action_id}", response_model=None)
@@ -138,6 +146,8 @@ async def delete_workload_action_route(
     metrics_details = {
         "start_time": time.time(),
         "method": "DELETE",
-        "endpoint": f"/workload_action/{action_id}"
+        "endpoint": f"/workload_action/{action_id}",
     }
-    return await delete_workload_action(db_session, action_id, metrics_details=metrics_details)
+    return await delete_workload_action(
+        db_session, action_id, metrics_details=metrics_details
+    )
