@@ -249,7 +249,7 @@ async def update_workload_decision(
             )
             raise exception
 
-        for key, value in data.dict().items():
+        for key, value in data.model_dump(exclude_unset=True).items():
             setattr(workload_decision, key, value)
 
         await db_session.commit()

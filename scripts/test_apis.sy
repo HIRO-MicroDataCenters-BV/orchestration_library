@@ -121,9 +121,6 @@ tuning_parameters_api() {
   curl -s "$API_BASE_URL/tuning_parameters/latest/2" | jq
   sleep 1
 
-  echo "Getting tuning_parameters by ID..."
-  curl -s "$API_BASE_URL/tuning_parameters/$TUNING_ID" | jq || echo "Get by ID endpoint may not exist"
-  sleep 1
   echo "=== Tuning Parameters API tests completed ==="
 }
 
@@ -245,14 +242,14 @@ k8s_get_token_api() {
 
 main() {
   workload_request_decision_api
-  # workload_action_api
-  # tuning_parameters_api
-  # alerts_api
-  # k8s_node_api
-  # k8s_pod_api
-  # k8s_user_pod_api
-  # k8s_cluster_info_api
-  # k8s_get_token_api
+  workload_action_api
+  tuning_parameters_api
+  alerts_api
+  k8s_node_api
+  k8s_pod_api
+  k8s_user_pod_api
+  k8s_cluster_info_api
+  k8s_get_token_api
   echo "=== All API tests completed ==="
 }
 
