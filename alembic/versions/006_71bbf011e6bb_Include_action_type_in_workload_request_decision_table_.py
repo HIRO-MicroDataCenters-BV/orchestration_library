@@ -95,7 +95,7 @@ def downgrade() -> None:
     # 2. Create the old enum with original values
     op.execute("""
         CREATE TYPE workload_request_decision_status_enum_old AS ENUM (
-            'pending', 'successful', 'failed'
+            'pending', 'successful', 'failed', 'succeeded'
         );
     """)
 
