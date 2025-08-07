@@ -54,5 +54,5 @@ class WorkloadRequestDecisionStatusEnum(str, Enum):
     Enum for workload request decision statuses.
     """
     PENDING = "pending"
-    SUCCESSFUL = "successful"
+    SUCCEEDED = "succeeded"
     FAILED = "failed"
