@@ -102,13 +102,13 @@ async def create_workload_decision(
         )
     finally:
         record_workload_request_decision_metrics(
-            metrics_details=metrics_details,
-            status_code=400,
-            exception=exception
+            metrics_details=metrics_details, status_code=400, exception=exception
         )
 
 
-async def get_workload_decision(db_session: AsyncSession, decision_id: UUID, metrics_details: dict):
+async def get_workload_decision(
+    db_session: AsyncSession, decision_id: UUID, metrics_details: dict
+):
     """
     Retrieve a specific WorkloadRequestDecision by its ID.
 
@@ -137,9 +137,7 @@ async def get_workload_decision(db_session: AsyncSession, decision_id: UUID, met
                 message=f"Pod decision with id '{decision_id}' not found."
             )
             record_workload_request_decision_metrics(
-                metrics_details=metrics_details,
-                status_code=404,
-                exception=exception
+                metrics_details=metrics_details, status_code=404, exception=exception
             )
             raise exception
         record_workload_request_decision_metrics(
@@ -165,14 +163,15 @@ async def get_workload_decision(db_session: AsyncSession, decision_id: UUID, met
         ) from exc
     finally:
         record_workload_request_decision_metrics(
-            metrics_details=metrics_details,
-            status_code=400,
-            exception=exception
+            metrics_details=metrics_details, status_code=400, exception=exception
         )
 
 
 async def get_all_workload_decisions(
-    db_session: AsyncSession, skip: int = 0, limit: int = 100, metrics_details: dict = None
+    db_session: AsyncSession,
+    skip: int = 0,
+    limit: int = 100,
+    metrics_details: dict = None,
 ):
     """
     Retrieve all WorkloadRequestDecision records with pagination.
@@ -207,14 +206,15 @@ async def get_all_workload_decisions(
         ) from exc
     finally:
         record_workload_request_decision_metrics(
-            metrics_details=metrics_details,
-            status_code=400,
-            exception=exception
+            metrics_details=metrics_details, status_code=400, exception=exception
         )
 
 
 async def update_workload_decision(
-    db_session: AsyncSession, decision_id: UUID, data: WorkloadRequestDecisionUpdate, metrics_details: dict
+    db_session: AsyncSession,
+    decision_id: UUID,
+    data: WorkloadRequestDecisionUpdate,
+    metrics_details: dict,
 ):
     """
     Update an existing WorkloadRequestDecision record by its ID.
@@ -245,9 +245,7 @@ async def update_workload_decision(
                 message=f"Pod decision with id '{decision_id}' not found."
             )
             record_workload_request_decision_metrics(
-                metrics_details=metrics_details,
-                status_code=404,
-                exception=exception
+                metrics_details=metrics_details, status_code=404, exception=exception
             )
             raise exception
 
@@ -303,7 +301,9 @@ async def update_workload_decision(
         ) from exc
 
 
-async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID, metrics_details: dict):
+async def delete_workload_decision(
+    db_session: AsyncSession, decision_id: UUID, metrics_details: dict
+):
     """
     Delete a WorkloadRequestDecision record by its ID.
 
@@ -332,9 +332,7 @@ async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID, 
                 message=f"Pod decision with id '{decision_id}' not found."
             )
             record_workload_request_decision_metrics(
-                metrics_details=metrics_details,
-                status_code=404,
-                exception=exception
+                metrics_details=metrics_details, status_code=404, exception=exception
             )
             raise exception
 
@@ -397,7 +395,5 @@ async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID, 
         ) from exc
     finally:
         record_workload_request_decision_metrics(
-            metrics_details=metrics_details,
-            status_code=400,
-            exception=exception
+            metrics_details=metrics_details, status_code=400, exception=exception
         )

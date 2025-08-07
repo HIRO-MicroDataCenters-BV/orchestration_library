@@ -2,11 +2,9 @@
 CRUD operations for managing tuning parameters in the database.
 """
 
-from datetime import datetime
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Sequence
 import logging
 
-from matplotlib.pylab import f
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -85,10 +83,7 @@ async def create_tuning_parameter(
 
 async def get_tuning_parameters(
     db: AsyncSession,
-    skip: int = 0,
-    limit: int = 100,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
+    tuning_parameter_reqest_args: Dict[str, Any] = None,
     metrics_details: Dict[str, Any] = None
 ) -> Sequence[TuningParameter]:
     """
@@ -109,6 +104,12 @@ async def get_tuning_parameters(
     """
     exception = None
     try:
+        if tuning_parameter_reqest_args is None:
+            tuning_parameter_reqest_args = {}
+        skip = tuning_parameter_reqest_args.get("skip", 0)
+        limit = tuning_parameter_reqest_args.get("limit", 100)
+        start_date = tuning_parameter_reqest_args.get("start_date", None)
+        end_date = tuning_parameter_reqest_args.get("end_date", None)
         logger.debug(
             "Retrieving tuning parameters with skip=%d, limit=%d, start_date=%s, end_date=%s",
             skip,

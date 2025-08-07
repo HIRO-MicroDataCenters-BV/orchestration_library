@@ -80,6 +80,12 @@ async def read_tuning_parameters(
     Raises:
         DatabaseConnectionException: If there's a database error
     """
+    tuning_parameter_reqest_args = {
+        "skip": skip,
+        "limit": limit,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
     metrics_details = {
         "start_time": time.time(),
         "method": "GET",
@@ -87,10 +93,7 @@ async def read_tuning_parameters(
     }
     tuning_parameters = await tuning_parameter_crud.get_tuning_parameters(
         db,
-        skip=skip,
-        limit=limit,
-        start_date=start_date,
-        end_date=end_date,
+        tuning_parameter_reqest_args,
         metrics_details=metrics_details,
     )
     return tuning_parameters

@@ -213,7 +213,7 @@ async def test_get_tuning_parameters_with_start_date():
     start_date = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
     result = await tuning_parameter.get_tuning_parameters(
         db,
-        start_date=start_date,
+        tuning_parameter_reqest_args={"start_date": start_date},
         metrics_details=mock_metrics_details("GET", "/tuning_parameters"),
     )
 
@@ -240,7 +240,7 @@ async def test_get_tuning_parameters_with_end_date():
     end_date = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
     result = await tuning_parameter.get_tuning_parameters(
         db,
-        end_date=end_date,
+        tuning_parameter_reqest_args={"end_date": end_date},
         metrics_details=mock_metrics_details("GET", "/tuning_parameters"),
     )
 
@@ -268,8 +268,7 @@ async def test_get_tuning_parameters_with_start_and_end_date():
     end_date = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
     result = await tuning_parameter.get_tuning_parameters(
         db,
-        start_date=start_date,
-        end_date=end_date,
+        tuning_parameter_reqest_args={"start_date": start_date, "end_date": end_date},
         metrics_details=mock_metrics_details("GET", "/tuning_parameters"),
     )
 
