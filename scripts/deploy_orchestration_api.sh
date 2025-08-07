@@ -9,6 +9,7 @@ KUBERNETES_DASHBOARD_RELEASE_NAME="aces-kubernetes-dashboard"
 KUBERNETES_DASHBOARD_RO_SA="readonly-user"
 NGINX_DASHBOARD_REVERSE_PROXY_NAME="aces-dashboard-reverse-proxy"
 NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT=80
+NGINX_DASHBOARD_REVERSE_PROXY_NODE_IP="localhost"
 NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT=30016
 
 ORCHRESTRATION_API_NAMESPACE="aces-orchestration-api"
@@ -41,27 +42,31 @@ helm repo update
 echo "Update Helm dependencies for k8s-dashboard chart"
 helm dependency build ./charts/k8s-dashboard
 
-echo "Deploy the Kubernetes Dashboard with reverse proxy to the cluster"
-helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
-  --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
-  --create-namespace \
-  --set serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
-  --set reverseProxy.name=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
-  --set reverseProxy.service.port=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
-  --set reverseProxy.service.type=NodePort \
-  --set reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
+# echo "Deploy the Kubernetes Dashboard with reverse proxy to the cluster"
+# helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
+#   --namespace $KUBERNETES_DASHBOARD_NAMESPACE \
+#   --create-namespace \
+#   --set serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
+#   --set reverseProxy.name=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
+#   --set reverseProxy.service.port=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
+#   --set reverseProxy.service.type=NodePort \
+#   --set reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
 
-echo "Deploy the orchestration-api to the Kind cluster"
+echo "Deploy the orchestration-api with dependencies(K8S Dashboard with reverse proxy) to the Kind cluster"
 helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
   --namespace $ORCHRESTRATION_API_NAMESPACE \
   --create-namespace \
   --set app.image.repository=$ORCHRESTRATION_API_IMAGE_NAME \
   --set app.image.tag=$ORCHRESTRATION_API_IMAGE_TAG \
   --set app.image.pullPolicy=IfNotPresent \
-  --set dashboard.namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
-  --set dashboard.serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
-  --set dashboard.reverseProxyServiceName=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
-  --set dashboard.reverseProxyServicePort=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
+  --set k8sDashboard.enabled=true \
+  --set k8sDashboard.namespace=$KUBERNETES_DASHBOARD_NAMESPACE \
+  --set k8sDashboard.serviceAccountName=$KUBERNETES_DASHBOARD_RO_SA \
+  --set k8sDashboard.reverseProxy.service.type=NodePort \
+  --set k8sDashboard.reverseProxy.service.port=$NGINX_DASHBOARD_REVERSE_PROXY_SERVICE_PORT \
+  --set k8sDashboard.reverseProxy.service.name=$NGINX_DASHBOARD_REVERSE_PROXY_NAME \
+  --set k8sDashboard.reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
+  --set k8sDashboard.accessURL="http://${NGINX_DASHBOARD_REVERSE_PROXY_NODE_IP}:${NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT}/" \
   --set app.service.type=NodePort \
   --set app.service.port=$ORCHRESTRATION_API_SERVICE_PORT \
   --set app.service.nodePort=$ORCHRESTRATION_API_NODE_PORT \

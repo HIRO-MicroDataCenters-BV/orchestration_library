@@ -257,17 +257,17 @@ jobs:
       #       --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
       #       ${{ steps.helm-dry-run.outputs.flag }}
 
-      # - name: Set Dashboard URL
-      #   id: set-dashboard-url
-      #   run: |
-      #     if [[ -n "${{ secrets.KUBERNETES_DASHBOARD_URL }}" ]]; then
-      #       DASHBOARD_URL="${{ secrets.KUBERNETES_DASHBOARD_URL }}"
-      #     elif [[ "${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }}" == "NodePort" ]]; then
-      #       DASHBOARD_URL="http://${{ secrets.KUBERNETES_DASHBOARD_NODE_IP }}:${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}/"
-      #     else
-      #       DASHBOARD_URL=""
-      #     fi
-      #     echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
+      - name: Set Dashboard URL
+        id: set-dashboard-url
+        run: |
+          if [[ -n "${{ secrets.KUBERNETES_DASHBOARD_URL }}" ]]; then
+            DASHBOARD_URL="${{ secrets.KUBERNETES_DASHBOARD_URL }}"
+          elif [[ "${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }}" == "NodePort" ]]; then
+            DASHBOARD_URL="http://${{ secrets.KUBERNETES_DASHBOARD_NODE_IP }}:${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}/"
+          else
+            DASHBOARD_URL=""
+          fi
+          echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
 
       - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
         run: |
