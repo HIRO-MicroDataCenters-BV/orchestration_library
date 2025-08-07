@@ -17,6 +17,7 @@ from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
 from app.utils.constants import (
     POD_PARENT_TYPE_ENUM,
+    WORKLOAD_ACTION_TYPE_ENUM,
     WORKLOAD_REQUEST_DECISION_STATUS_ENUM,
 )
 
@@ -34,6 +35,12 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     namespace = Column(String(255), nullable=False)
     node_id = Column(UUID(as_uuid=True), nullable=False)
     node_name = Column(String(255), nullable=False)
+    action_type = Column(
+        SAEnum(
+            *WORKLOAD_ACTION_TYPE_ENUM,
+            name="workload_action_type_enum"
+        ), nullable=False
+    )
     is_elastic = Column(Boolean, nullable=False)
     queue_name = Column(String(255), nullable=False)
     demand_cpu = Column(Float, nullable=False)

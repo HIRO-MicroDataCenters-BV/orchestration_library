@@ -7,7 +7,7 @@ from typing import Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
-from app.utils.constants import PodParentTypeEnum
+from app.utils.constants import PodParentTypeEnum, WorkloadActionTypeEnum
 from app.utils.constants import WorkloadRequestDecisionStatusEnum
 
 
@@ -22,6 +22,7 @@ class WorkloadRequestDecisionSchema(BaseModel):
     namespace: str
     node_id: UUID
     node_name: str
+    action_type: WorkloadActionTypeEnum
     is_elastic: bool
     queue_name: str
     demand_cpu: float
@@ -70,6 +71,7 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     namespace: Optional[str] = None
     node_id: Optional[UUID] = None
     node_name: Optional[str] = None
+    action_type: Optional[WorkloadActionTypeEnum] = None
     is_elastic: Optional[bool] = None
     queue_name: Optional[str] = None
     demand_cpu: Optional[float] = None
@@ -118,6 +120,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     namespace: str
     node_id: UUID
     node_name: str
+    action_type: WorkloadActionTypeEnum
     is_elastic: bool
     queue_name: str
     demand_cpu: float
