@@ -133,13 +133,13 @@ async def get_workload_action_by_id(
         )
         workload_action = result.scalar_one_or_none()
         if not workload_action:
-            custom_exception = get_custom_db_entry_not_found_exception(action_id)
+            exception = get_custom_db_entry_not_found_exception(action_id)
             record_workload_action_metrics(
                 metrics_details=metrics_details,
                 status_code=404,  # Not found
-                exception=custom_exception,
+                exception=exception,
             )
-            raise custom_exception
+            raise exception
         record_workload_action_metrics(
             metrics_details=metrics_details,
             status_code=200,  # Explicitly set
@@ -193,13 +193,13 @@ async def update_workload_action(
         workload_action = result.scalar_one_or_none()
 
         if not workload_action:
-            custom_exception = get_custom_db_entry_not_found_exception(action_id)
+            exception = get_custom_db_entry_not_found_exception(action_id)
             record_workload_action_metrics(
                 metrics_details=metrics_details,
                 status_code=404,  # Not found
-                exception=custom_exception,
+                exception=exception,
             )
-            raise custom_exception
+            raise exception
 
         for key, value in workload_action_update.model_dump(exclude_unset=True).items():
             setattr(workload_action, key, value)
@@ -267,12 +267,13 @@ async def delete_workload_action(
         workload_action = result.scalar_one_or_none()
 
         if not workload_action:
-            custom_exception = get_custom_db_entry_not_found_exception(action_id)
+            exception = get_custom_db_entry_not_found_exception(action_id)
             record_workload_action_metrics(
                 metrics_details=metrics_details,
                 status_code=404,  # Not found
+                exception=exception
             )
-            raise custom_exception
+            raise exception
 
         await db.delete(workload_action)
         await db.commit()

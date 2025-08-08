@@ -21,9 +21,12 @@ from app.utils.exceptions import (
     DBEntryNotFoundException,
     DBEntryUpdateException,
     DBEntryDeletionException,
-    OrchestrationBaseException
+    OrchestrationBaseException,
 )
-from app.tests.utils.mock_objects import mock_workload_request_decision_create
+from app.tests.utils.mock_objects import (
+    mock_metrics_details,
+    mock_workload_request_decision_create,
+)
 
 
 @pytest.mark.asyncio
@@ -38,7 +41,9 @@ async def test_create_workload_decision_success():
         return_value=mock_obj,
     ):
         result = await create_workload_decision(
-            mock_db, mock_workload_request_decision_create()
+            mock_db,
+            mock_workload_request_decision_create(),
+            mock_metrics_details("POST", "/workload_request_decision"),
         )
 
     mock_db.add.assert_called_once()
@@ -61,7 +66,11 @@ async def test_get_workload_decision_success():
     mock_session.execute.return_value = mock_result
 
     # Act
-    result = await get_workload_decision(mock_session, decision_id)
+    result = await get_workload_decision(
+        mock_session,
+        decision_id,
+        mock_metrics_details("GET", f"/workload_request_decision/{decision_id}"),
+    )
 
     # Assert
     assert result == expected_decision
@@ -80,7 +89,11 @@ async def test_get_workload_decision_not_found():
     mock_session.execute.return_value = mock_result
 
     with pytest.raises(DBEntryNotFoundException) as exc_info:
-        await get_workload_decision(mock_session, decision_id)
+        await get_workload_decision(
+            mock_session,
+            decision_id,
+            mock_metrics_details("GET", f"/workload_request_decision/{decision_id}"),
+        )
 
     assert "not found" in str(exc_info.value)
 
@@ -121,7 +134,12 @@ async def test_update_workload_decision_success():
     mock_session.execute.return_value = mock_result
 
     # Act
-    result = await update_workload_decision(mock_session, decision_id, update_data)
+    result = await update_workload_decision(
+        mock_session,
+        decision_id,
+        update_data,
+        mock_metrics_details("PUT", f"/workload_request_decision/{decision_id}"),
+    )
 
     # Assert
     assert result.pod_name == "updated_pod"
@@ -142,7 +160,12 @@ async def test_update_workload_decision_not_found():
     mock_session.execute.return_value = mock_result
 
     with pytest.raises(DBEntryNotFoundException):
-        await update_workload_decision(mock_session, decision_id, update_data)
+        await update_workload_decision(
+            mock_session,
+            decision_id,
+            update_data,
+            mock_metrics_details("PUT", f"/workload_request_decision/{decision_id}"),
+        )
 
 
 # @pytest.mark.asyncio
@@ -177,7 +200,11 @@ async def test_delete_workload_decision_success():
     mock_result.scalar_one_or_none.return_value = decision_obj
     mock_session.execute.return_value = mock_result
 
-    result = await delete_workload_decision(mock_session, decision_id)
+    result = await delete_workload_decision(
+        mock_session,
+        decision_id,
+        mock_metrics_details("DELETE", f"/workload_request_decision/{decision_id}"),
+    )
 
     assert result is True
     mock_session.delete.assert_awaited_once_with(decision_obj)
@@ -195,7 +222,11 @@ async def test_delete_workload_decision_not_found():
     mock_session.execute.return_value = mock_result
 
     with pytest.raises(DBEntryNotFoundException):
-        await delete_workload_decision(mock_session, decision_id)
+        await delete_workload_decision(
+            mock_session,
+            decision_id,
+            mock_metrics_details("DELETE", f"/workload_request_decision/{decision_id}"),
+        )
 
 
 # @pytest.mark.asyncio
@@ -243,7 +274,12 @@ async def test_update_workload_decision_db_errors(exc_cls, expected_exc):
     mock_session.rollback = AsyncMock()
 
     with pytest.raises(expected_exc):
-        await update_workload_decision(mock_session, decision_id, update_data)
+        await update_workload_decision(
+            mock_session,
+            decision_id,
+            update_data,
+            mock_metrics_details("PUT", f"/workload_request_decision/{decision_id}"),
+        )
     mock_session.rollback.assert_awaited_once()
 
 
@@ -274,7 +310,11 @@ async def test_delete_workload_decision_db_errors(exc_cls, expected_exc):
     mock_session.delete = AsyncMock()
 
     with pytest.raises(expected_exc):
-        await delete_workload_decision(mock_session, decision_id)
+        await delete_workload_decision(
+            mock_session,
+            decision_id,
+            mock_metrics_details("DELETE", f"/workload_request_decision/{decision_id}"),
+        )
     mock_session.rollback.assert_awaited_once()
 
 
@@ -304,13 +344,13 @@ async def test_get_all_workload_decisions_db_error(exc_cls, expected_exc):
 )
 async def test_create_workload_decision_db_errors(exc_cls, expected_exc):
     """Test create_workload_decision Integrity/Operational/SQLAlchemy
-        error branches.
+    error branches.
     """
     mock_db = AsyncMock()
     mock_db.commit.side_effect = exc_cls("err", None, None)
     mock_db.refresh = AsyncMock()
     mock_db.add = MagicMock()
     data = mock_workload_request_decision_create()
-
+    metrics_details = mock_metrics_details("POST", "/workload_request_decision")
     with pytest.raises(expected_exc):
-        await create_workload_decision(mock_db, data)
+        await create_workload_decision(mock_db, data, metrics_details)

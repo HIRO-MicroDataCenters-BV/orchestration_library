@@ -242,20 +242,20 @@ jobs:
             echo "flag=--dry-run" >> $GITHUB_OUTPUT
           fi
 
-      - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
-        # Ignore CSRF secret template errors in dry-run/template mode
-        # (see https://github.com/kubernetes/dashboard/issues/7908)
-        # This step will always pass, even if the CSRF error occurs, due to '|| true'
-        run: |
-          helm upgrade --install ${{ vars.KUBERNETES_DASHBOARD_RELEASE_NAME}} ./charts/k8s-dashboard \
-            --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
-            --create-namespace \
-            --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
-            --set reverseProxy.name=aces-dashboard-reverse-proxy \
-            --set reverseProxy.service.port=80 \
-            --set reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
-            --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
-            ${{ steps.helm-dry-run.outputs.flag }}
+      # - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
+      #   # Ignore CSRF secret template errors in dry-run/template mode
+      #   # (see https://github.com/kubernetes/dashboard/issues/7908)
+      #   # This step will always pass, even if the CSRF error occurs, due to '|| true'
+      #   run: |
+      #     helm upgrade --install ${{ vars.KUBERNETES_DASHBOARD_RELEASE_NAME}} ./charts/k8s-dashboard \
+      #       --namespace ${{ vars.KUBERNETES_DASHBOARD_NAMESPACE }} \
+      #       --create-namespace \
+      #       --set serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
+      #       --set reverseProxy.name=aces-dashboard-reverse-proxy \
+      #       --set reverseProxy.service.port=80 \
+      #       --set reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
+      #       --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
+      #       ${{ steps.helm-dry-run.outputs.flag }}
 
       - name: Set Dashboard URL
         id: set-dashboard-url
@@ -269,7 +269,7 @@ jobs:
           fi
           echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
 
-      - name: Deploy Orchestration API Helm chart
+      - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
         run: |
           helm upgrade --install ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
@@ -278,6 +278,7 @@ jobs:
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
             --set app.service.type=${{ vars.ORCHESTRATION_API_SERVICE_TYPE }} \
             --set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }} \
+            --set k8sDashboard.enabled=true \
             --set k8sDashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set k8sDashboard.accessURL=${{ steps.set-dashboard-url.outputs.dashboard_url }} \
             --set k8sDashboard.reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \

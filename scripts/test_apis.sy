@@ -1,0 +1,257 @@
+#!/bin/bash
+
+set -xe
+
+API_BASE_URL="http://localhost:30015"
+
+workload_request_decision_api() {
+  echo "=== Workload Request Decision API ==="
+  echo "Creating workload_request_decision..."
+  CREATE_DECISION_RESP=$(curl -s -X POST $API_BASE_URL/workload_request_decision/ \
+    -H "Content-Type: application/json" \
+    -d '{
+      "pod_id": "11111111-1111-1111-1111-111111111111",
+      "pod_name": "test-pod",
+      "namespace": "default",
+      "node_id": "22222222-2222-2222-2222-222222222222",
+      "node_name": "node-1",
+      "action_type": "create",
+      "is_elastic": true,
+      "queue_name": "queue-A",
+      "demand_cpu": 1.0,
+      "demand_memory": 512.0,
+      "demand_slack_cpu": 0.5,
+      "demand_slack_memory": 128.0,
+      "decision_status": "succeeded",
+      "pod_parent_id": "33333333-3333-3333-3333-333333333333",
+      "pod_parent_name": "controller-1",
+      "pod_parent_kind": "deployment"
+    }')
+  echo $CREATE_DECISION_RESP
+  DECISION_ID=$(echo $CREATE_DECISION_RESP | jq -r '.id')
+  sleep 1
+
+  echo "Getting workload_request_decision by ID..."
+  curl -s $API_BASE_URL/workload_request_decision/$DECISION_ID | jq
+  sleep 1
+
+  echo "Listing all workload_request_decision..."
+  curl -s "$API_BASE_URL/workload_request_decision/?skip=0&limit=10" | jq
+  sleep 1
+
+  echo "Updating workload_request_decision..."
+  curl -s -X PUT $API_BASE_URL/workload_request_decision/$DECISION_ID \
+    -H "Content-Type: application/json" \
+    -d '{"pod_name": "updated-pod", "decision_status": "failed", "queue_name": "queue-B"}' | jq
+  sleep 1
+
+  echo "Deleting workload_request_decision..."
+  curl -s -X DELETE $API_BASE_URL/workload_request_decision/$DECISION_ID
+  sleep 1
+  echo "=== Workload Request Decision API tests completed ==="
+}
+
+workload_action_api() {
+  echo "=== Workload Action API ==="
+  echo "Creating workload_action..."
+  CREATE_ACTION_RESP=$(curl -s -X POST $API_BASE_URL/workload_action/ \
+    -H "Content-Type: application/json" \
+    -d '{
+      "action_type": "bind",
+      "action_status": "pending",
+      "action_reason": "Initial bind for test",
+      "pod_parent_name": "parent-deploy",
+      "pod_parent_type": "deployment",
+      "created_pod_name": "pod1",
+      "created_pod_namespace": "default",
+      "created_node_name": "node1",
+      "deleted_pod_name": null,
+      "deleted_pod_namespace": null,
+      "deleted_node_name": null,
+      "bound_pod_name": "pod1",
+      "bound_pod_namespace": "default",
+      "bound_node_name": "node1"
+    }')
+  echo $CREATE_ACTION_RESP
+  ACTION_ID=$(echo $CREATE_ACTION_RESP | jq -r '.id')
+  sleep 1
+
+  echo "Getting workload_action by ID..."
+  curl -s $API_BASE_URL/workload_action/$ACTION_ID | jq
+  sleep 1
+
+  echo "Listing all workload_action..."
+  curl -s "$API_BASE_URL/workload_action/" | jq
+  sleep 1
+
+  echo "Updating workload_action..."
+  curl -s -X PUT $API_BASE_URL/workload_action/$ACTION_ID \
+    -H "Content-Type: application/json" \
+    -d '{"action_status": "succeeded", "action_reason": "Action completed successfully", "bound_node_name": "node2"}' | jq
+  sleep 1
+
+  echo "Deleting workload_action..."
+  curl -s -X DELETE $API_BASE_URL/workload_action/$ACTION_ID
+  sleep 1
+  echo "=== Workload Action API tests completed ==="
+}
+
+tuning_parameters_api() {
+  echo "=== Tuning Parameters API ==="
+  echo "Creating tuning_parameters..."
+  CREATE_TUNING_RESP=$(curl -s -X POST $API_BASE_URL/tuning_parameters/ \
+    -H "Content-Type: application/json" \
+    -d '{
+      "output_1": 1.0,
+      "output_2": 2.0,
+      "output_3": 3.0,
+      "alpha": 0.1,
+      "beta": 0.2,
+      "gamma": 0.3
+    }')
+  echo $CREATE_TUNING_RESP
+  TUNING_ID=$(echo $CREATE_TUNING_RESP | jq -r '.id')
+  sleep 1
+
+  echo "Listing all tuning_parameters..."
+  curl -s "$API_BASE_URL/tuning_parameters/" | jq
+  sleep 1
+
+  echo "Getting latest 2 tuning_parameters..."
+  curl -s "$API_BASE_URL/tuning_parameters/latest/2" | jq
+  sleep 1
+
+  echo "=== Tuning Parameters API tests completed ==="
+}
+
+alerts_api() {
+  echo "=== Alerts API ==="
+  echo "Creating alert..."
+  CREATE_ALERT_RESP=$(curl -s -X POST $API_BASE_URL/alerts/ \
+    -H "Content-Type: application/json" \
+    -d '{
+      "alert_type": "Abnormal",
+      "alert_model": "SampleAnomalyDetectionModel",
+      "alert_description": "High CPU usage detected on pod",
+      "pod_id": "123e4567-e89b-12d3-a456-426614174000",
+      "node_id": "123e4567-e89b-12d3-a456-426614174000",
+      "source_ip": "192.168.1.1",
+      "destination_ip": "192.168.1.2",
+      "source_port": 8080,
+      "destination_port": 80,
+      "protocol": "TCP"
+    }')
+  echo $CREATE_ALERT_RESP
+  ALERT_ID=$(echo $CREATE_ALERT_RESP | jq -r '.id')
+  sleep 1
+
+  echo "Listing all alerts..."
+  curl -s "$API_BASE_URL/alerts/?skip=0&limit=10" | jq
+  sleep 1
+  echo "=== Alerts API tests completed ==="
+}
+
+k8s_node_api() {
+  echo "=== K8S Node API ==="
+  echo "List all nodes:"
+  curl -s "$API_BASE_URL/k8s_node/" | jq
+  sleep 1
+
+  echo "List nodes by name:"
+  curl -s "$API_BASE_URL/k8s_node/?name=test-node" | jq
+  sleep 1
+
+  echo "List nodes by node_id:"
+  curl -s "$API_BASE_URL/k8s_node/?node_id=11111111-1111-1111-1111-111111111111" | jq
+  sleep 1
+
+  echo "List nodes by status:"
+  curl -s "$API_BASE_URL/k8s_node/?status=Ready" | jq
+  sleep 1
+  echo "=== K8S Node API tests completed ==="
+}
+
+k8s_pod_api() {
+  echo "=== K8S Pod API ==="
+  echo "List all pods:"
+  curl -s "$API_BASE_URL/k8s_pod/" | jq
+  sleep 1
+
+  echo "List pods by namespace:"
+  curl -s "$API_BASE_URL/k8s_pod/?namespace=default" | jq
+  sleep 1
+
+  echo "List pods by name:"
+  curl -s "$API_BASE_URL/k8s_pod/?name=test-pod" | jq
+  sleep 1
+
+  echo "List pods by pod_id:"
+  curl -s "$API_BASE_URL/k8s_pod/?pod_id=uid-1" | jq
+  sleep 1
+
+  echo "List pods by status:"
+  curl -s "$API_BASE_URL/k8s_pod/?status=Running" | jq
+  sleep 1
+  echo "=== K8S Pod API tests completed ==="
+}
+
+k8s_user_pod_api() {
+  echo "=== K8S User Pod API ==="
+  echo "List all user pods:"
+  curl -s "$API_BASE_URL/k8s_user_pod/" | jq
+  sleep 1
+
+  echo "List user pods by namespace:"
+  curl -s "$API_BASE_URL/k8s_user_pod/?namespace=default" | jq
+  sleep 1
+
+  echo "List user pods by name:"
+  curl -s "$API_BASE_URL/k8s_user_pod/?name=test-pod" | jq
+  sleep 1
+
+  echo "List user pods by pod_id:"
+  curl -s "$API_BASE_URL/k8s_user_pod/?pod_id=uid-1" | jq
+  sleep 1
+
+  echo "List user pods by status:"
+  curl -s "$API_BASE_URL/k8s_user_pod/?status=Running" | jq
+  sleep 1
+  echo "=== K8S User Pod API tests completed ==="
+}
+
+k8s_cluster_info_api() {
+  echo "=== K8S Cluster Info API ==="
+  echo "Get basic cluster info:"
+  curl -s "$API_BASE_URL/k8s_cluster_info/?advanced=false" | jq
+  sleep 1
+
+  echo "Get advanced cluster info:"
+  curl -s "$API_BASE_URL/k8s_cluster_info/?advanced=true" | jq
+  sleep 1
+  echo "=== K8S Cluster Info API tests completed ==="
+}
+
+k8s_get_token_api() {
+  echo "=== K8S Get Token API ==="
+  echo "Get token for service account:"
+  curl -s -X GET "$API_BASE_URL/k8s_get_token/?namespace=aces-orchestration-api&service_account_name=readonly-user" \
+    -H "Content-Type: application/json" | jq
+  sleep 1
+  echo "=== K8S Get Token API tests completed ==="
+}
+
+main() {
+  workload_request_decision_api
+  workload_action_api
+  tuning_parameters_api
+  alerts_api
+  k8s_node_api
+  k8s_pod_api
+  k8s_user_pod_api
+  k8s_cluster_info_api
+  k8s_get_token_api
+  echo "=== All API tests completed ==="
+}
+
+main "$@"
+# End of script

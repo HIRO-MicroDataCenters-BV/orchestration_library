@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.metrics.helper import record_workload_request_decision_metrics
 from app.models.workload_request_decision import WorkloadRequestDecision
 from app.schemas.workload_request_decision_schema import (
     WorkloadRequestDecisionUpdate,
@@ -29,7 +30,9 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-async def create_workload_decision(db_session: AsyncSession, data: WorkloadRequestDecisionCreate):
+async def create_workload_decision(
+    db_session: AsyncSession, data: WorkloadRequestDecisionCreate, metrics_details: dict
+):
     """
     Create a new WorkloadRequestDecision record in the database.
 
@@ -43,14 +46,20 @@ async def create_workload_decision(db_session: AsyncSession, data: WorkloadReque
     Raises:
         DBEntryCreationException: If creation fails due to integrity or DB errors.
     """
+    exception = None
     try:
         db_obj = WorkloadRequestDecision(**data.model_dump())
         db_session.add(db_obj)
         await db_session.commit()
         await db_session.refresh(db_obj)
         logger.info("successfully created pod decision with %s", data.pod_name)
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return db_obj
     except IntegrityError as exc:
+        exception = exc
         await handle_db_exception(
             exc,
             db_session,
@@ -64,13 +73,13 @@ async def create_workload_decision(db_session: AsyncSession, data: WorkloadReque
             custom_exception_cls=DBEntryCreationException,
         )
     except OperationalError as exc:
+        exception = exc
         await handle_db_exception(
             exc,
             db_session,
             logger,
             exception_details={
-                "message": 
-                f"Failed to create workload_decision with name '{data.pod_name}'",
+                "message": f"Failed to create workload_decision with name '{data.pod_name}'",
                 "pod_name": data.pod_name,
                 "error": str(exc),
                 "error_type": "pod_request_decision_database_connection_error",
@@ -78,22 +87,28 @@ async def create_workload_decision(db_session: AsyncSession, data: WorkloadReque
             custom_exception_cls=DBEntryCreationException,
         )
     except SQLAlchemyError as exc:
+        exception = exc
         await handle_db_exception(
             exc,
             db_session,
             logger,
             exception_details={
-                "message": 
-                f"Failed to create workload_decision with pod '{data.pod_name}'",
+                "message": f"Failed to create workload_decision with pod '{data.pod_name}'",
                 "pod_name": data.pod_name,
                 "error": str(exc),
                 "error_type": "database_error",
             },
             custom_exception_cls=DBEntryCreationException,
         )
+    finally:
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details, status_code=400, exception=exception
+        )
 
 
-async def get_workload_decision(db_session: AsyncSession, decision_id: UUID):
+async def get_workload_decision(
+    db_session: AsyncSession, decision_id: UUID, metrics_details: dict
+):
     """
     Retrieve a specific WorkloadRequestDecision by its ID.
 
@@ -108,19 +123,30 @@ async def get_workload_decision(db_session: AsyncSession, decision_id: UUID):
         DBEntryNotFoundException: If the pod decision is not found.
         DataBaseException: For database-related errors.
     """
+    exception = None
     try:
         result = await db_session.execute(
-            select(WorkloadRequestDecision).where(WorkloadRequestDecision.id == decision_id)
+            select(WorkloadRequestDecision).where(
+                WorkloadRequestDecision.id == decision_id
+            )
         )
         workload_decision = result.scalar_one_or_none()
 
         if not workload_decision:
-            raise DBEntryNotFoundException(
+            exception = DBEntryNotFoundException(
                 message=f"Pod decision with id '{decision_id}' not found."
             )
-
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=404, exception=exception
+            )
+            raise exception
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return workload_decision
     except OperationalError as exc:
+        exception = exc
         logger.error(
             "Database operational error while retrieving pod decision : %s", str(exc)
         )
@@ -129,15 +155,23 @@ async def get_workload_decision(db_session: AsyncSession, decision_id: UUID):
             details={"error_type": "database_connection_error", "error": str(exc)},
         ) from exc
     except SQLAlchemyError as exc:
+        exception = exc
         logger.error("Database error while retrieving pod decision : %s", str(exc))
         raise OrchestrationBaseException(
             message="Failed to retrieve pod decision: Database error",
             details={"error_type": "database_error", "error": str(exc)},
         ) from exc
+    finally:
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details, status_code=400, exception=exception
+        )
 
 
 async def get_all_workload_decisions(
-    db_session: AsyncSession, skip: int = 0, limit: int = 100
+    db_session: AsyncSession,
+    skip: int = 0,
+    limit: int = 100,
+    metrics_details: dict = None,
 ):
     """
     Retrieve all WorkloadRequestDecision records with pagination.
@@ -153,21 +187,34 @@ async def get_all_workload_decisions(
     Raises:
         DataBaseException: If a database error occurs during retrieval.
     """
+    exception = None
     try:
         result = await db_session.execute(
             select(WorkloadRequestDecision).offset(skip).limit(limit)
         )
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return result.scalars().all()
     except SQLAlchemyError as exc:
+        exception = exc
         logger.error("Error retrieving all pod decisions %s", str(exc))
         raise OrchestrationBaseException(
             message="Failed to retrieve pod decisions due to database error.",
             details={"error": str(exc)},
         ) from exc
+    finally:
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details, status_code=400, exception=exception
+        )
 
 
 async def update_workload_decision(
-    db_session: AsyncSession, decision_id: UUID, data: WorkloadRequestDecisionUpdate
+    db_session: AsyncSession,
+    decision_id: UUID,
+    data: WorkloadRequestDecisionUpdate,
+    metrics_details: dict,
 ):
     """
     Update an existing WorkloadRequestDecision record by its ID.
@@ -184,26 +231,38 @@ async def update_workload_decision(
         DBEntryNotFoundException: If the pod decision is not found.
         DBEntryUpdateException: If update fails due to integrity or DB errors.
     """
+    exception = None
     try:
         result = await db_session.execute(
-            select(WorkloadRequestDecision).where(WorkloadRequestDecision.id == decision_id)
+            select(WorkloadRequestDecision).where(
+                WorkloadRequestDecision.id == decision_id
+            )
         )
         workload_decision = result.scalar_one_or_none()
 
         if not workload_decision:
-            raise DBEntryNotFoundException(
+            exception = DBEntryNotFoundException(
                 message=f"Pod decision with id '{decision_id}' not found."
             )
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=404, exception=exception
+            )
+            raise exception
 
-        for key, value in data.dict().items():
+        for key, value in data.model_dump(exclude_unset=True).items():
             setattr(workload_decision, key, value)
 
         await db_session.commit()
         await db_session.refresh(workload_decision)
         logger.info("Successfully updated pod decision %s", decision_id)
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return workload_decision
 
     except IntegrityError as exc:
+        exception = exc
         await db_session.rollback()
         logger.error(
             "Integrity error while updating pod decision %s %s",
@@ -215,6 +274,7 @@ async def update_workload_decision(
             details={"error": str(exc)},
         ) from exc
     except OperationalError as exc:
+        exception = exc
         await db_session.rollback()
         logger.error(
             "Database operational error while updating pod decision %s: %s",
@@ -230,6 +290,7 @@ async def update_workload_decision(
             },
         ) from exc
     except SQLAlchemyError as exc:
+        exception = exc
         await db_session.rollback()
         logger.error(
             "SQL error while updating pod decision %s %s ", decision_id, str(exc)
@@ -240,7 +301,9 @@ async def update_workload_decision(
         ) from exc
 
 
-async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID):
+async def delete_workload_decision(
+    db_session: AsyncSession, decision_id: UUID, metrics_details: dict
+):
     """
     Delete a WorkloadRequestDecision record by its ID.
 
@@ -255,23 +318,35 @@ async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID):
         DBEntryNotFoundException: If the pod decision is not found.
         DBEntryDeletionException: If deletion fails due to DB errors.
     """
+    exception = None
     try:
         result = await db_session.execute(
-            select(WorkloadRequestDecision).where(WorkloadRequestDecision.id == decision_id)
+            select(WorkloadRequestDecision).where(
+                WorkloadRequestDecision.id == decision_id
+            )
         )
         workload_decision = result.scalar_one_or_none()
 
         if not workload_decision:
-            raise DBEntryNotFoundException(
+            exception = DBEntryNotFoundException(
                 message=f"Pod decision with id '{decision_id}' not found."
             )
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=404, exception=exception
+            )
+            raise exception
 
         await db_session.delete(workload_decision)
         await db_session.commit()
         logger.info("Successfully deleted pod decision %s", decision_id)
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return True
 
     except IntegrityError as exc:
+        exception = exc
         await db_session.rollback()
         logger.error(
             "Integrity error while deleting pod decision %s: %s",
@@ -287,6 +362,7 @@ async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID):
             },
         ) from exc
     except OperationalError as exc:
+        exception = exc
         await db_session.rollback()
         logger.error(
             "Database operational error while deleting pod decision %s: %s",
@@ -302,6 +378,7 @@ async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID):
             },
         ) from exc
     except SQLAlchemyError as exc:
+        exception = exc
         await db_session.rollback()
         logger.error(
             "Database error while deleting pod decision %s: %s",
@@ -316,3 +393,7 @@ async def delete_workload_decision(db_session: AsyncSession, decision_id: UUID):
                 "decision_id": str(decision_id),
             },
         ) from exc
+    finally:
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details, status_code=400, exception=exception
+        )
