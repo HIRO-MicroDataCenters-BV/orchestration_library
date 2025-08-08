@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.utils.exceptions import (
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 async def create_alert(
-        db: AsyncSession, alert: AlertCreateRequest
+        db: AsyncSession, alert: AlertCreateRequest, metrics_details: dict = None
 ) -> AlertResponse:
     """
     Create a new alert in the database.
@@ -34,6 +35,7 @@ async def create_alert(
         DBEntryCreationException: If there's an error creating the alert
         DataBaseException: If there's a database error
     """
+    exception = None
     try:
         logger.info("Creating alert with data: %s", alert.model_dump())
         alert_model = Alert(**alert.model_dump())
@@ -41,9 +43,14 @@ async def create_alert(
         await db.commit()
         await db.refresh(alert_model)
         logger.info("Successfully created alert with ID: %d", alert_model.id)
+        record_alerts_metrics(
+            metrics_details=metrics_details,
+            status_code=200
+        )
         return AlertResponse.from_orm(alert_model)
 
     except IntegrityError as e:
+        exception = e
         logger.error("Integrity error while creating alert: %s", str(e))
         await db.rollback()
         raise DBEntryCreationException(
@@ -51,6 +58,7 @@ async def create_alert(
             details={"error": str(e)}
         ) from e
     except OperationalError as e:
+        exception = e
         logger.error("Database connection error while creating alert: %s", str(e))
         await db.rollback()
         raise DBEntryCreationException(
@@ -58,6 +66,7 @@ async def create_alert(
             details={"error": str(e)}
         ) from e
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while creating alert: %s", str(e))
         await db.rollback()
         raise DBEntryCreationException(
@@ -65,15 +74,23 @@ async def create_alert(
             details={"error": str(e)}
         ) from e
     except Exception as e:
+        exception = e
         logger.error("Unexpected error while creating alert: %s", str(e))
         await db.rollback()
         raise e
+    finally:
+        record_alerts_metrics(
+            metrics_details=metrics_details,
+            status_code=400,
+            exception=exception
+        )
 
 
 async def get_alerts(
         db: AsyncSession,
         skip: int = 0,
         limit: int = 100,
+        metrics_details: dict = None
 ) -> Sequence[AlertResponse]:
     """
     Get a list of alerts with pagination.
@@ -89,6 +106,7 @@ async def get_alerts(
     Raises:
         DataBaseException: If there's a database error
     """
+    exception = None
     try:
         logger.debug("Retrieving alerts with skip=%d, limit=%d", skip, limit)
         query = select(Alert).order_by(Alert.created_at.desc())
@@ -96,16 +114,28 @@ async def get_alerts(
         result = await db.execute(query)
         alerts = result.scalars().all()
         logger.info("Retrieved %d alerts", len(alerts))
+        record_alerts_metrics(
+            metrics_details=metrics_details,
+            status_code=200
+        )
         return [AlertResponse.from_orm(alert) for alert in alerts]
     except SQLAlchemyError as e:
+        exception = e
         logger.error("Database error while retrieving alerts: %s", str(e))
         raise OrchestrationBaseException(
             "Failed to retrieve alerts",
             details={"error": str(e)}
         ) from e
     except Exception as e:
+        exception = e
         logger.error("Unexpected error while retrieving alerts: %s", str(e))
         raise OrchestrationBaseException(
             "An unexpected error occurred while retrieving alerts",
             details={"error": str(e)}
         ) from e
+    finally:
+        record_alerts_metrics(
+            metrics_details=metrics_details,
+            status_code=500,
+            exception=exception
+        )

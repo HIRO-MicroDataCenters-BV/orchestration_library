@@ -4,6 +4,7 @@ This module defines the API endpoints for managing Alert in the database.
 It includes routes for creating, retrieving Alert records.
 """
 
+from time import time
 from typing import List
 
 from fastapi import APIRouter, Depends, status
@@ -41,7 +42,12 @@ async def create(
         DBEntryCreationException: If there's an error creating the alert
         DataBaseException: If there's a database error
     """
-    return await alerts_repo.create_alert(db, data)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "POST",
+        "endpoint": "/alerts",
+    }
+    return await alerts_repo.create_alert(db, data, metrics_details=metrics_details)
 
 
 @router.get(
@@ -70,4 +76,9 @@ async def read_alerts(
     Raises:
         DataBaseException: If there's a database error
     """
-    return await alerts_repo.get_alerts(db, skip=skip, limit=limit)
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": "/alerts",
+    }
+    return await alerts_repo.get_alerts(db, skip=skip, limit=limit, metrics_details=metrics_details)
