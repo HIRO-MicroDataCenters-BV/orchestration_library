@@ -146,6 +146,8 @@ class AlertResponse(BaseModel):
         ..., description="Timestamp when the alert was created"
     )
 
+    model_config = {'from_attributes': True}
+
     def __repr__(self) -> str:
         """
         String representation of the alert response.
@@ -170,29 +172,3 @@ class AlertResponse(BaseModel):
             f"AlertResponse {self.id}: {self.alert_type} on pod {self.pod_id} "
             f"node {self.node_id} at {self.created_at} by model {self.alert_model}"
         )
-
-    class Config:
-        """
-        Pydantic model configuration.
-        """
-
-        from_attributes = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
-
-        def __repr__(self) -> str:
-            """
-            String representation of the config.
-
-            Returns:
-                str: String representation
-            """
-            return "<AlertResponse.Config>"
-
-        def __str__(self) -> str:
-            """
-            Human-readable string representation of the config.
-
-            Returns:
-                str: Human-readable string representation
-            """
-            return "AlertResponse configuration"

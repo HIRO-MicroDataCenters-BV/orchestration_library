@@ -1,5 +1,6 @@
 """Mock objects for testing Kubernetes cluster information retrieval""" ""
 from datetime import datetime, timezone
+import time
 from unittest.mock import MagicMock
 from uuid import uuid4
 import uuid
@@ -227,7 +228,7 @@ def mock_metrics_details(method, endpoint):
     Mock metrics details dictionary for a workload action.
     """
     return {
-        "start_time": 1720000000.0,  # Example fixed timestamp
+        "start_time": time.time(),
         "method": method,
         "endpoint": endpoint
     }

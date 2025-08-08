@@ -4,7 +4,7 @@ This module defines the API endpoints for managing Alert in the database.
 It includes routes for creating, retrieving Alert records.
 """
 
-from time import time
+import time
 from typing import List
 
 from fastapi import APIRouter, Depends, status

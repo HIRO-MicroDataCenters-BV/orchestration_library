@@ -47,7 +47,7 @@ async def create_alert(
             metrics_details=metrics_details,
             status_code=200
         )
-        return AlertResponse.from_orm(alert_model)
+        return AlertResponse.model_validate(alert_model)
 
     except IntegrityError as e:
         exception = e
@@ -118,7 +118,7 @@ async def get_alerts(
             metrics_details=metrics_details,
             status_code=200
         )
-        return [AlertResponse.from_orm(alert) for alert in alerts]
+        return [AlertResponse.model_validate(alert) for alert in alerts]
     except SQLAlchemyError as e:
         exception = e
         logger.error("Database error while retrieving alerts: %s", str(e))
