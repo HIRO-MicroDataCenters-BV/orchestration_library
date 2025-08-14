@@ -137,6 +137,10 @@ def get_parent_controller_details_of_pod(
 
         pod = get_pod_by_name_or_uid(core_v1, namespace, pod_name, pod_id)
         if not pod:
+            record_k8s_pod_parent_metrics(
+                metrics_details=metrics_details,
+                status_code=200,
+            )
             return {
                 "message": (
                     f"No pod found with name: {pod_name} or UID: {pod_id} "
@@ -145,6 +149,10 @@ def get_parent_controller_details_of_pod(
             }
 
         if not pod.metadata.owner_references:
+            record_k8s_pod_parent_metrics(
+                metrics_details=metrics_details,
+                status_code=200,
+            )
             return {"message": "Pod has no owner references (standalone pod)"}
 
         for owner in pod.metadata.owner_references:
