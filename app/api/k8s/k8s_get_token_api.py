@@ -3,6 +3,7 @@ API to retrieve a read-only token for a specific Kubernetes service account.
 """
 
 import os
+import time
 from fastapi import APIRouter
 from app.repositories.k8s import k8s_get_token
 
@@ -33,6 +34,13 @@ def get_ro_token(
     Returns:
         JSONResponse: A response containing the read-only token or an error message.
     """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": "/k8s_get_token",
+    }
     return k8s_get_token.get_read_only_token(
-        namespace=namespace, service_account_name=service_account_name
+        namespace=namespace,
+        service_account_name=service_account_name,
+        metrics_details=metrics_details,
     )

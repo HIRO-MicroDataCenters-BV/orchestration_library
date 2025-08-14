@@ -6,6 +6,7 @@ import logging
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
+from app.metrics.helper import record_k8s_pod_parent_metrics
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
     get_k8s_batch_v1_client,
@@ -117,7 +118,7 @@ def get_controller_details(apps_v1, batch_v1, namespace, owner):
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
 def get_parent_controller_details_of_pod(
-    namespace, pod_name=None, pod_id=None
+    namespace, pod_name=None, pod_id=None, metrics_details=None
 ) -> JSONResponse:
     """
     Get the parent controller of a Kubernetes pod.
@@ -151,6 +152,10 @@ def get_parent_controller_details_of_pod(
                 apps_v1, batch_v1, namespace, owner
             )
             if controller_details:
+                record_k8s_pod_parent_metrics(
+                    metrics_details=metrics_details,
+                    status_code=200,
+                )
                 return JSONResponse(content=controller_details)
         logger.warning(
             "Pod %s in namespace %s has no recognized parent controller.",
