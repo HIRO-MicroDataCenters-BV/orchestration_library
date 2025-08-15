@@ -11,7 +11,7 @@ router = APIRouter(prefix="/k8s_cluster_info")
 
 
 @router.get("/")
-async def get_cluster_info(advanced: bool = False):
+def get_cluster_info(advanced: bool = False):
     """
     Get cluster information about the Kubernetes cluster.
     If `advanced` is set to True, it will return detailed information.
@@ -25,6 +25,6 @@ async def get_cluster_info(advanced: bool = False):
         "method": "GET",
         "endpoint": "/k8s_cluster_info",
     }
-    return await k8s_cluster_info.get_cluster_info(
+    return k8s_cluster_info.get_cluster_info(
         advanced=advanced, metrics_details=metrics_details
     )
