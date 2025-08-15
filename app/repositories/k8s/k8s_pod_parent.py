@@ -179,7 +179,7 @@ def get_parent_controller_details_of_pod(
             context_msg=(
                 f"Kubernetes API error while getting parent controller of pod "
                 f"{pod_name or pod_id} in namespace {namespace}"
-            ),
+            ), metrics_details=metrics_details
         )
     except ConfigException as e:
         handle_k8s_exceptions(
@@ -187,7 +187,7 @@ def get_parent_controller_details_of_pod(
             context_msg=(
                 f"Kubernetes configuration error while getting parent controller of pod "
                 f"{pod_name or pod_id} in namespace {namespace}"
-            ),
+            ), metrics_details=metrics_details
         )
     except ValueError as e:
         handle_k8s_exceptions(
@@ -195,5 +195,5 @@ def get_parent_controller_details_of_pod(
             context_msg=(
                 f"Value error while getting parent controller of pod "
                 f"{pod_name or pod_id} in namespace {namespace}"
-            ),
+            ), metrics_details=metrics_details
         )
