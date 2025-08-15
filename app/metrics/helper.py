@@ -22,8 +22,6 @@ from app.metrics.custom_metrics import (
     k8s_pod_requests_latency_seconds,
     k8s_pod_parent_requests_total,
     k8s_pod_parent_requests_latency_seconds,
-    k8s_user_pod_requests_total,
-    k8s_user_pod_requests_latency_seconds,
     k8s_node_requests_total,
     k8s_node_requests_latency_seconds,
     k8s_get_token_requests_total,

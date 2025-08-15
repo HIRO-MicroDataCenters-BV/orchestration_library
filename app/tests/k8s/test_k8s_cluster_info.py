@@ -12,6 +12,7 @@ import pytest
 from app.repositories.k8s import k8s_cluster_info
 from app.tests.utils.mock_objects import (
     mock_configmap,
+    mock_metrics_details,
     mock_version_info,
     mock_node,
     mock_component,
@@ -81,15 +82,16 @@ def k8s_cluster_info_mocks():
             "mock_config": mock_config,
         }
 
+
 def test_get_cluster_info_success():
     """
     Test the get_cluster_info function with mocked Kubernetes API responses.
     This test checks if the function correctly aggregates information about nodes,
     components, pods, and other resources in the cluster.
     """
-    with patch("kubernetes.config.load_kube_config", return_value=None), \
-        patch("kubernetes.config.load_incluster_config", return_value=None), \
-        k8s_cluster_info_mocks() as mocks:
+    with patch("kubernetes.config.load_kube_config", return_value=None), patch(
+        "kubernetes.config.load_incluster_config", return_value=None
+    ), k8s_cluster_info_mocks() as mocks:
         # Mock version API
         mocks["mock_version"].return_value.get_code.return_value = mock_version_info()
 
@@ -146,7 +148,11 @@ def test_get_cluster_info_success():
         mock_custom_api.list_cluster_custom_object.return_value = {"items": []}
         mocks["mock_node_custom"].return_value = mock_custom_api
 
-        response = k8s_cluster_info.get_cluster_info(advanced=True)
+        metrics_details = mock_metrics_details("GET", "/k8s_cluster_info")
+        
+        response = k8s_cluster_info.get_cluster_info(
+            advanced=True, metrics_details=metrics_details
+        )
         result = json.loads(response.body.decode())
         print(result)  # For debugging purposes
         assert result["kubernetes_version"] == "v1.25.0-test-10.0.0.1"

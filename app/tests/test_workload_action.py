@@ -150,7 +150,7 @@ async def test_list_workload_actions():
     actions = await list_workload_actions(
         db,
         filters={"action_type": "bind", "action_status": None},
-        metrics_details=metrics_details,
+        metrics_details=None,
     )
     db.execute.assert_called_once()
     assert len(actions) == 2
