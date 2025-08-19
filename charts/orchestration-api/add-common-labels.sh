@@ -7,7 +7,7 @@ yq eval '
       "app.kubernetes.io/instance": (.["app.kubernetes.io/instance"] // "aces-orchestration-api"),
       "app.kubernetes.io/managed-by": (.["app.kubernetes.io/managed-by"] // "Helm"),
       "app.kubernetes.io/part-of": (.["app.kubernetes.io/part-of"] // "aces-orchestration-api"),
-      "app.kubernetes.io/aces-service-name": (.["app.kubernetes.io/aces-service-name"] // "aces-orchestration-api")
+      "app.kubernetes.io/aces-service-name": (.["app.kubernetes.io/aces-component-name"] // "aces-orchestration-api")
     }
 )
 ' -
