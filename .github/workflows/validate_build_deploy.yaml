@@ -201,6 +201,9 @@ jobs:
     needs:
       - build-and-push
       - test-db-migrations
+    strategy:
+      matrix:
+        kubeconfig_secret_name: [HIRO_KUBE_CONFIG_AWS, HIRO_KUBE_CONFIG_BASTON]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -218,7 +221,7 @@ jobs:
       - name: Set up kubeconfig
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.HIRO_KUBE_CONFIG }}" > ~/.kube/config
+          echo "${{ secrets[matrix.kubeconfig_secret_name] }}" > ~/.kube/config
           chmod 600 ~/.kube/config
 
       - name: Install jq
