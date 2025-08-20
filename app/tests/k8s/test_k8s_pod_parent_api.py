@@ -4,7 +4,6 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
-from app.tests.utils.mock_objects import mock_metrics_details
 
 @pytest.mark.asyncio
 @patch("app.api.k8s.k8s_pod_parent.k8s_pod_parent.get_parent_controller_details_of_pod")

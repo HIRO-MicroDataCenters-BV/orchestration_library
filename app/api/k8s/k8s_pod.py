@@ -5,6 +5,7 @@ import logging
 import time
 from fastapi import APIRouter
 from app.repositories.k8s import k8s_pod
+from app.utils.k8s import build_pod_filters
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/k8s_pod")
@@ -23,12 +24,9 @@ def list_all_pods(
         "method": "GET",
         "endpoint": "/k8s_pod",
     }
-    pod_filters = {
-        "namespace": namespace,
-        "name": name,
-        "pod_id": pod_id,
-        "status": status,
-    }
+    pod_filters = build_pod_filters(
+        namespace=namespace, name=name, pod_id=pod_id, status=status
+    )
     return k8s_pod.list_k8s_pods(
         pod_filters=pod_filters, metrics_details=metrics_details
     )

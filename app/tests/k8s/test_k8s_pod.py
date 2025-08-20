@@ -2,7 +2,6 @@
 Tests for CRUD operations and routes related to K8S Pod management.
 """
 
-import time
 from unittest.mock import MagicMock, patch
 
 import json

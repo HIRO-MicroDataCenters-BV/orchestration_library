@@ -146,7 +146,6 @@ async def test_list_workload_actions():
     mock_result.scalars.return_value = mock_scalars
     db.execute.return_value = mock_result
 
-    metrics_details = mock_metrics_details("GET", "/workload_action")
     actions = await list_workload_actions(
         db,
         filters={"action_type": "bind", "action_status": None},

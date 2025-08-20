@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 
-from app import metrics
 from app.repositories import alerts as alerts_repo
 from app.schemas.alerts_request import AlertResponse, AlertType
 from app.tests.utils.mock_objects import (

@@ -108,9 +108,6 @@ def test_get_cluster_info_success():
         mock_namespace_obj = MagicMock()
         mock_namespace_obj.metadata = mock_namespace_metadata
         mock_core.read_namespace.return_value = mock_namespace_obj
-        # mock_core.read_namespace.return_value = SimpleNamespace(
-        #     metadata=SimpleNamespace(uid="abcdef123456")
-        # )
 
         # Patch list_namespace to return an object with items as list of objects with metadata.name
         mock_namespace_metadata1 = MagicMock()
@@ -118,9 +115,6 @@ def test_get_cluster_info_success():
         mock_namespace_item = MagicMock()
         mock_namespace_item.metadata = mock_namespace_metadata1
         mock_core.list_namespace.return_value.items = [mock_namespace_item]
-        # mock_core.list_namespace.return_value.items = [
-        #     SimpleNamespace(metadata=SimpleNamespace(name="default"))
-        # ]
 
         mocks["mock_core"].return_value = mock_core
         mocks["mock_node_core"].return_value = mock_core
@@ -149,12 +143,10 @@ def test_get_cluster_info_success():
         mocks["mock_node_custom"].return_value = mock_custom_api
 
         metrics_details = mock_metrics_details("GET", "/k8s_cluster_info")
-        
         response = k8s_cluster_info.get_cluster_info(
             advanced=True, metrics_details=metrics_details
         )
         result = json.loads(response.body.decode())
-        print(result)  # For debugging purposes
         assert result["kubernetes_version"] == "v1.25.0-test-10.0.0.1"
         assert result["nodes"][0]["name"] == "test-node"
         assert result["components"][0]["name"] == "scheduler"

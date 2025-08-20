@@ -262,3 +262,14 @@ def handle_k8s_exceptions(e, context_msg, details=None, metrics_details=None):
         )
         raise K8sValueError(f"{context_msg}: {str(e)}", details=details or str(e))
     raise e  # re-raise unexpected exceptions
+
+def build_pod_filters(namespace=None, name=None, pod_id=None, status=None):
+    """
+    Utility to build pod_filters dict for pod listing endpoints.
+    """
+    return {
+        "namespace": namespace,
+        "name": name,
+        "pod_id": pod_id,
+        "status": status,
+    }

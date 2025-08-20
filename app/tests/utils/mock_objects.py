@@ -45,11 +45,11 @@ def mock_to_dict(obj):
     """
     if isinstance(obj, (str, int, float, bool, type(None))):
         return obj
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [mock_to_dict(item) for item in obj]
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: mock_to_dict(v) for k, v in obj.items()}
-    elif isinstance(obj, MagicMock) or hasattr(obj, "__dict__"):
+    if isinstance(obj, MagicMock) or hasattr(obj, "__dict__"):
         result = {}
         for attr in dir(obj):
             if attr.startswith("_"):
@@ -62,8 +62,7 @@ def mock_to_dict(obj):
                 continue
             result[attr] = mock_to_dict(value)
         return result
-    else:
-        return str(obj)  # fallback for unknown types
+    return str(obj)  # fallback for unknown types
 
 def mock_version_info():
     """
