@@ -164,7 +164,7 @@ async def test_get_latest_tuning_parameters():
     db.execute.return_value = mock_result
 
     result = await tuning_parameter.get_latest_tuning_parameters(
-        db, metrics_details=mock_metrics_details("GET", "/tuning_parameters")
+        db
     )
 
     db.execute.assert_called_once()

@@ -6,6 +6,7 @@ as well as handle exceptions related to Kubernetes API and configuration.
 """
 from collections.abc import Mapping, Iterable
 from kubernetes import client, config
+from app.metrics.helper import record_k8s_pod_metrics
 from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
 
 def to_serializable(obj):
@@ -234,15 +235,41 @@ def get_daemonset_basic_info(ds):
         "number_ready": getattr(ds.status, "number_ready", None),
     }
 
-def handle_k8s_exceptions(e, context_msg, details=None):
+def handle_k8s_exceptions(e, context_msg, details=None, metrics_details=None):
     """
     Handles exceptions raised by Kubernetes API or configuration issues.
     Raises specific exceptions based on the type of error.
     """
     if isinstance(e, client.rest.ApiException):
+        record_k8s_pod_metrics(
+            metrics_details=metrics_details,
+            status_code=500,
+            exception=e
+        )
         raise K8sAPIException(f"{context_msg}: {str(e)}", details=details or str(e))
     if isinstance(e, config.ConfigException):
+        record_k8s_pod_metrics(
+            metrics_details=metrics_details,
+            status_code=403,
+            exception=e
+        )
         raise K8sConfigException(f"{context_msg}: {str(e)}", details=details or str(e))
     if isinstance(e, ValueError):
+        record_k8s_pod_metrics(
+            metrics_details=metrics_details,
+            status_code=422,
+            exception=e
+        )
         raise K8sValueError(f"{context_msg}: {str(e)}", details=details or str(e))
     raise e  # re-raise unexpected exceptions
+
+def build_pod_filters(namespace=None, name=None, pod_id=None, status=None):
+    """
+    Utility to build pod_filters dict for pod listing endpoints.
+    """
+    return {
+        "namespace": namespace,
+        "name": name,
+        "pod_id": pod_id,
+        "status": status,
+    }

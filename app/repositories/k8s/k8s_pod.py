@@ -7,6 +7,7 @@ import re
 from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
+from app.metrics.helper import record_k8s_pod_metrics
 from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
     K8S_IN_USE_NAMESPACE_REGEX,
@@ -15,16 +16,22 @@ from app.repositories.k8s.k8s_common import (
 
 logger = logging.getLogger(__name__)
 
+
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
-def list_k8s_pods(
-    namespace=None, name=None, pod_id=None, status=None, exclude_namespace_regex=None
-) -> JSONResponse:
+def list_k8s_pods(pod_filters=None, metrics_details=None) -> JSONResponse:
     """
     List all pods in the specified namespace.
     If no namespace is specified, list all pods in all namespaces.
     """
     try:
+        namespace = pod_filters.get("namespace") if pod_filters else None
+        name = pod_filters.get("name") if pod_filters else None
+        pod_id = pod_filters.get("pod_id") if pod_filters else None
+        status = pod_filters.get("status") if pod_filters else None
+        exclude_namespace_regex = (
+            pod_filters.get("exclude_namespace_regex") if pod_filters else None
+        )
         core_v1 = get_k8s_core_v1_client()
         logger.info("Listing pods with their IPs:")
 
@@ -51,6 +58,10 @@ def list_k8s_pods(
             ):
                 continue
             simplified_pods.append(get_pod_details(pod))
+        record_k8s_pod_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return JSONResponse(content=simplified_pods)
     except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing pods")
@@ -62,15 +73,13 @@ def list_k8s_pods(
         handle_k8s_exceptions(e, context_msg="Value error while listing pods")
 
 
-def list_k8s_user_pods(namespace=None, name=None, pod_id=None, status=None):
+def list_k8s_user_pods(pod_filters=None, metrics_details=None):
     """
     List all pods excluding system pods in the specified namespace.
     If no namespace is specified, list all pods in all namespaces.
     """
+    pod_filters["exclude_namespace_regex"] = K8S_IN_USE_NAMESPACE_REGEX
     return list_k8s_pods(
-        namespace=namespace,
-        name=name,
-        pod_id=pod_id,
-        status=status,
-        exclude_namespace_regex=K8S_IN_USE_NAMESPACE_REGEX,
+        pod_filters=pod_filters,
+        metrics_details=metrics_details,
     )

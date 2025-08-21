@@ -99,18 +99,6 @@ k8s_pod_parent_requests_latency_seconds = Histogram(
     ["method", "endpoint", "status_code", "exception"]
 )
 
-# K8s User Pod API
-k8s_user_pod_requests_total = Counter(
-    "k8s_user_pod_requests_total",
-    "Total number of k8s user pod API requests",
-    ["method", "endpoint", "status_code", "exception"]
-)
-k8s_user_pod_requests_latency_seconds = Histogram(
-    "k8s_user_pod_requests_latency_seconds",
-    "Latency of k8s user pod API requests in seconds",
-    ["method", "endpoint", "status_code", "exception"]
-)
-
 # K8s Node API
 k8s_node_requests_total = Counter(
     "k8s_node_requests_total",

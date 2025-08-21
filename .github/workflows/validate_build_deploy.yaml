@@ -275,6 +275,7 @@ jobs:
       - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
         run: |
           helm upgrade --install ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
+            --post-renderer ./charts/orchestration-api/add-common-labels.sh \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \

@@ -11,6 +11,7 @@ from kubernetes import config
 from kubernetes.config import ConfigException
 import yaml
 
+from app.metrics.helper import record_k8s_cluster_info_metrics
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
     get_k8s_batch_v1_client,
@@ -173,49 +174,67 @@ def get_resources_for_namespace(
     start = time.time()
     if not ns:
         fetchers = {
-            "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_pod_basic_info,
-                core_v1.list_pod_for_all_namespaces(watch=False).items
-            )),
-            "deployments": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_deployment_basic_info,
-                apps_v1.list_deployment_for_all_namespaces(watch=False).items
-            )),
-            "jobs": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_job_basic_info,
-                batch_v1.list_job_for_all_namespaces(watch=False).items
-            )),
-            "statefulsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_statefulset_basic_info,
-                apps_v1.list_stateful_set_for_all_namespaces(watch=False).items
-            )),
-            "daemonsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_daemonset_basic_info,
-                apps_v1.list_daemon_set_for_all_namespaces(watch=False).items
-            )),
+            "pods": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_pod_basic_info,
+                    core_v1.list_pod_for_all_namespaces(watch=False).items,
+                )
+            ),
+            "deployments": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_deployment_basic_info,
+                    apps_v1.list_deployment_for_all_namespaces(watch=False).items,
+                )
+            ),
+            "jobs": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_job_basic_info,
+                    batch_v1.list_job_for_all_namespaces(watch=False).items,
+                )
+            ),
+            "statefulsets": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_statefulset_basic_info,
+                    apps_v1.list_stateful_set_for_all_namespaces(watch=False).items,
+                )
+            ),
+            "daemonsets": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_daemonset_basic_info,
+                    apps_v1.list_daemon_set_for_all_namespaces(watch=False).items,
+                )
+            ),
         }
     else:
         fetchers = {
-            "pods": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_pod_basic_info,
-                core_v1.list_namespaced_pod(namespace=ns).items
-            )),
-            "deployments": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_deployment_basic_info,
-                apps_v1.list_namespaced_deployment(namespace=ns).items
-            )),
-            "jobs": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_job_basic_info,
-                batch_v1.list_namespaced_job(namespace=ns).items
-            )),
-            "statefulsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_statefulset_basic_info,
-                apps_v1.list_namespaced_stateful_set(namespace=ns).items
-            )),
-            "daemonsets": lambda: list(concurrent.futures.ThreadPoolExecutor().map(
-                get_daemonset_basic_info,
-                apps_v1.list_namespaced_daemon_set(namespace=ns).items
-            )),
+            "pods": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_pod_basic_info, core_v1.list_namespaced_pod(namespace=ns).items
+                )
+            ),
+            "deployments": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_deployment_basic_info,
+                    apps_v1.list_namespaced_deployment(namespace=ns).items,
+                )
+            ),
+            "jobs": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_job_basic_info, batch_v1.list_namespaced_job(namespace=ns).items
+                )
+            ),
+            "statefulsets": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_statefulset_basic_info,
+                    apps_v1.list_namespaced_stateful_set(namespace=ns).items,
+                )
+            ),
+            "daemonsets": lambda: list(
+                concurrent.futures.ThreadPoolExecutor().map(
+                    get_daemonset_basic_info,
+                    apps_v1.list_namespaced_daemon_set(namespace=ns).items,
+                )
+            ),
         }
 
     selected_fetchers = {k: v for k, v in fetchers.items() if k in resource_types}
@@ -318,7 +337,9 @@ def get_advanced_cluster_info(core_v1, version_v1, apps_v1, batch_v1, namespaces
 
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
-def get_cluster_info(advanced: bool = False) -> JSONResponse:
+def get_cluster_info(
+    advanced: bool = False, metrics_details: dict = None
+) -> JSONResponse:
     """
     Fetches and returns basic or advanced information about the Kubernetes cluster.
     """
@@ -346,19 +367,28 @@ def get_cluster_info(advanced: bool = False) -> JSONResponse:
         )
         cluster_info = {**basic_info, **advanced_info}
         logger.info("Fetched advanced cluster information")
+        record_k8s_cluster_info_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return JSONResponse(content=to_serializable(cluster_info))
     except ApiException as e:
         handle_k8s_exceptions(
-            e, context_msg="Kubernetes API error while fetching cluster information"
+            e,
+            context_msg="Kubernetes API error while fetching cluster information",
+            metrics_details=metrics_details,
         )
     except ConfigException as e:
         handle_k8s_exceptions(
             e,
             context_msg="Kubernetes configuration error while fetching cluster information",
+            metrics_details=metrics_details,
         )
     except ValueError as e:
         handle_k8s_exceptions(
-            e, context_msg="Value error while fetching cluster information"
+            e,
+            context_msg="Value error while fetching cluster information",
+            metrics_details=metrics_details,
         )
 
 

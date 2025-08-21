@@ -22,8 +22,6 @@ from app.metrics.custom_metrics import (
     k8s_pod_requests_latency_seconds,
     k8s_pod_parent_requests_total,
     k8s_pod_parent_requests_latency_seconds,
-    k8s_user_pod_requests_total,
-    k8s_user_pod_requests_latency_seconds,
     k8s_node_requests_total,
     k8s_node_requests_latency_seconds,
     k8s_get_token_requests_total,
@@ -250,34 +248,6 @@ def record_k8s_pod_parent_metrics(
         exception=exception,
         counter_metrics=[k8s_pod_parent_requests_total],
         histogram_metrics=[k8s_pod_parent_requests_latency_seconds],
-    )
-
-def record_k8s_user_pod_metrics(
-    metrics_details: Dict[str, Any],
-    status_code: int,
-    exception: Optional[Exception] = None,
-):
-    """
-    Record metrics for Kubernetes user pod API requests.
-
-    Args:
-        metrics_details (Dict[str, Any]): Details about the request for metrics.
-        status_code (int): HTTP status code of the response.
-        exception (Optional[Exception]): Exception raised during the request, if any.
-    """
-    if (
-        not metrics_details
-        or "method" not in metrics_details
-        or "endpoint" not in metrics_details
-        or "start_time" not in metrics_details
-    ):
-        return
-    record_api_metrics(
-        metrics_details=metrics_details,
-        status_code=status_code,
-        exception=exception,
-        counter_metrics=[k8s_user_pod_requests_total],
-        histogram_metrics=[k8s_user_pod_requests_latency_seconds],
     )
 
 def record_k8s_node_metrics(

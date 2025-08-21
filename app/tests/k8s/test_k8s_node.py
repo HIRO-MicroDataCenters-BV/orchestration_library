@@ -1,6 +1,7 @@
 """
 Tests for node get and list functionality in Kubernetes.
 """
+
 import json
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
@@ -8,7 +9,11 @@ from kubernetes.config.config_exception import ConfigException
 import pytest
 
 from app.repositories.k8s import k8s_node
-from app.tests.utils.mock_objects import mock_node, mock_custom_api
+from app.tests.utils.mock_objects import (
+    mock_metrics_details,
+    mock_node,
+    mock_custom_api,
+)
 from app.utils.exceptions import K8sAPIException, K8sConfigException, K8sValueError
 
 
@@ -24,7 +29,8 @@ def test_list_k8s_nodes_all(mock_get_client, mock_get_custom):
 
     mock_get_custom.return_value = mock_custom_api()
 
-    response = k8s_node.list_k8s_nodes()
+    metrics_details = mock_metrics_details("GET", "/k8s_node")
+    response = k8s_node.list_k8s_nodes(metrics_details=metrics_details)
     assert response.status_code == 200
 
     nodes = json.loads(response.body)
@@ -35,6 +41,7 @@ def test_list_k8s_nodes_all(mock_get_client, mock_get_custom):
     assert nodes[0]["capacity"]["cpu"] == "4"
     assert nodes[0]["usage"]["cpu"] == "100m"
     assert nodes[0]["addresses"][0]["address"] == "192.168.1.10"
+
 
 @patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
@@ -81,6 +88,7 @@ def test_list_k8s_nodes_with_filters(mock_get_client, mock_get_custom):
     nodes = json.loads(response.body)
     assert len(nodes) == 0
 
+
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_node.get_k8s_custom_objects_client")
 def test_list_k8s_nodes_metrics_api_exception(mock_get_custom, mock_get_core):
@@ -93,7 +101,9 @@ def test_list_k8s_nodes_metrics_api_exception(mock_get_custom, mock_get_core):
 
     # Simulate metrics.k8s.io API exception
     mock_custom_api1 = MagicMock()
-    mock_custom_api1.list_cluster_custom_object.side_effect = ApiException("metrics error")
+    mock_custom_api1.list_cluster_custom_object.side_effect = ApiException(
+        "metrics error"
+    )
     mock_get_custom.return_value = mock_custom_api1
 
     response = k8s_node.list_k8s_nodes()
@@ -102,6 +112,7 @@ def test_list_k8s_nodes_metrics_api_exception(mock_get_custom, mock_get_core):
     assert len(nodes) == 1
     assert nodes[0]["usage"] == {}
 
+
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 def test_list_k8s_nodes_api_exception(mock_get_core):
     """Test APIException handling in list_k8s_nodes."""
@@ -109,12 +120,14 @@ def test_list_k8s_nodes_api_exception(mock_get_core):
     with pytest.raises(K8sAPIException):
         k8s_node.list_k8s_nodes()
 
+
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 def test_list_k8s_nodes_config_exception(mock_get_core):
     """Test ConfigException handling in list_k8s_nodes."""
     mock_get_core.side_effect = ConfigException("config error")
     with pytest.raises(K8sConfigException):
         k8s_node.list_k8s_nodes()
+
 
 @patch("app.repositories.k8s.k8s_node.get_k8s_core_v1_client")
 def test_list_k8s_nodes_value_error(mock_get_core):

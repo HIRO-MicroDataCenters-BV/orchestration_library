@@ -38,6 +38,32 @@ def to_jsonable(obj):
     return obj
 
 
+def mock_to_dict(obj):
+    """
+    Recursively convert MagicMock or object with attributes to a dict.
+    Works for nested mocks, dicts, and lists.
+    """
+    if isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+    if isinstance(obj, list):
+        return [mock_to_dict(item) for item in obj]
+    if isinstance(obj, dict):
+        return {k: mock_to_dict(v) for k, v in obj.items()}
+    if isinstance(obj, MagicMock) or hasattr(obj, "__dict__"):
+        result = {}
+        for attr in dir(obj):
+            if attr.startswith("_"):
+                continue  # skip private/internal attributes
+            try:
+                value = getattr(obj, attr)
+            except AttributeError:
+                continue
+            if callable(value):
+                continue
+            result[attr] = mock_to_dict(value)
+        return result
+    return str(obj)  # fallback for unknown types
+
 def mock_version_info():
     """
     Mock version information for the Kubernetes cluster.
