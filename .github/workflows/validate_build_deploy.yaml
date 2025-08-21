@@ -221,8 +221,8 @@ jobs:
       - name: Set up kubeconfig
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets[matrix.kubeconfig_secret_name] }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
+          echo "${{ secrets[matrix.kubeconfig_secret_name] }}" > ~/.kube/${{ matrix.kubeconfig_secret_name }}
+          chmod 600 ~/.kube/${{ matrix.kubeconfig_secret_name }}
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -276,6 +276,7 @@ jobs:
         run: |
           helm upgrade --install ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
             --post-renderer ./charts/orchestration-api/add-common-labels.sh \
+            --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
@@ -294,19 +295,19 @@ jobs:
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
         run: |
-          JOB_NAME=$(kubectl get jobs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -o json \
+          JOB_NAME=$(kubectl get jobs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }}-o json \
             | jq -r '.items | map(select(.metadata.name | startswith("alembic-migration-"))) | sort_by(.metadata.creationTimestamp) | last(.[]).metadata.name')
 
           echo "Waiting for Job: $JOB_NAME"
-          kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} || JOB_STATUS=$?
+          kubectl wait --for=condition=complete --timeout=600s job/$JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} || JOB_STATUS=$?
           JOB_STATUS=$?
 
           echo "Job status:"
-          kubectl describe job $JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} || true
+          kubectl describe job $JOB_NAME -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} || true
           echo "Pods for job:"
-          kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o wide || true
+          kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o wide --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} || true
 
-          POD_NAME=$(kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o json | jq -r '.items[0].metadata.name // empty')
+          POD_NAME=$(kubectl get pods -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} -l job-name=$JOB_NAME -o json --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} | jq -r '.items[0].metadata.name // empty')
           if [ -z "$POD_NAME" ]; then
             echo "No pods found for Alembic migration job. Check job status above."
             exit 1
@@ -314,7 +315,7 @@ jobs:
 
           # Wait for pod to be in a loggable state (Running, Succeeded, or Failed)
           for i in {1..10}; do
-            PHASE=$(kubectl get pod -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} $POD_NAME -o jsonpath="{.status.phase}")
+            PHASE=$(kubectl get pod -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} $POD_NAME --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} -o jsonpath="{.status.phase}")
             if [[ "$PHASE" == "Running" || "$PHASE" == "Succeeded" || "$PHASE" == "Failed" ]]; then
               break
             fi
@@ -323,7 +324,7 @@ jobs:
           done
 
           echo "Pod logs:"
-          kubectl logs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} $POD_NAME || true
+          kubectl logs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} $POD_NAME --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} || true
 
           # Fail the step if the job did not succeed
           if [ $JOB_STATUS -ne 0 ]; then
