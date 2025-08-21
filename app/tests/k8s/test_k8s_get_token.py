@@ -1,5 +1,5 @@
 """Tests for the k8s_get_token module in the Kubernetes repository.
-This module tests the functionality of retrieving a read-only token 
+This module tests the functionality of retrieving a read-only token
 for a Kubernetes service account.
 """
 
@@ -8,13 +8,19 @@ from fastapi.responses import JSONResponse
 from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
 from app.repositories.k8s import k8s_get_token
+from app.tests.utils.mock_objects import mock_metrics_details
+
 
 def test_get_read_only_token_missing_params():
     """Should return 400 if namespace or service_account_name is missing."""
-    resp = k8s_get_token.get_read_only_token(namespace=None, service_account_name=None)
+    metrics_details = mock_metrics_details("GET", "/k8s_get_token")
+    resp = k8s_get_token.get_read_only_token(
+        namespace=None, service_account_name=None, metrics_details=metrics_details
+    )
     assert isinstance(resp, JSONResponse)
     assert resp.status_code == 400
     assert "must be provided" in resp.body.decode()
+
 
 @patch("app.repositories.k8s.k8s_get_token.create_token_for_sa")
 def test_get_read_only_token_success(mock_create_token):
@@ -23,6 +29,7 @@ def test_get_read_only_token_success(mock_create_token):
     resp = k8s_get_token.get_read_only_token(namespace="ns", service_account_name="sa")
     assert resp.status_code == 200
     assert "dummy-token" in resp.body.decode()
+
 
 @patch("app.repositories.k8s.k8s_get_token.create_token_for_sa")
 @patch("app.repositories.k8s.k8s_get_token.handle_k8s_exceptions")
@@ -33,6 +40,7 @@ def test_get_read_only_token_api_exception(mock_handle, mock_create_token):
     mock_handle.assert_called_once()
     assert "Kubernetes API error" in mock_handle.call_args[1]["context_msg"]
 
+
 @patch("app.repositories.k8s.k8s_get_token.create_token_for_sa")
 @patch("app.repositories.k8s.k8s_get_token.handle_k8s_exceptions")
 def test_get_read_only_token_config_exception(mock_handle, mock_create_token):
@@ -42,6 +50,7 @@ def test_get_read_only_token_config_exception(mock_handle, mock_create_token):
     mock_handle.assert_called_once()
     assert "Kubernetes configuration error" in mock_handle.call_args[1]["context_msg"]
 
+
 @patch("app.repositories.k8s.k8s_get_token.create_token_for_sa")
 @patch("app.repositories.k8s.k8s_get_token.handle_k8s_exceptions")
 def test_get_read_only_token_value_error(mock_handle, mock_create_token):
@@ -50,6 +59,7 @@ def test_get_read_only_token_value_error(mock_handle, mock_create_token):
     k8s_get_token.get_read_only_token(namespace="ns", service_account_name="sa")
     mock_handle.assert_called_once()
     assert "Value error" in mock_handle.call_args[1]["context_msg"]
+
 
 @patch("app.repositories.k8s.k8s_get_token.get_k8s_core_v1_client")
 def test_create_token_for_sa_success(mock_get_core):

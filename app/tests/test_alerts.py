@@ -13,6 +13,7 @@ from app.tests.utils.mock_objects import (
     mock_alert_create_request_obj,
     mock_alert_obj,
     mock_alert_response_obj,
+    mock_metrics_details,
 )
 from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
 
@@ -105,7 +106,9 @@ async def test_create_alert_success():
     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
     with patch("app.repositories.alerts.Alert", return_value=alert_obj):
-        created_alert = await alerts_repo.create_alert(db, alert_data)
+        created_alert = await alerts_repo.create_alert(
+            db, alert_data, metrics_details=mock_metrics_details("POST", "/alerts")
+        )
 
     db.add.assert_called_once_with(alert_obj)
     db.commit.assert_called_once()

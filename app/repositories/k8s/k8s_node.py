@@ -9,6 +9,7 @@ from kubernetes import client
 from kubernetes.config import ConfigException
 from kubernetes.client.rest import ApiException
 
+from app.metrics.helper import record_k8s_node_metrics
 from app.repositories.k8s.k8s_common import (
     get_k8s_core_v1_client,
     get_k8s_custom_objects_client,
@@ -17,9 +18,12 @@ from app.utils.k8s import get_node_details, handle_k8s_exceptions
 
 logger = logging.getLogger(__name__)
 
+
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
-def list_k8s_nodes(name=None, node_id=None, status=None) -> JSONResponse:
+def list_k8s_nodes(
+    name=None, node_id=None, status=None, metrics_details=None
+) -> JSONResponse:
     """
     List all nodes in the Kubernetes cluster with optional filters.
     :param name: Filter by node name.
@@ -28,15 +32,30 @@ def list_k8s_nodes(name=None, node_id=None, status=None) -> JSONResponse:
     :return: A list of nodes with their details.
     """
     try:
-        return JSONResponse(content=get_k8s_nodes(name, node_id, status))
+        simplified_nodes = get_k8s_nodes(name, node_id, status)
+        record_k8s_node_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
+        return JSONResponse(content=simplified_nodes)
     except ApiException as e:
-        handle_k8s_exceptions(e, context_msg="Kubernetes API error while listing nodes")
+        handle_k8s_exceptions(
+            e,
+            context_msg="Kubernetes API error while listing nodes",
+            metrics_details=metrics_details,
+        )
     except ConfigException as e:
         handle_k8s_exceptions(
-            e, context_msg="Kubernetes configuration error while listing nodes"
+            e,
+            context_msg="Kubernetes configuration error while listing nodes",
+            metrics_details=metrics_details,
         )
     except ValueError as e:
-        handle_k8s_exceptions(e, context_msg="Value error while listing nodes")
+        handle_k8s_exceptions(
+            e,
+            context_msg="Value error while listing nodes",
+            metrics_details=metrics_details,
+        )
 
 
 def get_k8s_nodes(name=None, node_id=None, status=None):
