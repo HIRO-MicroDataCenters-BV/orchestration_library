@@ -1,5 +1,5 @@
 #!/bin/bash
-RELEASE_NAME="$1"
+RELEASE_NAME="${RELEASE_NAME:-aces-orchestration-api}"
 yq eval "
   (select(.kind == \"Deployment\" or .kind == \"StatefulSet\" or .kind == \"DaemonSet\" or .kind == \"Job\" or .kind == \"CronJob\")
     .spec.template.metadata.labels) |= (
