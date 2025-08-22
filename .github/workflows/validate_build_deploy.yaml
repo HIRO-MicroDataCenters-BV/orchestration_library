@@ -224,6 +224,12 @@ jobs:
           echo "${{ secrets[matrix.kubeconfig_secret_name] }}" > ~/.kube/${{ matrix.kubeconfig_secret_name }}
           chmod 600 ~/.kube/${{ matrix.kubeconfig_secret_name }}
 
+      - name: Test the kubeconfig
+        run: |
+          ls -larth ~/.kube
+          cat ~/.kube/${{ matrix.kubeconfig_secret_name }}
+          kubectl get ns --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} || true
+
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
