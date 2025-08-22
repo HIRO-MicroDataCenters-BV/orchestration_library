@@ -246,9 +246,9 @@ jobs:
         id: helm-dry-run
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "flag=" >> $GITHUB_OUTPUT
+            echo "dry_run_flag=" >> $GITHUB_OUTPUT
           else
-            echo "flag=--dry-run" >> $GITHUB_OUTPUT
+            echo "dry_run_flag=--dry-run" >> $GITHUB_OUTPUT
           fi
 
       # - name: Deploy the Kubernetes Dashboard with reverse proxy to the cluster
@@ -264,7 +264,20 @@ jobs:
       #       --set reverseProxy.service.port=80 \
       #       --set reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
       #       --set reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
-      #       ${{ steps.helm-dry-run.outputs.flag }}
+      #       ${{ steps.helm-dry-run.outputs.dry_run_flag }}
+
+      - name: Set Helm Skip Cert-Manager CRDs flag
+        id: helm-skip-cert-manager
+        run: |
+          # List of CRDs you expect from k8s-dashboard or its dependencies
+          CRDS=("certificaterequests.cert-manager.io")
+          echo "cert-man-crd-install=true" >> $GITHUB_OUTPUT
+          for crd in "${CRDS[@]}"; do
+            if ! kubectl get crd "$crd" --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} >/dev/null 2>&1; then
+              echo "cert-man-crd-install=false" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
 
       - name: Set Dashboard URL
         id: set-dashboard-url
@@ -294,10 +307,11 @@ jobs:
             --set k8sDashboard.accessURL=${{ steps.set-dashboard-url.outputs.dashboard_url }} \
             --set k8sDashboard.reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
             --set k8sDashboard.reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
+            --set k8sDashboard.dashboard.cert-manager.installCRDs=${{ steps.helm-skip-cert-manager.outputs.cert-man-crd-install }}
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
             --set global.postgresql.auth.password=postgress \
-            ${{ steps.helm-dry-run.outputs.flag }}
+            ${{ steps.helm-dry-run.outputs.dry_run_flag }}
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
         run: |
