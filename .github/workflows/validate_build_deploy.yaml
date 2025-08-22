@@ -306,21 +306,8 @@ jobs:
             --set global.postgresql.auth.password=postgress \
             ${{ steps.helm-dry-run.outputs.dry_run_flag }}
 
-      - name: Wait for Orchestration API deployment to be ready
-        env:
-          ORCHRESTRATION_API_APP_NAME: ${{ vars.ORCHRESTRATION_API_APP_NAME }}
-          ORCHESTRATION_API_NAMESPACE: ${{ vars.ORCHESTRATION_API_NAMESPACE }}
-        run: |
-          echo "Wait for the $ORCHRESTRATION_API_APP_NAME to be ready"
-          kubectl wait --for=condition=available --timeout=60s deployment/$ORCHRESTRATION_API_APP_NAME -n $ORCHESTRATION_API_NAMESPACE --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }}
-
-      - name: Get Orchestration API service
-        env:
-          ORCHRESTRATION_API_APP_NAME: ${{ vars.ORCHRESTRATION_API_APP_NAME }}
-          ORCHESTRATION_API_NAMESPACE: ${{ vars.ORCHESTRATION_API_NAMESPACE }}
-        run: |
-          echo "Get the $ORCHRESTRATION_API_APP_NAME service"
-          kubectl get service $ORCHRESTRATION_API_APP_NAME -n $ORCHESTRATION_API_NAMESPACE --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }}
+      - name: Sleep 60 sec to allow pods to reach Running state
+        run: sleep 60
 
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
