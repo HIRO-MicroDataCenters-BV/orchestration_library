@@ -3,7 +3,7 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-08-22T22:22:51.094531959Z"
+    created: "2025-08-22T22:24:54.566433882Z"
     dependencies:
     - alias: dashboard
       condition: dashboard.enabled
@@ -11,7 +11,7 @@ entries:
       repository: https://kubernetes.github.io/dashboard/
       version: 7.13.0
     description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
-    digest: ed133dd2297d1c312f1eb0a5190dc9aa156e96e1c3536f7264a8c872c376a44a
+    digest: 44ab093a99db935f140726b1c29d5c24c48a55ffe9c0683cc2f6d37c3e5432ce
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: k8s-dashboard
     type: application
@@ -38,7 +38,7 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-08-22T22:22:51.114507291Z"
+    created: "2025-08-22T22:24:54.588015999Z"
     dependencies:
     - alias: k8sDashboard
       condition: k8sDashboard.enabled
@@ -46,7 +46,7 @@ entries:
       repository: file://../k8s-dashboard
       version: 1.0.1
     description: A Helm chart for deploying the orchestration api
-    digest: d53bd2ad6faf8b57e9686fef7fa32f02f14efe1ca785e17d44586597eaa5af16
+    digest: 60167dad137e42673807eeb20a102d9916dbe675a725fc91997a743871fc817e
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: orchestration-api
     type: application
@@ -64,4 +64,4 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/orchestration-api-1.0.0.tgz
     version: 1.0.0
-generated: "2025-08-22T22:22:51.073434466Z"
+generated: "2025-08-22T22:24:54.546195461Z"
