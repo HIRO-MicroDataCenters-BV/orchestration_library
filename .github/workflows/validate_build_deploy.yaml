@@ -306,7 +306,7 @@ jobs:
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
         run: |
-          JOB_NAME=$(kubectl get jobs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }}-o json \
+          JOB_NAME=$(kubectl get jobs -n ${{ vars.ORCHESTRATION_API_NAMESPACE }} --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} -o json \
             | jq -r '.items | map(select(.metadata.name | startswith("alembic-migration-"))) | sort_by(.metadata.creationTimestamp) | last(.[]).metadata.name')
 
           echo "Waiting for Job: $JOB_NAME"
