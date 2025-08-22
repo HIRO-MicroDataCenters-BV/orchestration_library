@@ -27,6 +27,9 @@ dashboard: # its alias in Chart.yaml is "dashboard"
   enabled: true
   metrics-server:
     enabled: false
+  cert-manager:
+    enabled: false
+    installCRDs: true
   protocolHttp: true
   kong:
     admin:
