@@ -1,13 +1,14 @@
 #!/bin/bash
-yq eval '
-(select(.kind == "Deployment" or .kind == "StatefulSet" or .kind == "DaemonSet" or .kind == "Job" or .kind == "CronJob")
-  .spec.template.metadata.labels) |= (
-    (. // {}) * {
-      "app.kubernetes.io/name": (.["app.kubernetes.io/name"] // "aces-orchestration-api"),
-      "app.kubernetes.io/instance": (.["app.kubernetes.io/instance"] // "aces-orchestration-api"),
-      "app.kubernetes.io/managed-by": (.["app.kubernetes.io/managed-by"] // "Helm"),
-      "app.kubernetes.io/part-of": (.["app.kubernetes.io/part-of"] // "aces-orchestration-api"),
-      "aces-component-name": (.["aces-component-name"] // "aces-orchestration-api")
-    }
-)
-' -
+RELEASE_NAME="${RELEASE_NAME:-aces-orchestration-api}"
+yq eval "
+  (select(.kind == \"Deployment\" or .kind == \"StatefulSet\" or .kind == \"DaemonSet\" or .kind == \"Job\" or .kind == \"CronJob\")
+    .spec.template.metadata.labels) |= (
+      (. // {}) * {
+        \"app.kubernetes.io/name\": (.\"app.kubernetes.io/name\" // \"$RELEASE_NAME\"),
+        \"app.kubernetes.io/instance\": (.\"app.kubernetes.io/instance\" // \"$RELEASE_NAME\"),
+        \"app.kubernetes.io/managed-by\": (.\"app.kubernetes.io/managed-by\" // \"$RELEASE_NAME\"),
+        \"app.kubernetes.io/part-of\": (.\"app.kubernetes.io/part-of\" // \"$RELEASE_NAME\"),
+        \"aces-component-name\": (.\"aces-component-name\" // \"$RELEASE_NAME\")
+      }
+  )
+" -

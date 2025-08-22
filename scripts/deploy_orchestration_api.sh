@@ -53,6 +53,7 @@ helm dependency build ./charts/k8s-dashboard
 #   --set reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
 
 echo "Deploy the orchestration-api with dependencies(K8S Dashboard with reverse proxy) to the Kind cluster"
+RELEASE_NAME=$ORCHRESTRATION_API_RELEASE_NAME
 helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
   --post-renderer ./charts/orchestration-api/add-common-labels.sh \
   --namespace $ORCHRESTRATION_API_NAMESPACE \
