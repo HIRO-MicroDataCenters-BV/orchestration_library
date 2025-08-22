@@ -274,7 +274,7 @@ jobs:
             echo "cert-man-crd-install=false" >> $GITHUB_OUTPUT
           else
             echo "cert-man-crd-install=true" >> $GITHUB_OUTPUT
-          done
+          fi
 
       - name: Set Dashboard URL
         id: set-dashboard-url
