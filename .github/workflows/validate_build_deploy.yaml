@@ -320,15 +320,15 @@ jobs:
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_service_type }} \
-            ${{ steps.helm-app-access.outputs.orchestration_api_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_service_nodePort }} \
+            ${{ steps.helm-app-access.outputs.orchestration_api_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_ingress_host }} \
             --set k8sDashboard.enabled=true \
             --set k8sDashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set k8sDashboard.accessURL=${{ steps.set-dashboard-url.outputs.dashboard_url }} \
             ${{ steps.helm-app-access.outputs.k8s_dashboard_service_type }} \
-            ${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.k8s_dashboard_service_nodePort }} \
+            ${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_host }} \
             --set k8sDashboard.dashboard.cert-manager.installCRDs=${{ steps.helm-install-cert-manager.outputs.cert-man-crd-install }} \
             --set runMigration=true \
