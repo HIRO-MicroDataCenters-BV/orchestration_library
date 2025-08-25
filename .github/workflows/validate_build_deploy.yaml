@@ -280,6 +280,9 @@ jobs:
             echo "k8s_dashboard_ingress_enabled=--set k8sDashboard.reverseProxy.ingress.enabled=false" >> $GITHUB_OUTPUT
             echo "orchestration_api_service_nodePort=--set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }}" >> $GITHUB_OUTPUT
             echo "k8s_dashboard_service_nodePort=--set k8sDashboard.reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}" >> $GITHUB_OUTPUT
+            echo "orchestration_api_ingress_host=--set app.ingress.host=${{ vars.ORCHESTRATION_API_INGRESS_HOST }}" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_ingress_host=--set k8sDashboard.reverseProxy.ingress.host=${{ vars.KUBERNETES_DASHBOARD_INGRESS_HOST }}" >> $GITHUB_OUTPUT
+
           else
             echo "orchestration_api_service_type=--set app.service.type=ClusterIP" >> $GITHUB_OUTPUT
             echo "k8s_dashboard_service_type=--set k8sDashboard.reverseProxy.service.type=ClusterIP" >> $GITHUB_OUTPUT
@@ -287,6 +290,8 @@ jobs:
             echo "k8s_dashboard_ingress_enabled=--set k8sDashboard.reverseProxy.ingress.enabled=true" >> $GITHUB_OUTPUT
             echo "orchestration_api_service_nodePort=" >> $GITHUB_OUTPUT
             echo "k8s_dashboard_service_nodePort=" >> $GITHUB_OUTPUT
+            echo "orchestration_api_ingress_host=" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_ingress_host=" >> $GITHUB_OUTPUT
           fi
 
       - name: Set Dashboard URL
@@ -296,6 +301,8 @@ jobs:
             DASHBOARD_URL="${{ secrets.KUBERNETES_DASHBOARD_URL }}"
           elif [[ "${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }}" == "NodePort" ]]; then
             DASHBOARD_URL="http://${{ secrets.KUBERNETES_DASHBOARD_NODE_IP }}:${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}/"
+          elif [[steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled == "--set k8sDashboard.reverseProxy.ingress.enabled=true" ]]; then
+            DASHBOARD_URL="http://${{ vars.KUBERNETES_DASHBOARD_INGRESS_HOST }}/"
           else
             DASHBOARD_URL=""
           fi
@@ -316,12 +323,14 @@ jobs:
             ${{ steps.helm-app-access.outputs.orchestration_api_service_type }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_service_nodePort }} \
+            ${{ steps.helm-app-access.outputs.orchestration_api_ingress_host }} \
             --set k8sDashboard.enabled=true \
             --set k8sDashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set k8sDashboard.accessURL=${{ steps.set-dashboard-url.outputs.dashboard_url }} \
             ${{ steps.helm-app-access.outputs.k8s_dashboard_service_type }} \
             ${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.k8s_dashboard_service_nodePort }} \
+            ${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_host }} \
             --set k8sDashboard.dashboard.cert-manager.installCRDs=${{ steps.helm-install-cert-manager.outputs.cert-man-crd-install }} \
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
