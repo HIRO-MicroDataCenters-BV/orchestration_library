@@ -21,6 +21,13 @@ reverseProxy:
     port: 80
     targetPort: 8080
     nodePort: 30016
+  ingress:
+    enabled: true
+    className: nginx
+    host: k8s-dashboard.aces.hiro-develop.nl
+    path: /
+    tls: false
+    tlsSecretName: ""
 
 # Subchart (dependency) values
 dashboard: # its alias in Chart.yaml is "dashboard"
