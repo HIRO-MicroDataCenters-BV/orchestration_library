@@ -35,6 +35,13 @@ app:
     port: 80
     targetPort: 8000
     nodePort: 30015
+  ingress:
+    enabled: true
+    className: nginx
+    host: orchestration-api.aces.hiro-develop.nl
+    path: /
+    tls: false
+    tlsSecretName: ""
 
 configmap:
   databaseURLConfig: orchestration-api-config

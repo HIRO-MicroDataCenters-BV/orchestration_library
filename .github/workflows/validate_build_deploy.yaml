@@ -270,6 +270,23 @@ jobs:
             echo "cert-man-crd-install=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Set Helm values for Service type and Ingress
+        id: helm-app-access
+        run: |
+          if [[ "${{ matrix.kubeconfig_secret_name }}" == "HIRO_KUBE_CONFIG_AWS" ]]; then
+            echo "orchestration_api_service_type=NodePort" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_service_type=NodePort" >> $GITHUB_OUTPUT
+            echo "orchestration_api_ingress_enabled=false" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_ingress_enabled=false" >> $GITHUB_OUTPUT
+            echo "orchestration_api_service_nodePort=--set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }}" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_service_nodePort=--set k8sDashboard.reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}" >> $GITHUB_OUTPUT
+          else
+            echo "orchestration_api_service_type=ClusterIP" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_service_type=ClusterIP" >> $GITHUB_OUTPUT
+            echo "orchestration_api_ingress_enabled=true" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_ingress_enabled=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set Dashboard URL
         id: set-dashboard-url
         run: |
@@ -291,15 +308,18 @@ jobs:
             --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
+            --set app.name=${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} \
             --set app.image.repository=${{ vars.ORCHESTRATION_API_IMAGE_NAME }} \
             --set app.image.tag=${{ needs.build-and-push.outputs.image_tag }} \
-            --set app.service.type=${{ vars.ORCHESTRATION_API_SERVICE_TYPE }} \
-            --set app.service.nodePort=${{ vars.ORCHESTRATION_API_NODE_PORT }} \
+            --set app.service.type=${{ steps.helm-app-access.outputs.orchestration_api_service_type }} \
+            --set app.ingress.enabled=${{ steps.helm-app-access.outputs.orchestration_api_ingress_enabled }} \
+            ${{ steps.helm-app-access.outputs.orchestration_api_service_nodePort }} \
             --set k8sDashboard.enabled=true \
             --set k8sDashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set k8sDashboard.accessURL=${{ steps.set-dashboard-url.outputs.dashboard_url }} \
-            --set k8sDashboard.reverseProxy.service.type=${{ vars.KUBERNETES_DASHBOARD_SERVICE_TYPE }} \
-            --set k8sDashboard.reverseProxy.service.nodePort=${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }} \
+            --set k8sDashboard.reverseProxy.service.type=${{ steps.helm-app-access.outputs.k8s_dashboard_service_type }} \
+            --set k8sDashboard.reverseProxy.ingress.enabled=${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled }} \
+            ${{ steps.helm-app-access.outputs.k8s_dashboard_service_nodePort }} \
             --set k8sDashboard.dashboard.cert-manager.installCRDs=${{ steps.helm-install-cert-manager.outputs.cert-man-crd-install }} \
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
