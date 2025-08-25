@@ -285,8 +285,8 @@ jobs:
             echo "k8s_dashboard_service_type=--set k8sDashboard.reverseProxy.service.type=ClusterIP" >> $GITHUB_OUTPUT
             echo "orchestration_api_ingress_enabled=--set app.ingress.enabled=true" >> $GITHUB_OUTPUT
             echo "k8s_dashboard_ingress_enabled=--set k8sDashboard.reverseProxy.ingress.enabled=true" >> $GITHUB_OUTPUT
-            echo "orchestration_api_service_nodePort=--set app.service.nodePort=" >> $GITHUB_OUTPUT
-            echo "k8s_dashboard_service_nodePort=--set k8sDashboard.reverseProxy.service.nodePort=" >> $GITHUB_OUTPUT
+            echo "orchestration_api_service_nodePort=" >> $GITHUB_OUTPUT
+            echo "k8s_dashboard_service_nodePort=" >> $GITHUB_OUTPUT
           fi
 
       - name: Set Dashboard URL
