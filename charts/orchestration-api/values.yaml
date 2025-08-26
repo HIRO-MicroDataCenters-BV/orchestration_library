@@ -40,8 +40,8 @@ app:
     className: nginx
     host: orchestration-api.aces.hiro-develop.nl
     path: /
-    tls: false
-    tlsSecretName: ""
+    tls: true
+    tlsSecretName: orchestration-api-tls-secret
 
 configmap:
   databaseURLConfig: orchestration-api-config
