@@ -300,7 +300,7 @@ jobs:
             DASHBOARD_URL="${{ secrets.KUBERNETES_DASHBOARD_URL }}"
           elif [[ "${{ steps.helm-app-access.outputs.k8s_dashboard_service_type }}" == "--set k8sDashboard.reverseProxy.service.type=NodePort" ]]; then
             DASHBOARD_URL="http://${{ secrets.KUBERNETES_DASHBOARD_NODE_IP }}:${{ vars.KUBERNETES_DASHBOARD_NODE_PORT }}/"
-          elif [[steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled == "--set k8sDashboard.reverseProxy.ingress.enabled=true" ]]; then
+          elif [[ "${{ steps.helm-app-access.outputs.k8s_dashboard_ingress_enabled }}" == "--set k8sDashboard.reverseProxy.ingress.enabled=true" ]]; then
             DASHBOARD_URL="https://${{ vars.KUBERNETES_DASHBOARD_INGRESS_HOST }}/"
           else
             DASHBOARD_URL=""
