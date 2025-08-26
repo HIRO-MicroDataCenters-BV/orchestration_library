@@ -26,8 +26,8 @@ reverseProxy:
     className: nginx
     host: k8s-dashboard.aces.hiro-develop.nl
     path: /
-    tls: false
-    tlsSecretName: ""
+    tls: true
+    tlsSecretName: k8s-dashboard-tls-secret
 
 # Subchart (dependency) values
 dashboard: # its alias in Chart.yaml is "dashboard"
