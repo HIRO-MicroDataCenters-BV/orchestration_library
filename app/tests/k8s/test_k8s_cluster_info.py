@@ -4,6 +4,7 @@ Tests for the k8s_cluster_info module.
 
 from contextlib import contextmanager
 import json
+import os
 from unittest.mock import MagicMock, patch
 from kubernetes.client.exceptions import ApiException
 from kubernetes.config.config_exception import ConfigException
@@ -18,7 +19,7 @@ from app.tests.utils.mock_objects import (
     mock_component,
     mock_pod,
 )
-from app.utils.exceptions import K8sAPIException, K8sConfigException
+from app.utils.exceptions import K8sAPIException
 
 
 @pytest.mark.parametrize(
@@ -221,22 +222,97 @@ def test_get_cluster_info_nodes_exception():
         assert "nodes error" in str(excinfo.value)
 
 
-def test_get_cluster_info_config_exception():
+# def test_get_cluster_info_config_exception():
+#     """
+#     Test the get_cluster_info function when the Kubernetes configuration loading fails.
+#     This test checks if the function raises a K8sConfigException when the configuration
+#     cannot be loaded.
+#     """
+#     with patch("kubernetes.config.load_kube_config", return_value=None), patch(
+#         "kubernetes.config.load_incluster_config", return_value=None
+#     ), k8s_cluster_info_mocks() as mocks:
+#         mock_core = setup_common_mocks(mocks)
+#         # Remove side effect for list_namespace so config is reached
+#         mock_core.list_namespace.side_effect = None
+#         # Patch config.load_incluster_config to raise ConfigException
+#         mocks["mock_config"].load_incluster_config.side_effect = ConfigException(
+#             "config error"
+#         )
+#         with pytest.raises(K8sConfigException) as excinfo:
+#             k8s_cluster_info.get_cluster_info(advanced=True)
+#         assert "config error" in str(excinfo.value)
+
+
+def test_get_kubeadm_config_configmap_not_found():
     """
-    Test the get_cluster_info function when the Kubernetes configuration loading fails.
-    This test checks if the function raises a K8sConfigException when the configuration
-    cannot be loaded.
+    Test get_kubeadm_config returns {} and logs a warning when kubeadm-config ConfigMap 
+    is not found (404).
     """
-    with patch("kubernetes.config.load_kube_config", return_value=None), patch(
-        "kubernetes.config.load_incluster_config", return_value=None
-    ), k8s_cluster_info_mocks() as mocks:
-        mock_core = setup_common_mocks(mocks)
-        # Remove side effect for list_namespace so config is reached
-        mock_core.list_namespace.side_effect = None
-        # Patch config.load_incluster_config to raise ConfigException
-        mocks["mock_config"].load_incluster_config.side_effect = ConfigException(
-            "config error"
+    with patch("app.repositories.k8s.k8s_cluster_info.logger") as mock_logger:
+        mock_core_v1 = MagicMock()
+        api_exc = ApiException(status=404)
+        mock_core_v1.read_namespaced_config_map.side_effect = api_exc
+        result = k8s_cluster_info.get_kubeadm_config(mock_core_v1)
+        assert result == {}
+        mock_logger.warning.assert_called_with(
+            "kubeadm-config ConfigMap not found in kube-system namespace"
         )
-        with pytest.raises(K8sConfigException) as excinfo:
-            k8s_cluster_info.get_cluster_info(advanced=True)
-        assert "config error" in str(excinfo.value)
+
+
+def test_get_cluster_name_env_var(monkeypatch):
+    """
+    Test get_cluster_name returns the value from the CLUSTER_NAME environment variable.
+    """
+    mock_core_v1 = MagicMock()
+    # get_kubeadm_config returns empty dict
+    with patch(
+        "app.repositories.k8s.k8s_cluster_info.get_kubeadm_config", return_value={}
+    ):
+        monkeypatch.setenv("CLUSTER_NAME", "test-env-cluster")
+        result = k8s_cluster_info.get_cluster_name(mock_core_v1)
+        assert result == "test-env-cluster"
+        monkeypatch.delenv("CLUSTER_NAME", raising=False)
+
+
+def test_get_cluster_name_fallback_to_cluster_id():
+    """
+    Test get_cluster_name falls back to get_cluster_id when kubeadm config and 
+    env var are missing.
+    """
+    mock_core_v1 = MagicMock()
+    with patch(
+        "app.repositories.k8s.k8s_cluster_info.get_kubeadm_config", return_value={}
+    ), patch(
+        "app.repositories.k8s.k8s_cluster_info.get_cluster_id", return_value="fake-uid"
+    ):
+        # Ensure CLUSTER_NAME is not set
+        if "CLUSTER_NAME" in os.environ:
+            del os.environ["CLUSTER_NAME"]
+        result = k8s_cluster_info.get_cluster_name(mock_core_v1)
+        assert result == "fake-uid"
+
+
+def test_get_cluster_name_returns_unknown(monkeypatch):
+    """
+    Test get_cluster_name returns 'unknown' if kubeadm config, env var, 
+    and cluster_id are all missing.
+    """
+    mock_core_v1 = MagicMock()
+    with patch(
+        "app.repositories.k8s.k8s_cluster_info.get_kubeadm_config", return_value={}
+    ), patch("app.repositories.k8s.k8s_cluster_info.get_cluster_id", return_value=None):
+        monkeypatch.delenv("CLUSTER_NAME", raising=False)
+        result = k8s_cluster_info.get_cluster_name(mock_core_v1)
+        assert result == "unknown"
+
+
+def test_get_kubeadm_config_raises_other_api_exception():
+    """
+    Test get_kubeadm_config re-raises ApiException if status is not 404.
+    """
+    mock_core_v1 = MagicMock()
+    api_exc = ApiException(status=500)
+    mock_core_v1.read_namespaced_config_map.side_effect = api_exc
+    with pytest.raises(ApiException) as excinfo:
+        k8s_cluster_info.get_kubeadm_config(mock_core_v1)
+    assert excinfo.value.status == 500

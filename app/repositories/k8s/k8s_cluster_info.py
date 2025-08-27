@@ -5,9 +5,9 @@ Get cluster information from Kubernetes.
 import logging
 import concurrent
 import time
+import os
 from fastapi.responses import JSONResponse
 from kubernetes.client.exceptions import ApiException
-from kubernetes import config
 from kubernetes.config import ConfigException
 import yaml
 
@@ -148,12 +148,14 @@ def get_cluster_name(core_v1):
     if kubeadm_config and "clusterName" in kubeadm_config:
         return kubeadm_config["clusterName"]
     # If kubeadm config is not available, fallback to kubeconfig context
-    config.load_incluster_config()
-    contexts, active_context = config.list_kube_config_contexts()
-    logger.info("Contexts: %s", contexts)
-    logger.info("Active context: %s", active_context)
-    cluster_name = active_context["context"]["cluster"]
-    return cluster_name
+    env_name = os.environ.get("CLUSTER_NAME")
+    if env_name:
+        return env_name
+    # fallback to cluster UID
+    cluster_id = get_cluster_id(core_v1)
+    if cluster_id:
+        return cluster_id
+    return "unknown"
 
 
 def get_namespaces(core_v1):
