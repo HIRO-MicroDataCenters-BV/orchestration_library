@@ -2,13 +2,15 @@
 Get cluster information from Kubernetes.
 """
 
-import logging
-import concurrent
 import time
 import os
-from fastapi.responses import JSONResponse
+import logging
+import concurrent
+from kubernetes import config
 from kubernetes.client.exceptions import ApiException
 from kubernetes.config import ConfigException
+
+from fastapi.responses import JSONResponse
 import yaml
 
 from app.metrics.helper import record_k8s_cluster_info_metrics
@@ -136,26 +138,41 @@ def get_kubeadm_config(core_v1):
         return kubeadm_config
     except ApiException as e:
         if e.status == 404:
-            logger.warning("kubeadm-config ConfigMap not found in kube-system namespace")
+            logger.warning(
+                "kubeadm-config ConfigMap not found in kube-system namespace"
+            )
             return {}
         raise
+
 
 def get_cluster_name(core_v1):
     """
     Fetches and returns the cluster name from the current kubeconfig context.
     """
-    kubeadm_config = get_kubeadm_config(core_v1)
-    if kubeadm_config and "clusterName" in kubeadm_config:
-        return kubeadm_config["clusterName"]
-    # If kubeadm config is not available, fallback to kubeconfig context
-    env_name = os.environ.get("CLUSTER_NAME")
-    if env_name:
-        return env_name
-    # fallback to cluster UID
-    cluster_id = get_cluster_id(core_v1)
-    if cluster_id:
-        return cluster_id
-    return "unknown"
+    try:
+        kubeadm_config = get_kubeadm_config(core_v1)
+        if kubeadm_config and "clusterName" in kubeadm_config:
+            return kubeadm_config["clusterName"]
+        config.load_incluster_config()
+        contexts, active_context = config.list_kube_config_contexts()
+        logger.info("Contexts: %s", contexts)
+        logger.info("Active context: %s", active_context)
+        cluster_name = active_context["context"]["cluster"]
+        return cluster_name
+    except (ConfigException, KeyError, TypeError) as e:
+        logger.warning(
+            "Could not get cluster name from kubeadm config or kubeconfig context: %s",
+            e,
+        )
+        # If kubeadm config is not available, fallback to kubeconfig context
+        env_name = os.environ.get("CLUSTER_NAME")
+        if env_name:
+            return env_name
+        # fallback to cluster UID
+        cluster_id = get_cluster_id(core_v1)
+        if cluster_id:
+            return cluster_id
+        return "unknown"
 
 
 def get_namespaces(core_v1):
