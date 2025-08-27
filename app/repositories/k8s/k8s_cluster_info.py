@@ -124,16 +124,21 @@ def get_kubeadm_config(core_v1):
     """
     Fetches and returns the kubeadm configuration from the kube-system namespace.
     """
-    config_map = core_v1.read_namespaced_config_map(
-        name="kubeadm-config", namespace="kube-system"
-    )
-    raw_config = config_map.data.get("ClusterConfiguration", None)
-    if raw_config:
-        kubeadm_config = yaml.safe_load(raw_config)
-    else:
-        kubeadm_config = {}
-    return kubeadm_config
-
+    try:
+        config_map = core_v1.read_namespaced_config_map(
+            name="kubeadm-config", namespace="kube-system"
+        )
+        raw_config = config_map.data.get("ClusterConfiguration", None)
+        if raw_config:
+            kubeadm_config = yaml.safe_load(raw_config)
+        else:
+            kubeadm_config = {}
+        return kubeadm_config
+    except ApiException as e:
+        if e.status == 404:
+            logger.warning("kubeadm-config ConfigMap not found in kube-system namespace")
+            return {}
+        raise
 
 def get_cluster_name(core_v1):
     """
