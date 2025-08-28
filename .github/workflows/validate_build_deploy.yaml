@@ -334,10 +334,9 @@ jobs:
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
             --set global.postgresql.auth.password=postgress \
+            --wait \
+            --debug \
             ${{ steps.helm-dry-run.outputs.dry_run_flag }}
-
-      - name: Sleep 60 sec to allow pods to reach Running state
-        run: sleep 60
 
       - name: Wait for Alembic migration job and show logs
         if: github.event_name == 'push'
