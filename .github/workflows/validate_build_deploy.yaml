@@ -334,6 +334,7 @@ jobs:
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
             --set global.postgresql.auth.password=postgress \
+            --timeout=600s \
             --wait \
             --debug \
             ${{ steps.helm-dry-run.outputs.dry_run_flag }}
