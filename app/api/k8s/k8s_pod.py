@@ -30,3 +30,20 @@ def list_all_pods(
     return k8s_pod.list_k8s_pods(
         pod_filters=pod_filters, metrics_details=metrics_details
     )
+
+@router.delete("/")
+def delete_pod(
+    namespace: str, pod_name: str
+):
+    """
+    Delete a pods in the specified namespace.
+    """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "DELETE",
+        "endpoint": "/k8s_pod",
+    }
+
+    return k8s_pod.delete_k8s_pod(
+        namespace=namespace, pod_name=pod_name, metrics_details=metrics_details
+    )
