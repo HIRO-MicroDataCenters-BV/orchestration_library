@@ -83,3 +83,24 @@ def list_k8s_user_pods(pod_filters=None, metrics_details=None):
         pod_filters=pod_filters,
         metrics_details=metrics_details,
     )
+
+def delete_k8s_pod(namespace, pod_name, metrics_details=None) -> JSONResponse:
+    """
+    Delete a pod in the specified namespace.
+    """
+    try:
+        core_v1 = get_k8s_core_v1_client()
+        logger.info(f"Deleting pod {pod_name} in namespace {namespace}")
+
+        core_v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
+        record_k8s_pod_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
+        return JSONResponse(content={"message": "Pod deleted successfully"}, status_code=200)
+    except ApiException as e:
+        handle_k8s_exceptions(e, context_msg="Kubernetes API error while deleting pod")
+    except ConfigException as e:
+        handle_k8s_exceptions(
+            e, context_msg="Kubernetes configuration error while deleting pod"
+        )

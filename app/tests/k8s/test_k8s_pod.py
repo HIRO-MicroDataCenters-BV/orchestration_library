@@ -247,3 +247,35 @@ def test_list_k8s_pods_api_exception(mock_get_client):
     with pytest.raises(K8sAPIException) as exc:
         k8s_pod.list_k8s_pods()
     assert "api error" in str(exc.value).lower()
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_delete_k8s_pod_success(mock_get_client):
+    """Test successful pod deletion."""
+    mock_core_v1 = MagicMock()
+    mock_get_client.return_value = mock_core_v1
+    mock_core_v1.delete_namespaced_pod.return_value = None
+
+    response = k8s_pod.delete_k8s_pod("default", "test-pod")
+    assert response.status_code == 200
+
+@patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_delete_k8s_pod_api_exception(mock_get_client, mock_handle):
+    """Test pod deletion when Kubernetes API raises an exception."""
+    mock_core_v1 = MagicMock()
+    mock_get_client.return_value = mock_core_v1
+    mock_core_v1.delete_namespaced_pod.side_effect = ApiException("api error")
+    k8s_pod.delete_k8s_pod("default", "test-pod")
+    mock_handle.assert_called()
+    assert "Kubernetes API error while deleting pod" in mock_handle.call_args[1]["context_msg"]
+
+@patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_delete_k8s_pod_config_exception(mock_get_client, mock_handle):
+    """Test pod deletion when Kubernetes config raises an exception."""
+    mock_core_v1 = MagicMock()
+    mock_get_client.return_value = mock_core_v1
+    mock_core_v1.delete_namespaced_pod.side_effect = ConfigException("config error")
+    k8s_pod.delete_k8s_pod("default", "test-pod")
+    mock_handle.assert_called()
+    assert "Kubernetes configuration error while deleting pod" in mock_handle.call_args[1]["context_msg"]
