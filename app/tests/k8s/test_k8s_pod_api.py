@@ -44,11 +44,16 @@ async def test_delete_pod_route(mock_delete_k8s_pod):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.delete("/k8s_pod/", params={"namespace": "default", "pod_name": "test-pod"})
+        response = await ac.delete(
+            "/k8s_pod/",
+            params={
+            "namespace": "default",
+            "pod_name": "test-pod"
+            }
+        )
     assert response.status_code == 200
     mock_delete_k8s_pod.assert_called_once()
-    args, kwargs = mock_delete_k8s_pod.call_args
+    _, kwargs = mock_delete_k8s_pod.call_args
     assert kwargs["namespace"] == "default"
     assert kwargs["pod_name"] == "test-pod"
     assert kwargs["metrics_details"]["method"] == "DELETE"
-

@@ -90,7 +90,7 @@ def delete_k8s_pod(namespace, pod_name, metrics_details=None) -> JSONResponse:
     """
     try:
         core_v1 = get_k8s_core_v1_client()
-        logger.info(f"Deleting pod {pod_name} in namespace {namespace}")
+        logger.info("Deleting pod %s in namespace %s", pod_name, namespace)
 
         core_v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
         record_k8s_pod_metrics(

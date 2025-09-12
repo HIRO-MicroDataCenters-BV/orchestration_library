@@ -278,4 +278,7 @@ def test_delete_k8s_pod_config_exception(mock_get_client, mock_handle):
     mock_core_v1.delete_namespaced_pod.side_effect = ConfigException("config error")
     k8s_pod.delete_k8s_pod("default", "test-pod")
     mock_handle.assert_called()
-    assert "Kubernetes configuration error while deleting pod" in mock_handle.call_args[1]["context_msg"]
+    assert (
+        "Kubernetes configuration error while deleting pod"
+        in mock_handle.call_args[1]["context_msg"]
+    )
