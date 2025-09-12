@@ -10,9 +10,9 @@ from kubernetes.config import ConfigException
 from app.metrics.helper import record_k8s_pod_metrics
 from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
-    K8S_IN_USE_NAMESPACE_REGEX,
     get_k8s_core_v1_client,
 )
+from app.utils.constants import K8S_IN_USE_NAMESPACE_REGEX
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,11 @@ def delete_k8s_pod(namespace, pod_name, metrics_details=None) -> JSONResponse:
     Delete a pod in the specified namespace.
     """
     try:
+        if re.search(K8S_IN_USE_NAMESPACE_REGEX, namespace):
+            return JSONResponse(
+                content={"message": "Cannot delete system pods"},
+                status_code=403,
+            )
         core_v1 = get_k8s_core_v1_client()
         logger.info("Deleting pod %s in namespace %s", pod_name, namespace)
 
