@@ -45,6 +45,7 @@ class WorkloadAction(BaseModel):
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
 
+    durationInSeconds: Optional[float] = None
     created_at: datetime = None
     updated_at: Optional[datetime] = None
 
@@ -77,6 +78,8 @@ class WorkloadActionCreate(BaseModel):
     bound_pod_name: Optional[str] = None
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
+
+    durationInSeconds: Optional[float] = None
 
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
@@ -113,6 +116,7 @@ class WorkloadActionUpdate(BaseModel):
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
 
+    durationInSeconds: Optional[float] = None
     updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -142,3 +146,5 @@ class WorkloadActionFilters(BaseModel):
     bound_pod_name: Optional[str] = None
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
+
+    durationInSeconds: Optional[float] = None

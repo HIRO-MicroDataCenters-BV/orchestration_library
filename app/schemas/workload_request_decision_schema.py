@@ -33,6 +33,7 @@ class WorkloadRequestDecisionSchema(BaseModel):
     pod_parent_id: UUID
     pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
+    durationInSeconds: Optional[float] = None
     created_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
 
@@ -82,6 +83,7 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     pod_parent_id: Optional[UUID] = None
     pod_parent_name: Optional[str] = None
     pod_parent_kind: Optional[PodParentTypeEnum] = None
+    durationInSeconds: Optional[float] = None
     deleted_at: Optional[datetime] = None
 
     class Config:
@@ -131,6 +133,7 @@ class WorkloadRequestDecisionCreate(BaseModel):
     pod_parent_id: UUID
     pod_parent_name: str
     pod_parent_kind: PodParentTypeEnum
+    durationInSeconds: Optional[float] = None
     created_at: Optional[datetime] = datetime.now(timezone.utc)
     deleted_at: Optional[datetime] = None
 
