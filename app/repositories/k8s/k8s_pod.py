@@ -106,7 +106,7 @@ def delete_k8s_user_pod(namespace, pod_name, metrics_details=None) -> JSONRespon
             metrics_details=metrics_details,
             status_code=200,
         )
-        return JSONResponse(content={"message": "Pod deleted successfully"}, status_code=200)
+        return JSONResponse(content={"message": "Pod deletion triggered successfully"}, status_code=200)
     except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while deleting pod")
     except ConfigException as e:

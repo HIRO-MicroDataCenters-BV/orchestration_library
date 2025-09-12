@@ -39,7 +39,7 @@ async def test_delete_pod_route(mock_delete_k8s_user_pod):
     # Mock a JSONResponse-like object
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.body = b"{'message': 'Pod deleted successfully'}"
+    mock_response.body = b"{'message': 'Pod deletion triggered successfully'}"
     mock_delete_k8s_user_pod.return_value = mock_response
 
     transport = ASGITransport(app=app)
