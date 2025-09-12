@@ -16,7 +16,8 @@ ORCHRESTRATION_API_NAMESPACE="aces-orchestration-api"
 ORCHRESTRATION_API_RELEASE_NAME="aces-orchestration-api"
 ORCHRESTRATION_API_APP_NAME="aces-orchestration-api"
 ORCHRESTRATION_API_IMAGE_NAME="orchestration-api"
-ORCHRESTRATION_API_IMAGE_TAG="alpha1"
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+ORCHRESTRATION_API_IMAGE_TAG="alpha1-$TIMESTAMP"
 ORCHRESTRATION_API_SERVICE_PORT=80
 ORCHRESTRATION_API_NODE_PORT=30015
 
@@ -26,7 +27,7 @@ if [ -z "$CLUSTER_NAME" ]; then
 fi
 
 echo "Build Docker image"
-docker build -t orchestration-api:alpha1 -f Dockerfile .
+docker build -t $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG -f Dockerfile .
 
 echo "Set the kubectl context to $CLUSTER_NAME cluster"
 kubectl cluster-info --context kind-$CLUSTER_NAME
@@ -72,8 +73,7 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --set app.service.type=NodePort \
   --set app.service.port=$ORCHRESTRATION_API_SERVICE_PORT \
   --set app.service.nodePort=$ORCHRESTRATION_API_NODE_PORT \
-  --set runMigration=true \
-  --set dummyRedeployTimestamp=$(date +%s)
+  --set runMigration=true 
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
 
