@@ -249,14 +249,21 @@ def test_list_k8s_pods_api_exception(mock_get_client):
     assert "api error" in str(exc.value).lower()
 
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
-def test_delete_k8s_pod_success(mock_get_client):
+def test_delete_k8s_user_pod_success(mock_get_client):
     """Test successful pod deletion."""
     mock_core_v1 = MagicMock()
     mock_get_client.return_value = mock_core_v1
     mock_core_v1.delete_namespaced_pod.return_value = None
 
-    response = k8s_pod.delete_k8s_pod("default", "test-pod")
+    response = k8s_pod.delete_k8s_user_pod("test-ns", "test-pod")
     assert response.status_code == 200
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_delete_k8s_user_pod_fail(mock_get_client):
+    """Test deleting a pod in a system namespace returns 403 and skips deletion."""
+    response = k8s_pod.delete_k8s_user_pod("kube-system", "system-pod")
+    assert response.status_code == 403
+    assert json.loads(response.body) == {"message": "Cannot delete system pods"}
 
 @patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
@@ -265,7 +272,7 @@ def test_delete_k8s_pod_api_exception(mock_get_client, mock_handle):
     mock_core_v1 = MagicMock()
     mock_get_client.return_value = mock_core_v1
     mock_core_v1.delete_namespaced_pod.side_effect = ApiException("api error")
-    k8s_pod.delete_k8s_pod("default", "test-pod")
+    k8s_pod.delete_k8s_user_pod("test-ns", "test-pod")
     mock_handle.assert_called()
     assert "Kubernetes API error while deleting pod" in mock_handle.call_args[1]["context_msg"]
 
@@ -276,7 +283,7 @@ def test_delete_k8s_pod_config_exception(mock_get_client, mock_handle):
     mock_core_v1 = MagicMock()
     mock_get_client.return_value = mock_core_v1
     mock_core_v1.delete_namespaced_pod.side_effect = ConfigException("config error")
-    k8s_pod.delete_k8s_pod("default", "test-pod")
+    k8s_pod.delete_k8s_user_pod("test-ns", "test-pod")
     mock_handle.assert_called()
     assert (
         "Kubernetes configuration error while deleting pod"

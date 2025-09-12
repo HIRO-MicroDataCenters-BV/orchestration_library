@@ -84,12 +84,16 @@ def list_k8s_user_pods(pod_filters=None, metrics_details=None):
         metrics_details=metrics_details,
     )
 
-def delete_k8s_pod(namespace, pod_name, metrics_details=None) -> JSONResponse:
+def delete_k8s_user_pod(namespace, pod_name, metrics_details=None) -> JSONResponse:
     """
     Delete a pod in the specified namespace.
     """
     try:
         if re.search(K8S_IN_USE_NAMESPACE_REGEX, namespace):
+            record_k8s_pod_metrics(
+                metrics_details=metrics_details,
+                status_code=403,
+            )
             return JSONResponse(
                 content={"message": "Cannot delete system pods"},
                 status_code=403,

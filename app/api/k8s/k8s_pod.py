@@ -44,6 +44,6 @@ def delete_pod(
         "endpoint": "/k8s_pod",
     }
 
-    return k8s_pod.delete_k8s_pod(
+    return k8s_pod.delete_k8s_user_pod(
         namespace=namespace, pod_name=pod_name, metrics_details=metrics_details
     )
