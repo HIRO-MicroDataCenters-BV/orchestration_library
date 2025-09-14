@@ -121,6 +121,34 @@ async def test_create_alert_success():
     assert created_alert.created_at is not None
 
 
+# @pytest.mark.asyncio
+# async def test_create_alert_triggers_pod_deletion_on_network_attack():
+#     """Test that pod deletion is triggered for Network-Attack alert with pod_id."""
+#     db = MagicMock()
+#     db.commit = AsyncMock()
+#     db.refresh = AsyncMock()
+
+#     # Use a valid pod_id and alert_type for the test
+#     pod_id = "123e4567-e89b-12d3-a456-426614174000"
+#     alert_data = mock_alert_create_request_obj(alert_type="Network-Attack", pod_id=pod_id)
+#     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type, pod_id=pod_id)
+
+#     with patch("app.repositories.alerts.Alert", return_value=alert_obj), \
+#          patch("app.repositories.alerts.delete_k8s_user_pod") as mock_delete_pod:
+#         created_alert = await alerts_repo.create_alert(
+#             db, alert_data, metrics_details=mock_metrics_details("POST", "/alerts")
+#         )
+
+#     db.add.assert_called_once_with(alert_obj)
+#     db.commit.assert_called_once()
+#     db.refresh.assert_called_once()
+#     mock_delete_pod.assert_called_once_with(str(pod_id), metrics_details=mock_metrics_details("POST", "/alerts"))
+
+#     assert isinstance(created_alert, AlertResponse)
+#     assert created_alert.alert_type == alert_data.alert_type
+#     assert created_alert.pod_id == pod_id
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "exc,expected_exception",

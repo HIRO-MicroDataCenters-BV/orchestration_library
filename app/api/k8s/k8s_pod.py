@@ -3,6 +3,7 @@ List pods in the cluster
 """
 import logging
 import time
+from uuid import UUID
 from fastapi import APIRouter
 from app.repositories.k8s import k8s_pod
 from app.utils.k8s import build_pod_filters
@@ -33,7 +34,7 @@ def list_all_pods(
 
 @router.delete("/")
 def delete_pod(
-    namespace: str, pod_name: str
+    pod_id: UUID
 ):
     """
     Delete a pods in the specified namespace.
@@ -45,5 +46,5 @@ def delete_pod(
     }
 
     return k8s_pod.delete_k8s_user_pod(
-        namespace=namespace, pod_name=pod_name, metrics_details=metrics_details
+        pod_id=pod_id, metrics_details=metrics_details
     )

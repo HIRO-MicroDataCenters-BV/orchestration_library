@@ -2,6 +2,7 @@
 List the pods in the Kubernetes cluster.
 """
 
+import json
 import logging
 import re
 from fastapi.responses import JSONResponse
@@ -32,6 +33,7 @@ def list_k8s_pods(pod_filters=None, metrics_details=None) -> JSONResponse:
         exclude_namespace_regex = (
             pod_filters.get("exclude_namespace_regex") if pod_filters else None
         )
+
         core_v1 = get_k8s_core_v1_client()
         logger.info("Listing pods with their IPs:")
 
@@ -84,29 +86,46 @@ def list_k8s_user_pods(pod_filters=None, metrics_details=None):
         metrics_details=metrics_details,
     )
 
-def delete_k8s_user_pod(namespace, pod_name, metrics_details=None) -> JSONResponse:
+def delete_k8s_user_pod(pod_id, metrics_details=None) -> JSONResponse:
     """
-    Delete a pod in the specified namespace.
+    Delete a pod by pod_id (UID). Will not delete system pods.
     """
     try:
-        if re.search(K8S_IN_USE_NAMESPACE_REGEX, namespace):
-            record_k8s_pod_metrics(
-                metrics_details=metrics_details,
-                status_code=403,
-            )
-            return JSONResponse(
-                content={"message": "Cannot delete system pods"},
-                status_code=403,
-            )
-        core_v1 = get_k8s_core_v1_client()
-        logger.info("Deleting pod %s in namespace %s", pod_name, namespace)
+        # Find the pod details using the pod_id
+        pod_filters = {"pod_id": str(pod_id)}
+        response = list_k8s_user_pods(pod_filters=pod_filters, metrics_details=metrics_details)
+        pods = response.body if hasattr(response, "body") else response.content
 
-        core_v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
-        record_k8s_pod_metrics(
-            metrics_details=metrics_details,
+        # Parse JSON if needed
+        if isinstance(pods, (bytes, str)):
+            pods = json.loads(pods)
+
+        # pods is a JSON-serializable list of pod details
+        if not pods or len(pods) == 0:
+            record_k8s_pod_metrics(metrics_details=metrics_details, status_code=404)
+            return JSONResponse(
+                content={
+                    "message": (
+                        f"Pod with id {pod_id} not found or is a system pod "
+                        f"(namespace matches {K8S_IN_USE_NAMESPACE_REGEX})."
+                    )
+                },
+                status_code=404,
+            )
+
+        pod_info = pods[0]  # Should only be one pod with this UID
+        namespace = pod_info.get("namespace")
+        name = pod_info.get("name")
+
+        # Prevent deletion of system pods (already filtered by list_k8s_user_pods)
+        core_v1 = get_k8s_core_v1_client()
+        logger.info("Deleting pod %s in namespace %s", name, namespace)
+        core_v1.delete_namespaced_pod(name=name, namespace=namespace)
+        record_k8s_pod_metrics(metrics_details=metrics_details, status_code=200)
+        return JSONResponse(
+            content={"message": "Pod deletion triggered successfully"},
             status_code=200,
         )
-        return JSONResponse(content={"message": "Pod deletion triggered successfully"}, status_code=200)
     except ApiException as e:
         handle_k8s_exceptions(e, context_msg="Kubernetes API error while deleting pod")
     except ConfigException as e:

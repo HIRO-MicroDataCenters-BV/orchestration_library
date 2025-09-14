@@ -206,7 +206,7 @@ def pod_mock_fixture():
     """
     pod = MagicMock()
     pod.api_version = "v1"
-    pod.metadata.uid = "pod-uid"
+    pod.metadata.uid = "123e4567-e89b-12d3-a456-426614174000"
     pod.metadata.namespace = "default"
     pod.metadata.name = "test-pod"
     pod.metadata.labels = {"app": "test"}
@@ -234,7 +234,7 @@ def mock_user_pod():
     """
     pod = MagicMock()
     pod.metadata.owner_references = []
-    pod.metadata.uid = "pod-uid"
+    pod.metadata.uid = "123e4567-e89b-12d3-a456-426614174000"
     pod.metadata.name = "test-pod"
     pod.metadata.namespace = "default"
     return pod
