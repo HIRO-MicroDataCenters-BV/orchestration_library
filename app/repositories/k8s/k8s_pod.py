@@ -94,10 +94,12 @@ def delete_k8s_user_pod(pod_id, metrics_details=None) -> JSONResponse:
         # Find the pod details using the pod_id
         pod_filters = {"pod_id": str(pod_id)}
         response = list_k8s_user_pods(pod_filters=pod_filters, metrics_details=metrics_details)
-        pods = response.body if hasattr(response, "body") else response.content
+        pods = response.body
 
         # Parse JSON if needed
-        if isinstance(pods, (bytes, str)):
+        if isinstance(pods, bytes):
+            pods = json.loads(pods.decode("utf-8"))
+        elif isinstance(pods, str):
             pods = json.loads(pods)
 
         # pods is a JSON-serializable list of pod details

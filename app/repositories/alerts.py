@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
-from app.repositories.k8s.k8s_pod import delete_k8s_user_pod
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.utils.exceptions import (
     DBEntryCreationException, OrchestrationBaseException

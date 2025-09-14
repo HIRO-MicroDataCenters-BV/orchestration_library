@@ -142,7 +142,10 @@ async def test_create_alert_success():
 #     db.add.assert_called_once_with(alert_obj)
 #     db.commit.assert_called_once()
 #     db.refresh.assert_called_once()
-#     mock_delete_pod.assert_called_once_with(str(pod_id), metrics_details=mock_metrics_details("POST", "/alerts"))
+#     mock_delete_pod.assert_called_once_with(
+#         str(pod_id),
+#         metrics_details=mock_metrics_details("POST", "/alerts")
+#     )
 
 #     assert isinstance(created_alert, AlertResponse)
 #     assert created_alert.alert_type == alert_data.alert_type
