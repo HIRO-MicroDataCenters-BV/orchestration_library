@@ -341,7 +341,8 @@ def mock_workload_action_obj(
     )
 
 
-def mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL):
+def mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL,
+                                  pod_id=None, node_id=None):
     """
     Mock an alert creation object with necessary attributes.
     """
@@ -355,17 +356,19 @@ def mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL):
             destination_ip="192.168.1.2",
             destination_port=80,
             protocol="TCP",
+            pod_id=pod_id or "11111111-1111-1111-1111-111111111111",
         )
     return AlertCreateRequest(
         alert_type=alert_type,
         alert_model="TestModel",
         alert_description="Test alert",
-        pod_id="11111111-1111-1111-1111-111111111111",
-        node_id="22222222-2222-2222-2222-222222222222",
+        pod_id=pod_id or "11111111-1111-1111-1111-111111111111",
+        node_id=node_id or "22222222-2222-2222-2222-222222222222",
     )
 
 
-def mock_alert_create_request_data(alert_type=AlertType.ABNORMAL):
+def mock_alert_create_request_data(alert_type=AlertType.ABNORMAL,
+                                   pod_id=None, node_id=None):
     """
     Mock an alert creation request data dictionary with necessary attributes.
     """
@@ -379,13 +382,14 @@ def mock_alert_create_request_data(alert_type=AlertType.ABNORMAL):
             "destination_ip": "192.168.1.2",
             "destination_port": 80,
             "protocol": "TCP",
+            "pod_id": pod_id or "11111111-1111-1111-1111-111111111111",
         }
     return {
         "alert_type": alert_type,
         "alert_model": "TestModel",
         "alert_description": "Test alert",
-        "pod_id": "11111111-1111-1111-1111-111111111111",
-        "node_id": "22222222-2222-2222-2222-222222222222",
+        "pod_id": pod_id or "11111111-1111-1111-1111-111111111111",
+        "node_id": node_id or "22222222-2222-2222-2222-222222222222",
         "source_ip": "192.168.1.1",
         "source_port": 1234,
         "destination_ip": "192.168.1.2",
@@ -414,7 +418,8 @@ def mock_alert_response_obj(alert_type=AlertType.ABNORMAL):
     )
 
 
-def mock_alert_obj(alert_type=AlertType.ABNORMAL):
+def mock_alert_obj(alert_type=AlertType.ABNORMAL,
+                   pod_id=None, node_id=None):
     """
     Mock an alert object with necessary attributes.
     """
@@ -423,8 +428,8 @@ def mock_alert_obj(alert_type=AlertType.ABNORMAL):
         alert_type=alert_type,
         alert_model="TestModel",
         alert_description="Test alert",
-        pod_id="11111111-1111-1111-1111-111111111111",
-        node_id="22222222-2222-2222-2222-222222222222",
+        pod_id=pod_id or "11111111-1111-1111-1111-111111111111",
+        node_id=node_id or "22222222-2222-2222-2222-222222222222",
         source_ip="192.168.1.1",
         source_port=1234,
         destination_ip="192.168.1.2",

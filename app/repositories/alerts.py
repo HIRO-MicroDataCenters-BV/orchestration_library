@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
+from app.repositories.k8s.k8s_pod import delete_k8s_user_pod
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.utils.exceptions import (
     DBEntryCreationException, OrchestrationBaseException
@@ -47,14 +48,14 @@ async def create_alert(
             metrics_details=metrics_details,
             status_code=200
         )
-        # # Trigger pod deletion if it's a Network-Attack alert with a pod_id
-        # if alert_model.alert_type == "Network-Attack" and alert_model.pod_id is not None:
-        #     logger.info(
-        #         "Network-Attack alert detected for pod_id %s, triggering pod deletion.",
-        #         alert_model.pod_id,
-        #     )
-        #     # Call the delete function (synchronously, since it's not async)
-        #     delete_k8s_user_pod(str(alert_model.pod_id), metrics_details=metrics_details)
+        # Trigger pod deletion if it's a Network-Attack alert with a pod_id
+        if alert_model.alert_type == "Network-Attack" and alert_model.pod_id is not None:
+            logger.info(
+                "Network-Attack alert detected for pod_id %s, triggering pod deletion.",
+                alert_model.pod_id,
+            )
+            # Call the delete function (synchronously, since it's not async)
+            delete_k8s_user_pod(str(alert_model.pod_id), metrics_details=metrics_details)
         return AlertResponse.model_validate(alert_model)
     except IntegrityError as e:
         exception = e
