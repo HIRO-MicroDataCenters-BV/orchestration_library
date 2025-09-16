@@ -58,7 +58,8 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
     pod_parent_kind = Column(
         SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"), nullable=False
     )
-    durationInSeconds = Column(Float, nullable=True)
+    decision_start_time = Column(TIMESTAMP(timezone=True), nullable=False)
+    decision_end_time = Column(TIMESTAMP(timezone=True), nullable=False)
     created_at = Column(
         TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP"), index=True
     )

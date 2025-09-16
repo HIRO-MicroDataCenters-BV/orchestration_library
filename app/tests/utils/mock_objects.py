@@ -284,7 +284,6 @@ def mock_workload_action_create_obj(
         bound_pod_name=None,
         bound_pod_namespace=None,
         bound_node_name=None,
-        durationInSeconds=0.1
     )
 
 
@@ -305,7 +304,6 @@ def mock_workload_action_update_obj(
         created_pod_name=f"pod {count}",
         created_pod_namespace="default",
         created_node_name=f"node {count}",
-        durationInSeconds=0.2,
         updated_at=datetime.now(timezone.utc),
     )
 
@@ -335,7 +333,6 @@ def mock_workload_action_obj(
         bound_pod_name=None,
         bound_pod_namespace=None,
         bound_node_name=None,
-        durationInSeconds=0.1,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
