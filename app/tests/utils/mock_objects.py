@@ -284,7 +284,6 @@ def mock_workload_action_create_obj(
         bound_pod_name=None,
         bound_pod_namespace=None,
         bound_node_name=None,
-        durationInSeconds=0.1
     )
 
 
@@ -305,7 +304,6 @@ def mock_workload_action_update_obj(
         created_pod_name=f"pod {count}",
         created_pod_namespace="default",
         created_node_name=f"node {count}",
-        durationInSeconds=0.2,
         updated_at=datetime.now(timezone.utc),
     )
 
@@ -335,7 +333,6 @@ def mock_workload_action_obj(
         bound_pod_name=None,
         bound_pod_namespace=None,
         bound_node_name=None,
-        durationInSeconds=0.1,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -458,6 +455,8 @@ def mock_workload_request_decision_create() -> WorkloadRequestDecisionCreate:
         pod_parent_id=uuid4(),
         pod_parent_name="controller",
         pod_parent_kind=PodParentTypeEnum.DEPLOYMENT,
+        decision_start_time="2024-07-01T12:00:00Z",
+        decision_end_time="2024-07-01T12:00:00Z",
         created_at="2024-07-01T12:00:00Z",
         deleted_at=None,
     )
@@ -482,6 +481,8 @@ def mock_mock_workload_request_decision_api():
         "pod_parent_id": str(uuid4()),
         "pod_parent_name": "controller-1",
         "pod_parent_kind": PodParentTypeEnum.DEPLOYMENT,
+        "decision_start_time": "2024-07-01T12:00:00Z",
+        "decision_end_time": "2024-07-01T12:00:00Z",
         "created_at": TEST_DATE.isoformat(),
         "deleted_at": None,
     }
