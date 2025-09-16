@@ -84,9 +84,6 @@ class WorkloadAction(Base, BaseDictMixin):
     bound_node_name = Column(
         String, nullable=True, doc="Node name where the pod was bound"
     )
-    durationInSeconds = Column(
-        String, nullable=True, doc="Duration of the action in seconds"
-    )
 
     created_at = Column(
         TIMESTAMP(timezone=True),
