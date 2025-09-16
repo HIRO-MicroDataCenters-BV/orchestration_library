@@ -6,7 +6,6 @@ It uses SQLAlchemy ORM for database interactions.
 
 from kubernetes import config, client
 
-K8S_IN_USE_NAMESPACE_REGEX = "^kube-.*$|^default$"
 
 def load_kube_config():
     """

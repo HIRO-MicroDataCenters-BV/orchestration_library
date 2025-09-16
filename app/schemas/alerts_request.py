@@ -64,12 +64,12 @@ class AlertCreateRequest(BaseModel):
         examples=["High CPU usage detected on pod"],
     )
     pod_id: Optional[UUID] = Field(
-        ...,
+        None,
         description="ID of the pod",
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
     node_id: Optional[UUID] = Field(
-        ...,
+        None,
         description="ID of the node",
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )

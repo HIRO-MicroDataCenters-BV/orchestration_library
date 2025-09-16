@@ -1,5 +1,6 @@
 """Test cases for the Kubernetes pod API endpoints."""
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from uuid import UUID
 import pytest
 from httpx import AsyncClient, ASGITransport
 
@@ -31,3 +32,28 @@ async def test_list_all_user_pods_default(mock_list_k8s_user_pods):
     assert response.status_code == 200
     assert response.json() == mock_response
     mock_list_k8s_user_pods.assert_called_once()
+
+@pytest.mark.asyncio
+@patch("app.api.k8s.k8s_pod.k8s_pod.delete_k8s_user_pod")
+async def test_delete_pod_route(mock_delete_k8s_user_pod):
+    """Test the delete_pod API route."""
+    pod_id = "123e4567-e89b-12d3-a456-426614174000"
+    # Mock a JSONResponse-like object
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.body = b"{'message': 'Pod deletion triggered successfully'}"
+    mock_delete_k8s_user_pod.return_value = mock_response
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.delete(
+            "/k8s_pod/",
+            params={
+            "pod_id": pod_id
+            }
+        )
+    assert response.status_code == 200
+    mock_delete_k8s_user_pod.assert_called_once()
+    _, kwargs = mock_delete_k8s_user_pod.call_args
+    assert kwargs["pod_id"] == UUID(pod_id)
+    assert kwargs["metrics_details"]["method"] == "DELETE"

@@ -4,6 +4,8 @@ Constants used across the application.
 from enum import Enum
 
 
+K8S_IN_USE_NAMESPACE_REGEX = "^kube-.*$|^default$"
+
 WORKLOAD_ACTION_TYPE_ENUM = ("bind", "create", "delete", "move", "swap_x", "swap_y")
 WORKLOAD_ACTION_STATUS_ENUM = ("pending", "succeeded", "failed")
 POD_PARENT_TYPE_ENUM = (
