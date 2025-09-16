@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.repositories.workload_flow import get_workload_decision_action_flow
+from app.utils.constants import WorkloadActionTypeEnum
+
 
 router = APIRouter(prefix="/workload_flow", tags=["Workload Flow"])
 
@@ -11,7 +13,8 @@ router = APIRouter(prefix="/workload_flow", tags=["Workload Flow"])
 async def get_workload_flow(
     pod_name: str,
     namespace: str,
-    node_name: str = None,
+    node_name: str,
+    action_type: WorkloadActionTypeEnum,
     db: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -33,5 +36,5 @@ async def get_workload_flow(
         DatabaseConnectionException: If there is an error connecting to the database.
     """
     return await get_workload_decision_action_flow(
-        db, pod_name, namespace, node_name
+        db, pod_name, namespace, node_name, action_type
     )
