@@ -455,6 +455,8 @@ def mock_workload_request_decision_create() -> WorkloadRequestDecisionCreate:
         pod_parent_id=uuid4(),
         pod_parent_name="controller",
         pod_parent_kind=PodParentTypeEnum.DEPLOYMENT,
+        decision_start_time="2024-07-01T12:00:00Z",
+        decision_end_time="2024-07-01T12:00:00Z",
         created_at="2024-07-01T12:00:00Z",
         deleted_at=None,
     )
@@ -479,6 +481,8 @@ def mock_mock_workload_request_decision_api():
         "pod_parent_id": str(uuid4()),
         "pod_parent_name": "controller-1",
         "pod_parent_kind": PodParentTypeEnum.DEPLOYMENT,
+        "decision_start_time": "2024-07-01T12:00:00Z",
+        "decision_end_time": "2024-07-01T12:00:00Z",
         "created_at": TEST_DATE.isoformat(),
         "deleted_at": None,
     }
