@@ -73,10 +73,16 @@ echo "Using database: $DATABASE_URL"
 
 rename_latest_revision_file() {
   local message="$1"
-  local versions_dir="alembic/versions"
+  local latest_file="$2"
+  local versions_dir="$3"
 
   # Find the newest migration file created
   newfile=$(ls -t "$versions_dir"/*.py | head -n 1)
+
+  if [ "$newfile" == "$latest_file" ]; then
+    echo "No schema changes detected. No new migration created. Skipping rename."
+    return 0
+  fi
 
   # Extract the revision ID from filename
   filename=$(basename "$newfile")
@@ -110,9 +116,12 @@ read -rp "Enter your choice [1-7]: " choice
 
 case $choice in
   1)
+    versions_dir="alembic/versions"
+    # Get the latest file before creating a new revision
+    latest_file=$(ls -t "$versions_dir"/*.py | head -n 1)
     read -rp "Enter migration message: " message
     alembic revision --autogenerate -m "$message"
-    rename_latest_revision_file "$message"
+    rename_latest_revision_file "$message" "$latest_file" "$versions_dir"
     ;;
   2)
     alembic upgrade head
