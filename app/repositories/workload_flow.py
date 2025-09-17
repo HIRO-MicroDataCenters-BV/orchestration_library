@@ -40,6 +40,7 @@ async def get_workload_decision_action_flow(
                 WorkloadRequestDecision.node_name == WorkloadAction.bound_node_name,
             ])
         elif action_type == WorkloadActionTypeEnum.CREATE or \
+                action_type == WorkloadActionTypeEnum.MOVE or \
                 action_type == WorkloadActionTypeEnum.SWAP_X or \
                 action_type == WorkloadActionTypeEnum.SWAP_Y:
             join_conditions.extend([
@@ -52,12 +53,6 @@ async def get_workload_decision_action_flow(
                 WorkloadRequestDecision.pod_name == WorkloadAction.deleted_pod_name,
                 WorkloadRequestDecision.namespace == WorkloadAction.deleted_pod_namespace,
                 WorkloadRequestDecision.node_name == WorkloadAction.deleted_node_name,
-            ])
-        elif action_type == WorkloadActionTypeEnum.MOVE:
-            join_conditions.extend([
-                WorkloadRequestDecision.pod_name == WorkloadAction.created_pod_name,
-                WorkloadRequestDecision.namespace == WorkloadAction.created_pod_namespace,
-                WorkloadRequestDecision.node_name == WorkloadAction.created_node_name,
             ])
 
         # Build join condition
