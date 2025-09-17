@@ -20,19 +20,21 @@ async def test_get_workload_flow_success(mock_get_flow):
         {
             "pod_name": "pod1",
             "namespace": "default",
+            "node_name": "node1",
             "decision": "allow",
             "action": "bind",
         },
         {
             "pod_name": "pod2",
             "namespace": "default",
+            "node_name": "node2",
             "decision": "deny",
             "action": "delete",
         },
     ]
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/workload_flow/?pod_name=pod1&namespace=default")
+        response = await ac.get("/workload_flow/?pod_name=pod1&namespace=default&node_name=node1&action_type=bind")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -60,7 +62,7 @@ async def test_get_workload_flow_with_node_name(mock_get_flow):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get(
-            "/workload_flow/?pod_name=pod1&namespace=default&node_name=node1"
+            "/workload_flow/?pod_name=pod1&namespace=default&node_name=node1&action_type=bind"
         )
     assert response.status_code == 200
     data = response.json()
@@ -78,7 +80,7 @@ async def test_get_workload_flow_empty(mock_get_flow):
     mock_get_flow.return_value = []
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/workload_flow/?pod_name=podX&namespace=default")
+        response = await ac.get("/workload_flow/?pod_name=podX&namespace=default&node_name=nodeX&action_type=bind")
     assert response.status_code == 200
     data = response.json()
     assert data == []

@@ -35,7 +35,7 @@ async def test_get_workload_decision_action_flow_success():
 
     # Call the function
     result = await get_workload_decision_action_flow(
-        db, pod_name="test-pod", namespace="test-ns", node_name="test-node"
+        db, pod_name="test-pod", namespace="test-ns", node_name="test-node", action_type="bind"
     )
 
     db.execute.assert_called_once()
@@ -54,7 +54,7 @@ async def test_get_workload_decision_action_flow_empty():
     db.execute.return_value = mock_result
 
     result = await get_workload_decision_action_flow(
-        db, pod_name="notfound", namespace="test-ns"
+        db, pod_name="notfound", namespace="test-ns", node_name="test-node", action_type="bind"
     )
     db.execute.assert_called_once()
     assert result == []
@@ -68,5 +68,5 @@ async def test_get_workload_decision_action_flow_db_error():
 
     with pytest.raises(DatabaseConnectionException):
         await get_workload_decision_action_flow(
-            db, pod_name="test-pod", namespace="test-ns"
+            db, pod_name="test-pod", namespace="test-ns", node_name="test-node", action_type="bind"
         )

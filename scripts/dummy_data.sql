@@ -60,7 +60,7 @@ INSERT INTO workload_action (
     pod_parent_name, pod_parent_type, pod_parent_uid,
     created_pod_name, created_pod_namespace, created_node_name,
     deleted_pod_name, deleted_pod_namespace, deleted_node_name,
-    bound_pod_name, bound_pod_namespace, bound_node_name, durationInSeconds,
+    bound_pod_name, bound_pod_namespace, bound_node_name,
     created_at, updated_at
 ) VALUES
 -- Bind, pending
@@ -68,7 +68,7 @@ INSERT INTO workload_action (
  'parent-deploy', 'deployment', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
  'pod-x', 'ns-x', 'node-x',
  NULL, NULL, NULL,
- 'pod-x', 'ns-x', 'node-x', 1.12,
+ 'pod-x', 'ns-x', 'node-x',
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Create, successful
@@ -76,7 +76,7 @@ INSERT INTO workload_action (
  'parent-rs', 'replicaset', 'cccccccc-cccc-cccc-cccc-cccccccccccc',
  'pod-y', 'ns-y', 'node-y',
  NULL, NULL, NULL,
- 'pod-y', 'ns-y', 'node-y', 1.21,
+ 'pod-y', 'ns-y', 'node-y',
  '2024-07-31 11:00:00', '2024-07-31 12:00:00'
 ),
 -- Delete, failed
@@ -84,7 +84,7 @@ INSERT INTO workload_action (
  NULL, NULL, NULL,
  NULL, NULL, NULL,
  'pod-z', 'ns-z', 'node-z',
- NULL, NULL, NULL, 1.0,
+ NULL, NULL, NULL,
  '2024-07-31 10:00:00', '2024-07-31 11:00:00'
 ),
 -- Move, pending
@@ -92,7 +92,7 @@ INSERT INTO workload_action (
  'parent-sts', 'statefulset', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
  NULL, NULL, NULL,
  NULL, NULL, NULL,
- 'pod-w', 'ns-w', 'node-w', 1.14
+ 'pod-w', 'ns-w', 'node-w',
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Swap_x, successful, parent type Job
@@ -100,7 +100,7 @@ INSERT INTO workload_action (
  'parent-job', 'job', 'ffffffff-ffff-ffff-ffff-ffffffffffff',
  'pod-swap', 'ns-swap', 'node-swap',
  'pod-old', 'ns-old', 'node-old',
- 'pod-new', 'ns-new', 'node-new', 0.91,
+ 'pod-new', 'ns-new', 'node-new',
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Swap_y, successful, parent type Job
@@ -108,7 +108,7 @@ INSERT INTO workload_action (
  'parent-job', 'job', 'ffffffff-ffff-ffff-ffff-ffffffffffff',
  'pod-swap', 'ns-swap', 'node-swap',
  'pod-old', 'ns-old', 'node-old',
- 'pod-new', 'ns-new', 'node-new', 0.70,
+ 'pod-new', 'ns-new', 'node-new',
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Create, failed, parent type DaemonSet
@@ -116,7 +116,7 @@ INSERT INTO workload_action (
  'parent-daemon', 'daemonset', '22222222-3333-4444-5555-666666666666',
  'pod-daemon', 'ns-daemon', 'node-daemon',
  NULL, NULL, NULL,
- NULL, NULL, NULL, 1.0,
+ NULL, NULL, NULL,
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 ),
 -- Delete, pending, parent type CronJob
@@ -124,7 +124,7 @@ INSERT INTO workload_action (
  'parent-cron', 'cronjob', '33333333-4444-5555-6666-777777777777',
  NULL, NULL, NULL,
  'pod-cron', 'ns-cron', 'node-cron',
- NULL, NULL, NULL, 1.2132,
+ NULL, NULL, NULL,
  '2024-07-31 12:00:00', '2024-07-31 12:00:00'
 );
 
@@ -132,36 +132,36 @@ INSERT INTO workload_action (
 INSERT INTO workload_request_decision (
     id, pod_id, pod_name, namespace, node_id, node_name, is_elastic, queue_name,
     demand_cpu, demand_memory, demand_slack_cpu, demand_slack_memory, decision_status,
-    pod_parent_id, pod_parent_name, pod_parent_kind, durationInSeconds,created_at, deleted_at
+    pod_parent_id, pod_parent_name, pod_parent_kind, decision_start_time, decision_end_time, created_at, deleted_at
 ) VALUES
 ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'pod-x', 'ns-x', '22222222-2222-2222-2222-222222222222', 'node-x', FALSE, 'queue-x',
  2.0, 4096, 0.5, 512, 'successful',
- 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'parent-deploy', 'deployment', 1.12, '2024-07-31 12:00:00', NULL
+ 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'parent-deploy', 'deployment', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL
 ),
 ('ffffffff-ffff-ffff-ffff-ffffffffffff', '33333333-3333-3333-3333-333333333333', 'pod-y', 'ns-y', '44444444-4444-4444-4444-444444444444', 'node-y', FALSE, 'queue-y',
  1.0, 2048, 0.2, 256, 'failed',
- 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'parent-rs', 'replicaset', 1.21, '2024-07-30 12:00:00', '2024-07-31 12:00:00'
+ 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'parent-rs', 'replicaset', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-30 12:00:00', '2024-07-31 12:00:00'
 ),
 ('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555', 'pod-w', 'ns-w', '66666666-6666-6666-6666-666666666666', 'node-w', TRUE, 'queue-z',
  0.0, 0.0, NULL, NULL, 'successful',
- 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'parent-sts', 'statefulset', 1.0, '2024-07-31 12:00:00', NULL
+ 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'parent-sts', 'statefulset', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL
 ),
 ('88888888-8888-8888-8888-888888888888', '77777777-7777-7777-7777-777777777777', 'pod-null', 'ns-null', '88888888-8888-8888-8888-888888888888', 'node-null', FALSE, 'queue-null',
  0.0, 0.0, NULL, NULL, 'failed',
- 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'parent-null', 'job', 1.41, '2024-07-31 12:00:00', NULL
+ 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'parent-null', 'job', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL
 ),
 ('33333333-4444-5555-6666-777777777777', '99999999-8888-7777-6666-555555555555', 'pod-daemon', 'ns-daemon', '11111111-2222-3333-4444-555555555555', 'node-daemon', TRUE, 'queue-daemon',
  4.0, 8192, 1.0, 1024, 'successful',
- '11111111-2222-3333-4444-555555555555', 'parent-daemon', 'daemonset', 1.654, '2024-07-31 12:00:00', NULL
+ '11111111-2222-3333-4444-555555555555', 'parent-daemon', 'daemonset', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL
 ),
 ('44444444-5555-6666-7777-888888888888', '22222222-3333-4444-5555-666666666666', 'pod-cron', 'ns-cron', '33333333-4444-5555-6666-777777777777', 'node-cron', FALSE, 'queue-cron',
  0.5, 1024, 0.1, 128, 'failed',
- '22222222-3333-4444-5555-666666666666', 'parent-cron', 'cronjob', 1.111, '2024-07-31 12:00:00', NULL
+ '22222222-3333-4444-5555-666666666666', 'parent-cron', 'cronjob', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL
 ),
 ('55555555-6666-7777-8888-999999999999', 'aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-1', 'ns-pending', 'bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-1', TRUE, 'queue-pending-1',
  0.5, 512, 0.1, 64, 'pending',
- 'ccccccc1-cccc-cccc-cccc-cccccccccccc', 'parent-pending-1', 'deployment', 0.919, '2024-07-31 12:00:00', NULL
+ 'ccccccc1-cccc-cccc-cccc-cccccccccccc', 'parent-pending-1', 'deployment', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL
 ),
 ('66666666-7777-8888-9999-000000000000', 'aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'pod-pending-2', 'ns-pending', 'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'node-pending-2', FALSE, 'queue-pending-2',
  1.0, 1024, 0.2, 128, 'pending',
- 'ccccccc2-cccc-cccc-cccc-cccccccccccc', 'parent-pending-2', 'statefulset', 1.654, '2024-07-31 12:00:00', NULL);
+ 'ccccccc2-cccc-cccc-cccc-cccccccccccc', 'parent-pending-2', 'statefulset', '2024-07-31 12:00:00', '2024-07-31 12:00:01', '2024-07-31 12:00:00', NULL);
