@@ -84,6 +84,10 @@ def _build_pod_filters(flow_filters: dict) -> list:
         pod_filters.append(
             WorkloadDecisionActionFlowView.decision_node_name == node_name
         )
+    if action_type:
+        pod_filters.append(
+            WorkloadDecisionActionFlowView.action_type == action_type
+        )
     if action_type == WorkloadActionTypeEnum.BIND:
         _add_bind_filters(pod_filters, pod_name, namespace, node_name)
     elif action_type == WorkloadActionTypeEnum.DELETE:
