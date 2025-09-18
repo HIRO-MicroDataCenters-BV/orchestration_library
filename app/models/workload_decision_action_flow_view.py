@@ -5,6 +5,9 @@ This ORM class is provided solely for reference and query purposes within the ap
 We intentionally configure Alembic to skip these view classes during autogeneration by using the `include_object`
 function in alembic/env.py, so that they are not recognized as tables to be created, altered, or dropped.
 
+If you want to modify this class, you should do so in the Alembic migration file
+(alembic/versions/009_87e4d5720302_Add_workload_decision_action_flow_view_.py).).
+
 Model for the workload_decision_action_flow database view.
 Read-only ORM mapping.
 """
@@ -20,12 +23,15 @@ from app.utils.constants import (
 )
 
 
-class WorkloadDecisionActionFlow(Base, BaseDictMixin):
+class WorkloadDecisionActionFlowView(Base, BaseDictMixin):
     """
     ORM mapping to the VIEW: workload_decision_action_flow.
     (created in Alembic migration 
     alembic/versions/009_87e4d5720302_Add_workload_decision_action_flow_view_.py).
     Do not flush INSERT/UPDATE/DELETE against this model.
+
+    Below tablename should be same as the view name in 
+    alembic/versions/009_87e4d5720302_Add_workload_decision_action_flow_view_.py
     """
     __tablename__ = "workload_decision_action_flow"
     __table_args__ = {"info": {"is_view": True}}

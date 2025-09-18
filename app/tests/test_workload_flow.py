@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.repositories.workload_flow import get_workload_decision_action_flow
+from app.repositories.workload_decision_action_flow import get_workload_decision_action_flow
 from app.models.workload_action import WorkloadAction
 from app.models.workload_request_decision import WorkloadRequestDecision
 from app.utils.exceptions import DatabaseConnectionException

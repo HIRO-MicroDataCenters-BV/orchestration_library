@@ -20,8 +20,8 @@ from app.api import (
     tuning_parameters_api,
     alerts_api,
     workload_action_api,
-    workload_request_decision_api,
-    wrokload_flow_api
+    workload_decision_action_flow_api,
+    workload_request_decision_api
 )
 from app.logger.logging_config import setup_logging
 from app.utils.exception_handlers import init_exception_handlers
@@ -52,7 +52,7 @@ app.include_router(tuning_parameters_api.router, tags=["Tuning Parameters"])
 app.include_router(workload_request_decision_api.router, tags=["Workload Request Decision"])
 app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
-app.include_router(wrokload_flow_api.router, tags=["Workload Flow"])
+app.include_router(workload_decision_action_flow_api.router, tags=["Workload Decision Action Flow"])
 
 init_exception_handlers(app)
 

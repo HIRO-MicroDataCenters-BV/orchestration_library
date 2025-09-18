@@ -11,7 +11,7 @@ from app.main import app
 
 @pytest.mark.asyncio
 @patch(
-    "app.api.wrokload_flow_api.get_workload_decision_action_flow",
+    "app.api.workload_flow_api.get_workload_decision_action_flow",
     new_callable=AsyncMock,
 )
 async def test_get_workload_flow_success(mock_get_flow):
@@ -45,7 +45,7 @@ async def test_get_workload_flow_success(mock_get_flow):
 
 @pytest.mark.asyncio
 @patch(
-    "app.api.wrokload_flow_api.get_workload_decision_action_flow",
+    "app.api.workload_flow_api.get_workload_decision_action_flow",
     new_callable=AsyncMock,
 )
 async def test_get_workload_flow_with_node_name(mock_get_flow):
@@ -72,7 +72,7 @@ async def test_get_workload_flow_with_node_name(mock_get_flow):
 
 @pytest.mark.asyncio
 @patch(
-    "app.api.wrokload_flow_api.get_workload_decision_action_flow",
+    "app.api.workload_flow_api.get_workload_decision_action_flow",
     new_callable=AsyncMock,
 )
 async def test_get_workload_flow_empty(mock_get_flow):
