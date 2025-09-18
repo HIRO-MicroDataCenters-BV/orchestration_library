@@ -9,8 +9,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.repositories.workload_decision_action_flow import (
     get_workload_decision_action_flow,
 )
-from app.models.workload_action import WorkloadAction
-from app.models.workload_request_decision import WorkloadRequestDecision
 from app.tests.utils.mock_objects import mock_workload_decision_action_flow_item
 from app.utils.constants import WorkloadActionTypeEnum
 from app.utils.exceptions import DatabaseConnectionException
@@ -52,10 +50,12 @@ async def test_get_workload_decision_action_flow_success(
     # Call the function
     result = await get_workload_decision_action_flow(
         db,
-        pod_name=pod_name,
-        namespace=namespace,
-        node_name=node_name,
-        action_type=action_type,
+        flow_filters={
+            "pod_name": pod_name,
+            "namespace": namespace,
+            "node_name": node_name,
+            "action_type": action_type,
+        },
     )
 
     db.execute.assert_called_once()
@@ -87,10 +87,12 @@ async def test_get_workload_decision_action_flow_empty(
 
     result = await get_workload_decision_action_flow(
         db,
-        pod_name=pod_name,
-        namespace=namespace,
-        node_name=node_name,
-        action_type=action_type,
+        flow_filters={
+            "pod_name": pod_name,
+            "namespace": namespace,
+            "node_name": node_name,
+            "action_type": action_type,
+        },
     )
     db.execute.assert_called_once()
     assert result == []
@@ -105,8 +107,10 @@ async def test_get_workload_decision_action_flow_db_error():
     with pytest.raises(DatabaseConnectionException):
         await get_workload_decision_action_flow(
             db,
-            pod_name="test-pod",
-            namespace="test-ns",
-            node_name="test-node",
-            action_type="bind",
+            flow_filters={
+                "pod_name": "test-pod",
+                "namespace": "test-ns",
+                "node_name": "test-node",
+                "action_type": "bind",
+            },
         )

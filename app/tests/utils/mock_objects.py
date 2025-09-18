@@ -520,6 +520,12 @@ def mock_workload_decision_action_flow_item(
     pod_name: str, namespace: str, node_name: str, action_type: WorkloadActionTypeEnum
 ) -> WorkloadDecisionActionFlowItem:
     """Mock a workload decision action flow item."""
+    create_types = {
+        WorkloadActionTypeEnum.CREATE,
+        WorkloadActionTypeEnum.MOVE,
+        WorkloadActionTypeEnum.SWAP_X,
+        WorkloadActionTypeEnum.SWAP_Y,
+    }
     return WorkloadDecisionActionFlowItem(
         decision_id=uuid4(),
         action_id=uuid4(),
@@ -527,52 +533,15 @@ def mock_workload_decision_action_flow_item(
         decision_pod_name=pod_name,
         decision_namespace=namespace,
         decision_node_name=node_name,
-        created_pod_name=(
-            pod_name
-            if (
-                action_type == WorkloadActionTypeEnum.CREATE
-                or action_type == WorkloadActionTypeEnum.MOVE
-                or action_type == WorkloadActionTypeEnum.SWAP_X
-                or action_type == WorkloadActionTypeEnum.SWAP_Y
-            )
-            else None
-        ),
-        created_pod_namespace=(
-            namespace
-            if (
-                action_type == WorkloadActionTypeEnum.CREATE
-                or action_type == WorkloadActionTypeEnum.MOVE
-                or action_type == WorkloadActionTypeEnum.SWAP_X
-                or action_type == WorkloadActionTypeEnum.SWAP_Y
-            )
-            else None
-        ),
-        created_node_name=(
-            node_name
-            if (
-                action_type == WorkloadActionTypeEnum.CREATE
-                or action_type == WorkloadActionTypeEnum.MOVE
-                or action_type == WorkloadActionTypeEnum.SWAP_X
-                or action_type == WorkloadActionTypeEnum.SWAP_Y
-            )
-            else None
-        ),
-        deleted_pod_name=(
-            pod_name if action_type == WorkloadActionTypeEnum.DELETE else None
-        ),
-        deleted_pod_namespace=(
-            namespace if action_type == WorkloadActionTypeEnum.DELETE else None
-        ),
-        deleted_node_name=(
-            node_name if action_type == WorkloadActionTypeEnum.DELETE else None
-        ),
+        created_pod_name=pod_name if action_type in create_types else None,
+        created_pod_namespace=namespace if action_type in create_types else None,
+        created_node_name=node_name if action_type in create_types else None,
+        deleted_pod_name=pod_name if action_type == WorkloadActionTypeEnum.DELETE else None,
+        deleted_pod_namespace=namespace if action_type == WorkloadActionTypeEnum.DELETE else None,
+        deleted_node_name=node_name if action_type == WorkloadActionTypeEnum.DELETE else None,
         bound_pod_name=pod_name if action_type == WorkloadActionTypeEnum.BIND else None,
-        bound_pod_namespace=(
-            namespace if action_type == WorkloadActionTypeEnum.BIND else None
-        ),
-        bound_node_name=(
-            node_name if action_type == WorkloadActionTypeEnum.BIND else None
-        ),
+        bound_pod_namespace=namespace if action_type == WorkloadActionTypeEnum.BIND else None,
+        bound_node_name=node_name if action_type == WorkloadActionTypeEnum.BIND else None,
         decision_status=WorkloadRequestDecisionStatusEnum.SUCCEEDED,
         action_status=WorkloadActionStatusEnum.SUCCEEDED,
         decision_start_time=datetime.now(timezone.utc),

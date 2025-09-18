@@ -11,7 +11,20 @@ from app.utils.constants import PodParentTypeEnum, WorkloadActionTypeEnum
 from app.utils.constants import WorkloadRequestDecisionStatusEnum
 
 
-class WorkloadRequestDecisionSchema(BaseModel):
+# pylint: disable=too-few-public-methods
+class DemandFields:
+    """
+    Schema for demand-related fields.
+    """
+    is_elastic: Optional[bool] = None
+    queue_name: Optional[str] = None
+    demand_cpu: Optional[float] = None
+    demand_memory: Optional[float] = None
+    demand_slack_cpu: Optional[float] = None
+    demand_slack_memory: Optional[float] = None
+
+
+class WorkloadRequestDecisionSchema(DemandFields, BaseModel):
     """
     Schema for workload decision.
     """
@@ -23,12 +36,6 @@ class WorkloadRequestDecisionSchema(BaseModel):
     node_id: UUID
     node_name: str
     action_type: WorkloadActionTypeEnum
-    is_elastic: bool
-    queue_name: str
-    demand_cpu: float
-    demand_memory: float
-    demand_slack_cpu: Optional[float] = None
-    demand_slack_memory: Optional[float] = None
     decision_status: WorkloadRequestDecisionStatusEnum
     pod_parent_id: UUID
     pod_parent_name: str
@@ -64,7 +71,7 @@ class WorkloadRequestDecisionSchema(BaseModel):
             self.orm_mode = value
 
 
-class WorkloadRequestDecisionUpdate(BaseModel):
+class WorkloadRequestDecisionUpdate(DemandFields, BaseModel):
     """
     Schema for workload update decision.
     """
@@ -74,12 +81,6 @@ class WorkloadRequestDecisionUpdate(BaseModel):
     node_id: Optional[UUID] = None
     node_name: Optional[str] = None
     action_type: Optional[WorkloadActionTypeEnum] = None
-    is_elastic: Optional[bool] = None
-    queue_name: Optional[str] = None
-    demand_cpu: Optional[float] = None
-    demand_memory: Optional[float] = None
-    demand_slack_cpu: Optional[float] = None
-    demand_slack_memory: Optional[float] = None
     decision_status: Optional[WorkloadRequestDecisionStatusEnum] = None
     pod_parent_id: Optional[UUID] = None
     pod_parent_name: Optional[str] = None
@@ -114,7 +115,7 @@ class WorkloadRequestDecisionUpdate(BaseModel):
             self.orm_mode = value
 
 
-class WorkloadRequestDecisionCreate(BaseModel):
+class WorkloadRequestDecisionCreate(DemandFields, BaseModel):
     """
     Schema for creating a workload decision.
     """
@@ -125,12 +126,6 @@ class WorkloadRequestDecisionCreate(BaseModel):
     node_id: UUID
     node_name: str
     action_type: WorkloadActionTypeEnum
-    is_elastic: bool
-    queue_name: str
-    demand_cpu: float
-    demand_memory: float
-    demand_slack_cpu: Optional[float] = None
-    demand_slack_memory: Optional[float] = None
     decision_status: WorkloadRequestDecisionStatusEnum
     pod_parent_id: UUID
     pod_parent_name: str

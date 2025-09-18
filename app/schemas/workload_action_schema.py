@@ -16,23 +16,11 @@ from app.utils.constants import (
     WorkloadActionTypeEnum,
 )
 
-
-class WorkloadAction(BaseModel):
+# pylint: disable=too-few-public-methods
+class PodActionPhaseFields:
     """
-    Schema for workload action.
+    Schema for pod action phase fields.
     """
-
-    id: UUID
-    action_type: WorkloadActionTypeEnum
-    action_status: Optional[WorkloadActionStatusEnum] = None
-    action_start_time: Optional[datetime] = None
-    action_end_time: Optional[datetime] = None
-    action_reason: Optional[str] = None
-
-    pod_parent_name: Optional[str] = None
-    pod_parent_type: Optional[PodParentTypeEnum] = None
-    pod_parent_uid: Optional[UUID] = None
-
     created_pod_name: Optional[str] = None
     created_pod_namespace: Optional[str] = None
     created_node_name: Optional[str] = None
@@ -45,12 +33,28 @@ class WorkloadAction(BaseModel):
     bound_pod_namespace: Optional[str] = None
     bound_node_name: Optional[str] = None
 
+
+class WorkloadAction(PodActionPhaseFields, BaseModel):
+    """
+    Schema for workload action.
+    """
+    id: UUID
+    action_type: WorkloadActionTypeEnum
+    action_status: Optional[WorkloadActionStatusEnum] = None
+    action_start_time: Optional[datetime] = None
+    action_end_time: Optional[datetime] = None
+    action_reason: Optional[str] = None
+
+    pod_parent_name: Optional[str] = None
+    pod_parent_type: Optional[PodParentTypeEnum] = None
+    pod_parent_uid: Optional[UUID] = None
+
     durationInSeconds: Optional[float] = None
     created_at: datetime = None
     updated_at: Optional[datetime] = None
 
 
-class WorkloadActionCreate(BaseModel):
+class WorkloadActionCreate(PodActionPhaseFields, BaseModel):
     """
     Schema for creating a workload action.
     """
@@ -67,18 +71,6 @@ class WorkloadActionCreate(BaseModel):
     pod_parent_type: Optional[PodParentTypeEnum] = PodParentTypeEnum.DEPLOYMENT
     pod_parent_uid: Optional[UUID] = None
 
-    created_pod_name: Optional[str] = None
-    created_pod_namespace: Optional[str] = None
-    created_node_name: Optional[str] = None
-
-    deleted_pod_name: Optional[str] = None
-    deleted_pod_namespace: Optional[str] = None
-    deleted_node_name: Optional[str] = None
-
-    bound_pod_name: Optional[str] = None
-    bound_pod_namespace: Optional[str] = None
-    bound_node_name: Optional[str] = None
-
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -87,7 +79,7 @@ class WorkloadActionCreate(BaseModel):
     )
 
 
-class WorkloadActionUpdate(BaseModel):
+class WorkloadActionUpdate(PodActionPhaseFields, BaseModel):
     """
     Schema for updating a workload action.
     """
@@ -102,22 +94,10 @@ class WorkloadActionUpdate(BaseModel):
     pod_parent_type: Optional[PodParentTypeEnum] = None
     pod_parent_uid: Optional[UUID] = None
 
-    created_pod_name: Optional[str] = None
-    created_pod_namespace: Optional[str] = None
-    created_node_name: Optional[str] = None
-
-    deleted_pod_name: Optional[str] = None
-    deleted_pod_namespace: Optional[str] = None
-    deleted_node_name: Optional[str] = None
-
-    bound_pod_name: Optional[str] = None
-    bound_pod_namespace: Optional[str] = None
-    bound_node_name: Optional[str] = None
-
     updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
-class WorkloadActionFilters(BaseModel):
+class WorkloadActionFilters(PodActionPhaseFields, BaseModel):
     """
     Schema for filtering workload actions.
     """
@@ -131,15 +111,3 @@ class WorkloadActionFilters(BaseModel):
     pod_parent_name: Optional[str] = None
     pod_parent_type: Optional[PodParentTypeEnum] = None
     pod_parent_uid: Optional[UUID] = None
-
-    created_pod_name: Optional[str] = None
-    created_pod_namespace: Optional[str] = None
-    created_node_name: Optional[str] = None
-
-    deleted_pod_name: Optional[str] = None
-    deleted_pod_namespace: Optional[str] = None
-    deleted_node_name: Optional[str] = None
-
-    bound_pod_name: Optional[str] = None
-    bound_pod_namespace: Optional[str] = None
-    bound_node_name: Optional[str] = None

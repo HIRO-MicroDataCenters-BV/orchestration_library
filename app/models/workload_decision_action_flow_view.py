@@ -1,12 +1,18 @@
 """
-NOTE: For database views, the actual creation and management should be handled directly in Alembic migration files.
-This ORM class is provided solely for reference and query purposes within the application code.
+NOTE: For database views, the actual creation and management 
+should be handled directly in Alembic migration files.
 
-We intentionally configure Alembic to skip these view classes during autogeneration by using the `include_object`
-function in alembic/env.py, so that they are not recognized as tables to be created, altered, or dropped.
+This ORM class is provided solely for reference and query 
+purposes within the application code.
+
+We intentionally configure Alembic to skip these view classes 
+during autogeneration by using the
+
+`include_object` function in alembic/env.py, so that they are not 
+recognized as tables to be created, altered, or dropped.
 
 If you want to modify this class, you should do so in the Alembic migration file
-(alembic/versions/009_87e4d5720302_Add_workload_decision_action_flow_view_.py).).
+(alembic/versions/009_87e4d5720302_Add_workload_decision_action_flow_view_.py).
 
 Model for the workload_decision_action_flow database view.
 Read-only ORM mapping.
@@ -40,8 +46,13 @@ class WorkloadDecisionActionFlowView(Base, BaseDictMixin):
     decision_id = Column(UUID(as_uuid=True), primary_key=True)
     action_id = Column(UUID(as_uuid=True), primary_key=True)
 
-    action_type = Column(SAEnum(*WORKLOAD_ACTION_TYPE_ENUM, 
-                                name="workload_action_type_enum", native_enum=False))
+    action_type = Column(
+        SAEnum(
+            *WORKLOAD_ACTION_TYPE_ENUM,
+            name="workload_action_type_enum",
+            native_enum=False
+        )
+    )
 
     # Decision (d.*)
     decision_pod_name = Column(String)
@@ -63,12 +74,20 @@ class WorkloadDecisionActionFlowView(Base, BaseDictMixin):
     bound_pod_namespace = Column(String)
     bound_node_name = Column(String)
 
-    decision_status = Column(SAEnum(*WORKLOAD_REQUEST_DECISION_STATUS_ENUM, 
-                                    name="workload_request_decision_status_enum", 
-                                    native_enum=False))
-    action_status = Column(SAEnum(*WORKLOAD_ACTION_STATUS_ENUM, 
-                                   name="workload_action_status_enum", 
-                                   native_enum=False))
+    decision_status = Column(
+        SAEnum(
+            *WORKLOAD_REQUEST_DECISION_STATUS_ENUM,
+            name="workload_request_decision_status_enum",
+            native_enum=False,
+        )
+    )
+    action_status = Column(
+        SAEnum(
+            *WORKLOAD_ACTION_STATUS_ENUM,
+            name="workload_action_status_enum",
+            native_enum=False,
+        )
+    )
 
     decision_start_time = Column(TIMESTAMP(timezone=True))
     decision_end_time = Column(TIMESTAMP(timezone=True))
@@ -95,14 +114,22 @@ class WorkloadDecisionActionFlowView(Base, BaseDictMixin):
 
     decision_pod_parent_id = Column(UUID(as_uuid=True))
     decision_pod_parent_name = Column(String)
-    decision_pod_parent_kind = Column(SAEnum(*POD_PARENT_TYPE_ENUM, 
-                                             name="pod_parent_type_enum", 
-                                             native_enum=False))
+    decision_pod_parent_kind = Column(
+        SAEnum(
+            *POD_PARENT_TYPE_ENUM,
+            name="pod_parent_type_enum",
+            native_enum=False
+        )
+    )
 
     action_pod_parent_name = Column(String)
-    action_pod_parent_type = Column(SAEnum(*POD_PARENT_TYPE_ENUM, 
-                                           name="pod_parent_type_enum", 
-                                           native_enum=False))
+    action_pod_parent_type = Column(
+        SAEnum(
+            *POD_PARENT_TYPE_ENUM,
+            name="pod_parent_type_enum",
+            native_enum=False
+        )
+    )
     action_pod_parent_uid = Column(String)
 
     action_reason = Column(String)

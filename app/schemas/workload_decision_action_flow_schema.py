@@ -8,13 +8,24 @@ from typing import Optional
 from pydantic import BaseModel
 
 # Use the typed Enums already defined in constants for stricter validation
+from app.schemas.workload_action_schema import PodActionPhaseFields
+from app.schemas.workload_request_decision_schema import DemandFields
 from app.utils.constants import (
     WorkloadActionTypeEnum,
     WorkloadActionStatusEnum,
     WorkloadRequestDecisionStatusEnum,
 )
 
-class WorkloadDecisionActionFlowItem(BaseModel):
+class FlowQueryParams(BaseModel):
+    """
+    Query parameters for workload decision action flow.
+    """
+    pod_name: Optional[str] = None
+    namespace: Optional[str] = None
+    node_name: Optional[str] = None
+    action_type: Optional[WorkloadActionTypeEnum] = None
+
+class WorkloadDecisionActionFlowItem(PodActionPhaseFields, DemandFields, BaseModel):
     """
     Schema for a single workload decision and action flow item.
     Matches columns from the workload_decision_action_flow view.
@@ -27,21 +38,6 @@ class WorkloadDecisionActionFlowItem(BaseModel):
     decision_pod_name: Optional[str] = None
     decision_namespace: Optional[str] = None
     decision_node_name: Optional[str] = None
-
-    # Created (action created_* set)
-    created_pod_name: Optional[str] = None
-    created_pod_namespace: Optional[str] = None
-    created_node_name: Optional[str] = None
-
-    # Deleted (action deleted_* set)
-    deleted_pod_name: Optional[str] = None
-    deleted_pod_namespace: Optional[str] = None
-    deleted_node_name: Optional[str] = None
-
-    # Bound (action bound_* set)
-    bound_pod_name: Optional[str] = None
-    bound_pod_namespace: Optional[str] = None
-    bound_node_name: Optional[str] = None
 
     decision_status: Optional[WorkloadRequestDecisionStatusEnum] = None
     action_status: Optional[WorkloadActionStatusEnum] = None
@@ -61,14 +57,6 @@ class WorkloadDecisionActionFlowItem(BaseModel):
     action_created_at: Optional[datetime] = None
     action_updated_at: Optional[datetime] = None
 
-    is_elastic: Optional[bool] = None
-    queue_name: Optional[str] = None
-
-    demand_cpu: Optional[float] = None
-    demand_memory: Optional[float] = None
-    demand_slack_cpu: Optional[float] = None
-    demand_slack_memory: Optional[float] = None
-
     decision_pod_parent_id: Optional[UUID] = None
     decision_pod_parent_name: Optional[str] = None
     decision_pod_parent_kind: Optional[str] = None  # Could wrap with an Enum if needed
@@ -78,6 +66,3 @@ class WorkloadDecisionActionFlowItem(BaseModel):
     action_pod_parent_uid: Optional[UUID] = None
 
     action_reason: Optional[str] = None
-
-    class Config:
-        from_attributes = True  # Pydantic v2 replacement for
