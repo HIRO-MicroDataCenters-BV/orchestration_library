@@ -63,15 +63,15 @@ workload_request_decision_requests_latency_seconds = Histogram(
     ["method", "endpoint", "status_code", "exception"]
 )
 
-# Workload Flow API
-workload_flow_requests_total = Counter(
-    "workload_flow_requests_total",
-    "Total number of workload flow API requests",
+# Workload Decision Action Flow API
+workload_decision_action_flow_total = Counter(
+    "workload_decision_action_flow_total",
+    "Total number of workload decision action flow API requests",
     ["method", "endpoint", "status_code", "exception"]
 )
-workload_flow_requests_latency_seconds = Histogram(
-    "workload_flow_requests_latency_seconds",
-    "Latency of workload flow API requests in seconds",
+workload_decision_action_flow_latency_seconds = Histogram(
+    "workload_decision_action_flow_latency_seconds",
+    "Latency of workload decision action flow API requests in seconds",
     ["method", "endpoint", "status_code", "exception"]
 )
 

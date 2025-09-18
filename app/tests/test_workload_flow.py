@@ -9,7 +9,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.repositories.workload_decision_action_flow import (
     get_workload_decision_action_flow,
 )
-from app.tests.utils.mock_objects import mock_workload_decision_action_flow_item
+from app.tests.utils.mock_objects import (
+    mock_metrics_details,
+    mock_workload_decision_action_flow_item,
+)
 from app.utils.constants import WorkloadActionTypeEnum
 from app.utils.exceptions import DatabaseConnectionException
 
@@ -56,6 +59,7 @@ async def test_get_workload_decision_action_flow_success(
             "node_name": node_name,
             "action_type": action_type,
         },
+        metrics_details=mock_metrics_details("GET", "/workload_decision_action_flow"),
     )
 
     db.execute.assert_called_once()
@@ -93,6 +97,7 @@ async def test_get_workload_decision_action_flow_empty(
             "node_name": node_name,
             "action_type": action_type,
         },
+        metrics_details=mock_metrics_details("GET", "/workload_decision_action_flow"),
     )
     db.execute.assert_called_once()
     assert result == []
@@ -113,4 +118,7 @@ async def test_get_workload_decision_action_flow_db_error():
                 "node_name": "test-node",
                 "action_type": "bind",
             },
+            metrics_details=mock_metrics_details(
+                "GET", "/workload_decision_action_flow"
+            ),
         )

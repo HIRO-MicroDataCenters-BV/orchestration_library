@@ -1,5 +1,6 @@
 """API endpoint to retrieve workload decision and action flow for pods."""
 
+import time
 from typing import Sequence
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,6 +42,11 @@ async def workload_decision_action_flow(
     Raises:
         DatabaseConnectionException: If there is an error connecting to the database.
     """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "GET",
+        "endpoint": "/workload_decision_action_flow",
+    }
     return await get_workload_decision_action_flow(
         db,
         flow_filters={
@@ -48,7 +54,8 @@ async def workload_decision_action_flow(
             "namespace": flow_params.namespace,
             "node_name": flow_params.node_name,
             "action_type": flow_params.action_type,
+            "skip": skip,
+            "limit": limit,
         },
-        skip=skip,
-        limit=limit,
+        metrics_details=metrics_details
     )

@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.metrics.helper import record_workload_decision_action_flow_metrics
 from app.models.workload_decision_action_flow_view import WorkloadDecisionActionFlowView
 from app.utils.constants import WorkloadActionTypeEnum
 from app.utils.exceptions import (
@@ -103,16 +104,17 @@ def _build_pod_filters(flow_filters: dict) -> list:
 
 async def get_workload_decision_action_flow(
     db: AsyncSession,
-    flow_filters: dict = None,
-    skip: int = 0,
-    limit: int = 100,
+    flow_filters: dict,
+    metrics_details: dict
 ) -> Sequence[WorkloadDecisionActionFlowView]:
     """
     Get the workload decision action flow for the specified filters. 
     Full list if not filters.
     """
+    exception = None
     try:
-        flow_filters = flow_filters or {}
+        skip = flow_filters.get("skip", 0)
+        limit = flow_filters.get("limit", 100)
         pod_filters = _build_pod_filters(flow_filters)
         if pod_filters:
             stmt = (
@@ -124,8 +126,13 @@ async def get_workload_decision_action_flow(
         else:
             stmt = select(WorkloadDecisionActionFlowView).offset(skip).limit(limit)
         result = await db.execute(stmt)
+        record_workload_decision_action_flow_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
         return result.scalars().all()
     except SQLAlchemyError as e:
+        exception = e
         logger.error(
             "Database error while getting workload decision action flow list: %s",
             str(e),
@@ -134,3 +141,10 @@ async def get_workload_decision_action_flow(
             "Failed to get workload decision action flow list",
             details={"error": str(e)},
         ) from e
+    finally:
+        if exception:
+            record_workload_decision_action_flow_metrics(
+                metrics_details=metrics_details,
+                status_code=500,
+                exception=exception
+            )

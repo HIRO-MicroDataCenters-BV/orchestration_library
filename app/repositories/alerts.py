@@ -142,8 +142,9 @@ async def get_alerts(
             details={"error": str(e)}
         ) from e
     finally:
-        record_alerts_metrics(
-            metrics_details=metrics_details,
-            status_code=500,
-            exception=exception
-        )
+        if exception:
+            record_alerts_metrics(
+                metrics_details=metrics_details,
+                status_code=500,
+                exception=exception
+            )
