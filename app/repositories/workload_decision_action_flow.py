@@ -26,48 +26,79 @@ logger = logging.getLogger(__name__)
 
 async def get_workload_decision_action_flow(
     db: AsyncSession,
-    pod_name: str,
-    namespace: str,
-    node_name: str,
-    action_type: WorkloadActionTypeEnum,
+    pod_name: str = None,
+    namespace: str = None,
+    node_name: str = None,
+    action_type: WorkloadActionTypeEnum = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ) -> Sequence[WorkloadDecisionActionFlowView]:
     try:
         pod_filters = []
         if pod_name:
-            pod_filters.append(WorkloadDecisionActionFlowView.decision_pod_name == pod_name)
+            pod_filters.append(
+                WorkloadDecisionActionFlowView.decision_pod_name == pod_name
+            )
         if namespace:
-            pod_filters.append(WorkloadDecisionActionFlowView.decision_namespace == namespace)
+            pod_filters.append(
+                WorkloadDecisionActionFlowView.decision_namespace == namespace
+            )
         if node_name:
-            pod_filters.append(WorkloadDecisionActionFlowView.decision_node_name == node_name)
+            pod_filters.append(
+                WorkloadDecisionActionFlowView.decision_node_name == node_name
+            )
         if action_type == WorkloadActionTypeEnum.BIND:
             if pod_name:
-                pod_filters.append(WorkloadDecisionActionFlowView.bound_pod_name == pod_name)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.bound_pod_name == pod_name
+                )
             if namespace:
-                pod_filters.append(WorkloadDecisionActionFlowView.bound_pod_namespace == namespace)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.bound_pod_namespace == namespace
+                )
             if node_name:
-                pod_filters.append(WorkloadDecisionActionFlowView.bound_node_name == node_name)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.bound_node_name == node_name
+                )
         elif action_type == WorkloadActionTypeEnum.DELETE:
             if pod_name:
-                pod_filters.append(WorkloadDecisionActionFlowView.deleted_pod_name == pod_name)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.deleted_pod_name == pod_name
+                )
             if namespace:
-                pod_filters.append(WorkloadDecisionActionFlowView.deleted_pod_namespace == namespace)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.deleted_pod_namespace == namespace
+                )
             if node_name:
-                pod_filters.append(WorkloadDecisionActionFlowView.deleted_node_name == node_name)
-        elif action_type == WorkloadActionTypeEnum.CREATE or \
-                action_type == WorkloadActionTypeEnum.MOVE or \
-                action_type == WorkloadActionTypeEnum.SWAP_X or \
-                action_type == WorkloadActionTypeEnum.SWAP_Y:
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.deleted_node_name == node_name
+                )
+        elif (
+            action_type == WorkloadActionTypeEnum.CREATE
+            or action_type == WorkloadActionTypeEnum.MOVE
+            or action_type == WorkloadActionTypeEnum.SWAP_X
+            or action_type == WorkloadActionTypeEnum.SWAP_Y
+        ):
             if pod_name:
-                pod_filters.append(WorkloadDecisionActionFlowView.created_pod_name == pod_name)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.created_pod_name == pod_name
+                )
             if namespace:
-                pod_filters.append(WorkloadDecisionActionFlowView.created_pod_namespace == namespace)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.created_pod_namespace == namespace
+                )
             if node_name:
-                pod_filters.append(WorkloadDecisionActionFlowView.created_node_name == node_name)
+                pod_filters.append(
+                    WorkloadDecisionActionFlowView.created_node_name == node_name
+                )
 
-        if pod_filters:
-            stmt = select(WorkloadDecisionActionFlowView).where(*pod_filters).offset(skip).limit(limit)
+        if pod_filters and len(pod_filters) > 0:
+            stmt = (
+                select(WorkloadDecisionActionFlowView)
+                .where(*pod_filters)
+                .offset(skip)
+                .limit(limit)
+            )
         else:
             stmt = select(WorkloadDecisionActionFlowView).offset(skip).limit(limit)
         result = await db.execute(stmt)
@@ -81,65 +112,3 @@ async def get_workload_decision_action_flow(
             "Failed to get workload decision action flow list",
             details={"error": str(e)},
         ) from e
-
-
-# async def get_workload_decision_action_flow(
-#     db: AsyncSession,
-#     pod_name: str,
-#     namespace: str,
-#     node_name: str,
-#     action_type: WorkloadActionTypeEnum,
-# ) -> Sequence[WorkloadDecisionActionFlowView]:
-#     """
-#     Fetch rows for a specific pod/action. We match against the appropriate
-#     column set depending on action_type (bind uses bound_*, delete uses deleted_*,
-#     others use created_*), plus always the decision_* columns (since they exist for all).
-#     """
-#     try:
-#         pod_filters = [WorkloadDecisionActionFlowView.decision_pod_name == pod_name,
-#                        WorkloadDecisionActionFlowView.decision_namespace == namespace,
-#                        WorkloadDecisionActionFlowView.decision_node_name == node_name]
-#         if action_type == WorkloadActionTypeEnum.BIND:
-#             pod_filters.extend(
-#                 [
-#                     WorkloadDecisionActionFlowView.bound_pod_name == pod_name,
-#                     WorkloadDecisionActionFlowView.bound_pod_namespace == namespace,
-#                     WorkloadDecisionActionFlowView.bound_node_name == node_name,
-#                 ]
-#             )
-#         elif action_type == WorkloadActionTypeEnum.DELETE:
-#             pod_filters.extend(
-#                 [
-#                     WorkloadDecisionActionFlowView.deleted_pod_name == pod_name,
-#                     WorkloadDecisionActionFlowView.deleted_pod_namespace == namespace,
-#                     WorkloadDecisionActionFlowView.deleted_node_name == node_name,
-#                 ]
-#             )
-#         elif action_type == WorkloadActionTypeEnum.CREATE or \
-#                 action_type == WorkloadActionTypeEnum.MOVE or \
-#                 action_type == WorkloadActionTypeEnum.SWAP_X or \
-#                 action_type == WorkloadActionTypeEnum.SWAP_Y:
-#             pod_filters.extend(
-#                 [
-#                     WorkloadDecisionActionFlowView.created_pod_name == pod_name,
-#                     WorkloadDecisionActionFlowView.created_pod_namespace == namespace,
-#                     WorkloadDecisionActionFlowView.created_node_name == node_name,
-#                 ]
-#             )
-
-#         stmt = (
-#             select(WorkloadDecisionActionFlowView)
-#             .where(
-#                 WorkloadDecisionActionFlowView.action_type == action_type,
-#                 *pod_filters,
-#             )
-#         )
-#         result = await db.execute(stmt)
-#         return result.scalars().all()
-#     except SQLAlchemyError as e:
-#         logger.error(
-#             "Database error while getting workload decision action flow: %s", str(e)
-#         )
-#         raise DatabaseConnectionException(
-#             "Failed to get workload decision action flow", details={"error": str(e)}
-#         ) from e

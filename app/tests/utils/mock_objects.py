@@ -1,5 +1,5 @@
 """Mock objects for testing Kubernetes cluster information retrieval""" ""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import time
 from unittest.mock import MagicMock
 from uuid import uuid4
@@ -11,6 +11,9 @@ from app.schemas.workload_action_schema import (
     WorkloadAction,
     WorkloadActionCreate,
     WorkloadActionUpdate,
+)
+from app.schemas.workload_decision_action_flow_schema import (
+    WorkloadDecisionActionFlowItem,
 )
 from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionCreate
 from app.utils.constants import (
@@ -63,6 +66,7 @@ def mock_to_dict(obj):
             result[attr] = mock_to_dict(value)
         return result
     return str(obj)  # fallback for unknown types
+
 
 def mock_version_info():
     """
@@ -249,15 +253,13 @@ def make_owner(kind, name):
     owner.name = name
     return owner
 
+
 def mock_metrics_details(method, endpoint):
     """
     Mock metrics details dictionary for a workload action.
     """
-    return {
-        "start_time": time.time(),
-        "method": method,
-        "endpoint": endpoint
-    }
+    return {"start_time": time.time(), "method": method, "endpoint": endpoint}
+
 
 def mock_workload_action_create_obj(
     action_id=None, action_type=None, action_status=None, count=1
@@ -338,8 +340,9 @@ def mock_workload_action_obj(
     )
 
 
-def mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL,
-                                  pod_id=None, node_id=None):
+def mock_alert_create_request_obj(
+    alert_type=AlertType.ABNORMAL, pod_id=None, node_id=None
+):
     """
     Mock an alert creation object with necessary attributes.
     """
@@ -364,8 +367,9 @@ def mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL,
     )
 
 
-def mock_alert_create_request_data(alert_type=AlertType.ABNORMAL,
-                                   pod_id=None, node_id=None):
+def mock_alert_create_request_data(
+    alert_type=AlertType.ABNORMAL, pod_id=None, node_id=None
+):
     """
     Mock an alert creation request data dictionary with necessary attributes.
     """
@@ -415,8 +419,7 @@ def mock_alert_response_obj(alert_type=AlertType.ABNORMAL):
     )
 
 
-def mock_alert_obj(alert_type=AlertType.ABNORMAL,
-                   pod_id=None, node_id=None):
+def mock_alert_obj(alert_type=AlertType.ABNORMAL, pod_id=None, node_id=None):
     """
     Mock an alert object with necessary attributes.
     """
@@ -487,6 +490,7 @@ def mock_mock_workload_request_decision_api():
         "deleted_at": None,
     }
 
+
 def mock_cluster_info_api():
     """Mock a cluster info object similar to what get_basic_cluster_info returns."""
     # Each node should have 'usage' and 'allocatable' keys with cpu/memory strings
@@ -510,3 +514,99 @@ def mock_cluster_info_api():
             {"name": "pod3", "namespace": "kube-system"},
         ],
     }
+
+
+def mock_workload_decision_action_flow_item(
+    pod_name: str, namespace: str, node_name: str, action_type: WorkloadActionTypeEnum
+) -> WorkloadDecisionActionFlowItem:
+    """Mock a workload decision action flow item."""
+    return WorkloadDecisionActionFlowItem(
+        decision_id=uuid4(),
+        action_id=uuid4(),
+        action_type=action_type,
+        decision_pod_name=pod_name,
+        decision_namespace=namespace,
+        decision_node_name=node_name,
+        created_pod_name=(
+            pod_name
+            if (
+                action_type == WorkloadActionTypeEnum.CREATE
+                or action_type == WorkloadActionTypeEnum.MOVE
+                or action_type == WorkloadActionTypeEnum.SWAP_X
+                or action_type == WorkloadActionTypeEnum.SWAP_Y
+            )
+            else None
+        ),
+        created_pod_namespace=(
+            namespace
+            if (
+                action_type == WorkloadActionTypeEnum.CREATE
+                or action_type == WorkloadActionTypeEnum.MOVE
+                or action_type == WorkloadActionTypeEnum.SWAP_X
+                or action_type == WorkloadActionTypeEnum.SWAP_Y
+            )
+            else None
+        ),
+        created_node_name=(
+            node_name
+            if (
+                action_type == WorkloadActionTypeEnum.CREATE
+                or action_type == WorkloadActionTypeEnum.MOVE
+                or action_type == WorkloadActionTypeEnum.SWAP_X
+                or action_type == WorkloadActionTypeEnum.SWAP_Y
+            )
+            else None
+        ),
+        deleted_pod_name=(
+            pod_name if action_type == WorkloadActionTypeEnum.DELETE else None
+        ),
+        deleted_pod_namespace=(
+            namespace if action_type == WorkloadActionTypeEnum.DELETE else None
+        ),
+        deleted_node_name=(
+            node_name if action_type == WorkloadActionTypeEnum.DELETE else None
+        ),
+        bound_pod_name=pod_name if action_type == WorkloadActionTypeEnum.BIND else None,
+        bound_pod_namespace=(
+            namespace if action_type == WorkloadActionTypeEnum.BIND else None
+        ),
+        bound_node_name=(
+            node_name if action_type == WorkloadActionTypeEnum.BIND else None
+        ),
+        decision_status=WorkloadRequestDecisionStatusEnum.SUCCEEDED,
+        action_status=WorkloadActionStatusEnum.SUCCEEDED,
+        decision_start_time=datetime.now(timezone.utc),
+        decision_end_time=datetime.now(timezone.utc),
+        action_start_time=datetime.now(timezone.utc),
+        action_end_time=datetime.now(timezone.utc),
+        decision_duration=timedelta(seconds=10),
+        action_duration=timedelta(seconds=5),
+        total_duration=timedelta(seconds=15),
+        decision_created_at=datetime.now(timezone.utc),
+        decision_deleted_at=None,
+        action_created_at=datetime.now(timezone.utc),
+        action_updated_at=datetime.now(timezone.utc),
+        is_elastic=True,
+        queue_name="queue-x",
+        demand_cpu=0.5,
+        demand_memory=256,
+        demand_slack_cpu=0.1,
+        demand_slack_memory=64,
+        decision_pod_parent_id=uuid4(),
+        decision_pod_parent_name="controller",
+        decision_pod_parent_kind=PodParentTypeEnum.DEPLOYMENT,
+        action_pod_parent_name="controller",
+        action_pod_parent_type=PodParentTypeEnum.DEPLOYMENT,
+        action_pod_parent_uid=uuid4(),
+        action_reason="Test reason",
+    )
+
+
+def mock_workload_decision_action_flow_api(
+    pod_name: str, namespace: str, node_name: str, action_type: WorkloadActionTypeEnum
+):
+    """Mock a workload decision action flow item as a dictionary."""
+    item = mock_workload_decision_action_flow_item(
+        pod_name, namespace, node_name, action_type
+    )
+    return to_jsonable(item.model_dump())  # Convert to dict with JSON-serializable values
