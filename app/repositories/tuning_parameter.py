@@ -74,11 +74,12 @@ async def create_tuning_parameter(
             details={"error": str(e)},
         ) from e
     finally:
-        record_tuning_parameters_metrics(
-            metrics_details=metrics_details,
-            status_code=503,
-            exception=exception
-        )
+        if exception:
+            record_tuning_parameters_metrics(
+                metrics_details=metrics_details,
+                status_code=503,
+                exception=exception
+            )
 
 
 async def get_tuning_parameters(
@@ -151,11 +152,12 @@ async def get_tuning_parameters(
             details={"error": str(e)},
         ) from e
     finally:
-        record_tuning_parameters_metrics(
-            metrics_details=metrics_details,
-            status_code=503,
-            exception=exception
-        )
+        if exception:
+            record_tuning_parameters_metrics(
+                metrics_details=metrics_details,
+                status_code=503,
+                exception=exception
+            )
 
 
 async def get_latest_tuning_parameters(
@@ -217,8 +219,9 @@ async def get_latest_tuning_parameters(
             details={"error": str(e)},
         ) from e
     finally:
-        record_tuning_parameters_metrics(
-            metrics_details=metrics_details,
-            status_code=503,
-            exception=exception
-        )
+        if exception:
+            record_tuning_parameters_metrics(
+                metrics_details=metrics_details,
+                status_code=503,
+                exception=exception
+            )

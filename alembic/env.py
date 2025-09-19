@@ -28,17 +28,42 @@ config.set_main_option("sqlalchemy.url", db_url)
 fileConfig(config.config_file_name)
 target_metadata = Base.metadata
 
+exclude_tables_list = []
+
 
 print("Running migrations online...")
 print("Database URL:", db_url)
+
+def process_revision_directives(context, revision, directives):
+    """Skip generating a revision file when autogenerate finds no changes."""
+    if getattr(config, "cmd_opts", None) and getattr(config.cmd_opts, "autogenerate", False):
+        if not directives:
+            return
+        script = directives[0]
+        if script.upgrade_ops.is_empty():
+            print("No schema changes detected; skipping empty revision.")
+            directives[:] = []  # prevents file creation
+
+def include_object(object_, name, type_, reflection, compare_to):
+    # Skip view models (flagged with info.is_view) or explicit name
+    # print(f"include_object called with name={name}, type_={type_}, "
+    #       f"reflection={reflection}, compare_to={compare_to}")
+    if type_ == "table":
+        if getattr(object_, "info", {}).get("is_view"):
+            return False
+        if exclude_tables_list and name in exclude_tables_list:
+            return False
+    return True
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""
     context.configure( # pylint: disable=no-member
         url=db_url,
         target_metadata=target_metadata,
+        include_object=include_object,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        process_revision_directives=process_revision_directives,
     )
     with context.begin_transaction(): # pylint: disable=no-member
         context.run_migrations() # pylint: disable=no-member
@@ -48,6 +73,8 @@ def do_run_migrations(connection):
     context.configure( # pylint: disable=no-member
         connection=connection,
         target_metadata=target_metadata,
+        include_object=include_object,
+        process_revision_directives=process_revision_directives,
     )
     with context.begin_transaction(): # pylint: disable=no-member
         context.run_migrations() # pylint: disable=no-member

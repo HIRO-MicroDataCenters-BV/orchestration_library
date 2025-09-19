@@ -102,11 +102,12 @@ async def create_workload_action(
             "Failed to create workload action", details={"error": str(e)}
         ) from e
     finally:
-        record_workload_action_metrics(
-            metrics_details=metrics_details,
-            status_code=400,  # All above exceptions are thrown with 400 status code
-            exception=exception,
-        )
+        if exception:
+            record_workload_action_metrics(
+                metrics_details=metrics_details,
+                status_code=400,  # All above exceptions are thrown with 400 status code
+                exception=exception,
+            )
 
 
 async def get_workload_action_by_id(
@@ -159,9 +160,10 @@ async def get_workload_action_by_id(
             "Failed to retrieve workload action", details={"error": str(e)}
         ) from e
     finally:
-        record_workload_action_metrics(
-            metrics_details=metrics_details, status_code=500, exception=exception
-        )
+        if exception:
+            record_workload_action_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
 
 
 async def update_workload_action(
@@ -235,11 +237,12 @@ async def update_workload_action(
             "Failed to update workload action", details={"error": str(e)}
         ) from e
     finally:
-        record_workload_action_metrics(
-            metrics_details=metrics_details,
-            status_code=400,  # All above exceptions are thrown with 400 status code
-            exception=exception,
-        )
+        if exception:
+            record_workload_action_metrics(
+                metrics_details=metrics_details,
+                status_code=400,  # All above exceptions are thrown with 400 status code
+                exception=exception,
+            )
 
 
 async def delete_workload_action(
@@ -307,9 +310,10 @@ async def delete_workload_action(
             "Failed to delete workload action", details={"error": str(e)}
         ) from e
     finally:
-        record_workload_action_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_workload_action_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
 
 
 async def list_workload_actions(
@@ -383,6 +387,7 @@ async def list_workload_actions(
             "Failed to list workload actions", details={"error": str(e)}
         ) from e
     finally:
-        record_workload_action_metrics(
-            metrics_details=metrics_details, status_code=503, exception=exception
-        )
+        if exception:
+            record_workload_action_metrics(
+                metrics_details=metrics_details, status_code=503, exception=exception
+            )

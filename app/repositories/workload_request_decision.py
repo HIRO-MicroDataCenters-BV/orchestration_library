@@ -162,9 +162,10 @@ async def get_workload_decision(
             details={"error_type": "database_error", "error": str(exc)},
         ) from exc
     finally:
-        record_workload_request_decision_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
 
 
 async def get_all_workload_decisions(
@@ -205,9 +206,10 @@ async def get_all_workload_decisions(
             details={"error": str(exc)},
         ) from exc
     finally:
-        record_workload_request_decision_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
 
 
 async def update_workload_decision(
@@ -299,6 +301,13 @@ async def update_workload_decision(
             message="Failed to update pod decision due to database error.",
             details={"error": str(exc)},
         ) from exc
+    finally:
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details,
+                status_code=500,
+                exception=exception
+            )
 
 
 async def delete_workload_decision(
@@ -394,6 +403,7 @@ async def delete_workload_decision(
             },
         ) from exc
     finally:
-        record_workload_request_decision_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
