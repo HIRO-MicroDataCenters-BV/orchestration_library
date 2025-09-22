@@ -8,6 +8,7 @@ handling for common database exceptions.
 
 from typing import Any, Optional, Sequence, Dict
 import logging
+from uuid import UUID
 
 from sqlalchemy import and_, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -111,14 +112,14 @@ async def create_workload_action(
 
 
 async def get_workload_action_by_id(
-    db: AsyncSession, action_id: int, metrics_details: Dict[str, Any]
+    db: AsyncSession, action_id: UUID, metrics_details: Dict[str, Any]
 ) -> Optional[WorkloadAction]:
     """
     Retrieve a workload action by its ID.
 
     Args:
         db (AsyncSession): Database session
-        action_id (int): The ID of the workload action to retrieve
+        action_id (UUID): The ID of the workload action to retrieve
 
     Returns:
         Optional[WorkloadAction]: The workload action object if found, otherwise None
