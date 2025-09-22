@@ -31,7 +31,9 @@ async def save_decision(
     try:
         db_obj = await placement_decision.save_decision(db, decision)
         return PlacementDecisionResponse(
-            decision_id=db_obj.decision_id, status=PLACEMENT_DECISION_STATUS_OK
+            decision_id=db_obj.decision_id,
+            status=PLACEMENT_DECISION_STATUS_OK,
+            details=str(db_obj.to_dict()),
         )
     except Exception as e:
         return PlacementDecisionResponse(

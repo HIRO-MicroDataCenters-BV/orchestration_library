@@ -1,30 +1,36 @@
 """
 Repository for Placement Decision
 """
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.placement_decision import PlacementDecision
 from app.schemas.placement_decision_schema import PlacementDecisionCreate
 
 
+logger = logging.getLogger(__name__)
+
 async def save_decision(db: AsyncSession, decision: PlacementDecisionCreate):
     """
     Save a Placement Decision
     """
     try:
+        logger.info("Saving placement decision: %s", decision.model_dump())
         db_obj = PlacementDecision(
             name=decision.id.name,
             namespace=decision.id.namespace,
             spec=decision.spec,
-            decision_placement_lst=decision.decision.get("placement", []),
-            decision_reason=decision.decision.get("reason", "Unknown"),
+            decision_placement_lst=decision.decision.placement,
+            decision_reason=decision.decision.reason,
             trace=decision.trace,
         )
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
+        logger.info("Successfully saved placement decision: %s", db_obj.decision_id)
         return db_obj
     except Exception as e:
+        logger.error("Error saving placement decision: %s", e)
         await db.rollback()
         raise e
 
