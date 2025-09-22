@@ -35,7 +35,11 @@ async def save_decision(
             status=PLACEMENT_DECISION_STATUS_OK,
             details=str(db_obj.to_dict()),
         )
-    except Exception as e:
+    except ValueError as e:
+        return PlacementDecisionResponse(
+            decision_id=None, status=PLACEMENT_DECISION_STATUS_FAILURE, summary=str(e)
+        )
+    except RuntimeError as e:
         return PlacementDecisionResponse(
             decision_id=None, status=PLACEMENT_DECISION_STATUS_FAILURE, summary=str(e)
         )

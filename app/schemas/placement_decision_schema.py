@@ -1,10 +1,10 @@
 """
 Schema for Placement Decision
 """
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
 import uuid
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Field
 
 
 # --------------------
@@ -18,6 +18,9 @@ class PlacementDecisionID(BaseModel):
     namespace: str
 
 class PlacementDecisionField(BaseModel):
+    """
+    Schema for Placement Decision Field
+    """
     placement: List[str]
     reason: str
 
@@ -77,6 +80,7 @@ class PlacementDecisionResponse(BaseModel):
 # --------------------
 # Output Schema (DB → API)
 # --------------------
+# pylint: disable=too-few-public-methods
 class PlacementDecisionOut(BaseModel):
     """
     Schema for outputting a Placement Decision
@@ -91,4 +95,7 @@ class PlacementDecisionOut(BaseModel):
     timestamp: datetime
 
     class Config:
+        """
+        Pydantic config for ORM mode
+        """
         orm_mode = True
