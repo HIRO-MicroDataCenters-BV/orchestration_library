@@ -24,83 +24,94 @@ from app.utils.exceptions import (
 
 logger = logging.getLogger(__name__)
 
+def _add_initial_filters(pod_flow_filters, flow_filters):
+    if flow_filters.get("decision_id"):
+        pod_flow_filters.append(
+            WorkloadDecisionActionFlowView.decision_id == flow_filters["decision_id"]
+        )
+    if flow_filters.get("action_id"):
+        pod_flow_filters.append(
+            WorkloadDecisionActionFlowView.action_id == flow_filters["action_id"]
+        )
+    if flow_filters.get("pod_name"):
+        pod_flow_filters.append(
+            WorkloadDecisionActionFlowView.decision_pod_name == flow_filters["pod_name"]
+        )
+    if flow_filters.get("namespace"):
+        pod_flow_filters.append(
+            WorkloadDecisionActionFlowView.decision_namespace == flow_filters["namespace"]
+        )
+    if flow_filters.get("node_name"):
+        pod_flow_filters.append(
+            WorkloadDecisionActionFlowView.decision_node_name == flow_filters["node_name"]
+        )
+    if flow_filters.get("action_type"):
+        pod_flow_filters.append(
+            WorkloadDecisionActionFlowView.action_type == flow_filters["action_type"]
+        )
 
-def _add_bind_filters(pod_filters, pod_name, namespace, node_name):
+def _add_bind_filters(pod_flow_filters, pod_name, namespace, node_name):
     if pod_name:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.bound_pod_name == pod_name
         )
     if namespace:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.bound_pod_namespace == namespace
         )
     if node_name:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.bound_node_name == node_name
         )
 
-def _add_delete_filters(pod_filters, pod_name, namespace, node_name):
+def _add_delete_filters(pod_flow_filters, pod_name, namespace, node_name):
     if pod_name:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.deleted_pod_name == pod_name
         )
     if namespace:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.deleted_pod_namespace == namespace
         )
     if node_name:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.deleted_node_name == node_name
         )
 
-def _add_create_move_swap_filters(pod_filters, pod_name, namespace, node_name):
+def _add_create_move_swap_filters(pod_flow_filters, pod_name, namespace, node_name):
     if pod_name:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.created_pod_name == pod_name
         )
     if namespace:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.created_pod_namespace == namespace
         )
     if node_name:
-        pod_filters.append(
+        pod_flow_filters.append(
             WorkloadDecisionActionFlowView.created_node_name == node_name
         )
 
-def _build_pod_filters(flow_filters: dict) -> list:
+def _build_pod_flow_filters(flow_filters: dict) -> list:
+    """Build SQLAlchemy filters based on provided flow_filters."""
     pod_name = flow_filters.get("pod_name")
     namespace = flow_filters.get("namespace")
     node_name = flow_filters.get("node_name")
     action_type = flow_filters.get("action_type")
-    pod_filters = []
-    if pod_name:
-        pod_filters.append(
-            WorkloadDecisionActionFlowView.decision_pod_name == pod_name
-        )
-    if namespace:
-        pod_filters.append(
-            WorkloadDecisionActionFlowView.decision_namespace == namespace
-        )
-    if node_name:
-        pod_filters.append(
-            WorkloadDecisionActionFlowView.decision_node_name == node_name
-        )
-    if action_type:
-        pod_filters.append(
-            WorkloadDecisionActionFlowView.action_type == action_type
-        )
+    pod_flow_filters = []
+    _add_initial_filters(pod_flow_filters, flow_filters)
     if action_type == WorkloadActionTypeEnum.BIND:
-        _add_bind_filters(pod_filters, pod_name, namespace, node_name)
+        _add_bind_filters(pod_flow_filters, pod_name, namespace, node_name)
     elif action_type == WorkloadActionTypeEnum.DELETE:
-        _add_delete_filters(pod_filters, pod_name, namespace, node_name)
+        _add_delete_filters(pod_flow_filters, pod_name, namespace, node_name)
     elif action_type in (
         WorkloadActionTypeEnum.CREATE,
         WorkloadActionTypeEnum.MOVE,
         WorkloadActionTypeEnum.SWAP_X,
         WorkloadActionTypeEnum.SWAP_Y,
     ):
-        _add_create_move_swap_filters(pod_filters, pod_name, namespace, node_name)
-    return pod_filters
+        _add_create_move_swap_filters(pod_flow_filters, pod_name, namespace, node_name)
+    return pod_flow_filters
 
 async def get_workload_decision_action_flow(
     db: AsyncSession,
@@ -115,11 +126,11 @@ async def get_workload_decision_action_flow(
     try:
         skip = flow_filters.get("skip", 0)
         limit = flow_filters.get("limit", 100)
-        pod_filters = _build_pod_filters(flow_filters)
-        if pod_filters:
+        pod_flow_filters = _build_pod_flow_filters(flow_filters)
+        if pod_flow_filters:
             stmt = (
                 select(WorkloadDecisionActionFlowView)
-                .where(*pod_filters)
+                .where(*pod_flow_filters)
                 .offset(skip)
                 .limit(limit)
             )

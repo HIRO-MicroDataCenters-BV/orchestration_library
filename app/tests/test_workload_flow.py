@@ -2,6 +2,7 @@
 Tests for get_workload_decision_action_flow.
 """
 
+import uuid
 from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -19,29 +20,75 @@ from app.utils.exceptions import DatabaseConnectionException
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "pod_name,namespace,node_name,action_type",
+    "flow_filters",
     [
-        ("test-pod-bind", "test-ns", "test-node", WorkloadActionTypeEnum.BIND),
-        ("test-pod-create", "test-ns", "test-node", WorkloadActionTypeEnum.CREATE),
-        ("test-pod-delete", "test-ns", "test-node", WorkloadActionTypeEnum.DELETE),
-        ("test-pod-move", "test-ns", "test-node", WorkloadActionTypeEnum.MOVE),
-        ("test-pod-swapx", "test-ns", "test-node", WorkloadActionTypeEnum.SWAP_X),
-        ("test-pod-swapy", "test-ns", "test-node", WorkloadActionTypeEnum.SWAP_Y),
+        {
+            "decision_id": uuid.uuid4(),
+            "action_id": uuid.uuid4(),
+            "pod_name": "test-pod-bind",
+            "namespace": "test-ns",
+            "node_name": "test-node",
+            "action_type": WorkloadActionTypeEnum.BIND,
+        },
+        {
+            "decision_id": uuid.uuid4(),
+            "action_id": uuid.uuid4(),
+            "pod_name": "test-pod-create",
+            "namespace": "test-ns",
+            "node_name": "test-node",
+            "action_type": WorkloadActionTypeEnum.CREATE,
+        },
+        {
+            "decision_id": uuid.uuid4(),
+            "action_id": uuid.uuid4(),
+            "pod_name": "test-pod-delete",
+            "namespace": "test-ns",
+            "node_name": "test-node",
+            "action_type": WorkloadActionTypeEnum.DELETE,
+        },
+        {
+            "decision_id": uuid.uuid4(),
+            "action_id": uuid.uuid4(),
+            "pod_name": "test-pod-move",
+            "namespace": "test-ns",
+            "node_name": "test-node",
+            "action_type": WorkloadActionTypeEnum.MOVE,
+        },
+        {
+            "decision_id": uuid.uuid4(),
+            "action_id": uuid.uuid4(),
+            "pod_name": "test-pod-swapx",
+            "namespace": "test-ns",
+            "node_name": "test-node",
+            "action_type": WorkloadActionTypeEnum.SWAP_X,
+        },
+        {
+            "decision_id": uuid.uuid4(),
+            "action_id": uuid.uuid4(),
+            "pod_name": "test-pod-swapy",
+            "namespace": "test-ns",
+            "node_name": "test-node",
+            "action_type": WorkloadActionTypeEnum.SWAP_Y,
+        },
     ],
 )
 async def test_get_workload_decision_action_flow_success(
-    pod_name, namespace, node_name, action_type
+    flow_filters: dict
 ):
     """Test for successful retrieval of workload decision and action flow."""
     # Mock database session
     db = AsyncMock()
 
+    decision_id = flow_filters["decision_id"]
+    action_id = flow_filters["action_id"]
+    pod_name = flow_filters["pod_name"]
+    namespace = flow_filters["namespace"]
+    node_name = flow_filters["node_name"]
+    action_type = flow_filters["action_type"]
+
     # Mock objects
     mock_item = mock_workload_decision_action_flow_item(
-        pod_name=pod_name,
-        namespace=namespace,
-        node_name=node_name,
-        action_type=action_type,
+        flow_filters=flow_filters
     )
 
     # Mock result.all() to return a list of tuples
@@ -53,18 +100,15 @@ async def test_get_workload_decision_action_flow_success(
     # Call the function
     result = await get_workload_decision_action_flow(
         db,
-        flow_filters={
-            "pod_name": pod_name,
-            "namespace": namespace,
-            "node_name": node_name,
-            "action_type": action_type,
-        },
+        flow_filters=flow_filters,
         metrics_details=mock_metrics_details("GET", "/workload_decision_action_flow"),
     )
 
     db.execute.assert_called_once()
     assert isinstance(result, list)
     assert len(result) == 1
+    assert result[0].decision_id == decision_id
+    assert result[0].action_id == action_id
     assert result[0].decision_pod_name == pod_name
     assert result[0].decision_namespace == namespace
     assert result[0].decision_node_name == node_name
