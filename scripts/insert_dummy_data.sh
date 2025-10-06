@@ -2,6 +2,7 @@
 
 set -e
 
+# Usage: ./scripts/insert_dummy_data.sh [PORT] [CONTEXT] [KUBECONFIG] [NAMESPACE] [SERVICE_NAME] [--local]
 DATABASE_PORT=5432
 CLUSTER_NAME="sample"
 CONTEXT="kind-sample"
