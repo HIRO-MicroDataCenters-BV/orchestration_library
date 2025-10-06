@@ -41,6 +41,9 @@ def process_revision_directives(context, revision, directives):
             return
         script = directives[0]
         if script.upgrade_ops.is_empty():
+            if os.getenv("ALEMBIC_ALLOW_EMPTY") == "1":
+                print("No schema changes detected; creating empty revision because ALEMBIC_ALLOW_EMPTY=1.")
+                return
             print("No schema changes detected; skipping empty revision.")
             directives[:] = []  # prevents file creation
 
