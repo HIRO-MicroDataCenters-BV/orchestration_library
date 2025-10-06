@@ -2,8 +2,11 @@
 
 set -e
 
+# Usage: ./scripts/insert_dummy_data.sh [PORT] [CONTEXT] [KUBECONFIG] [NAMESPACE] [SERVICE_NAME] [--local]
 DATABASE_PORT=5432
 CLUSTER_NAME="sample"
+CONTEXT="kind-sample"
+KUBECONFIG="$HOME/.kube/config"
 NAMESPACE="aces-orchestration-api"
 SERVICE_NAME="aces-postgres"
 LOCAL_MODE=0
@@ -20,9 +23,21 @@ for arg in "$@"; do
       if [[ -z "$DATABASE_PORT_SET" ]]; then
         DATABASE_PORT="$arg"
         DATABASE_PORT_SET=1
-      elif [[ -z "$CLUSTER_NAME_SET" ]]; then
-        CLUSTER_NAME="$arg"
-        CLUSTER_NAME_SET=1
+      elif [[ -z "$CONTEXT_SET" ]]; then
+        CONTEXT="$arg"
+        CONTEXT_SET=1
+      elif [[ -z "$KUBECONFIG_SET" ]]; then
+        KUBECONFIG="$arg"
+        KUBECONFIG_SET=1
+      elif [[ -z "$NAMESPACE_SET" ]]; then
+        NAMESPACE="$arg"
+        NAMESPACE_SET=1
+      elif [[ -z "$SERVICE_NAME_SET" ]]; then
+        SERVICE_NAME="$arg"
+        SERVICE_NAME_SET=1
+      else
+        echo "Unknown argument: $arg"
+        exit 1
       fi
       shift
       ;;
@@ -31,15 +46,15 @@ done
 
 if [ "$LOCAL_MODE" -eq 0 ]; then
   echo "Remove the port-forwarding on the database service"
-  if pgrep -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME" > /dev/null; then
-    pkill -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+  if pgrep -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context $CONTEXT" --kubeconfig $KUBECONFIG > /dev/null; then
+    pkill -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context $CONTEXT" --kubeconfig $KUBECONFIG
   fi
 
   echo "Port-forwarding the database service to localhost:$DATABASE_PORT"
-  kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME &
+  kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context $CONTEXT --kubeconfig $KUBECONFIG &
 
   echo "Wait for port-forwarding to be ready"
-  sleep 3
+  sleep 5
 fi
 
 # Check if psql is installed
@@ -67,7 +82,7 @@ psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -f "$SQL_FILE"
 
 if [ "$LOCAL_MODE" -eq 0 ]; then
   echo "Remove the port-forwarding on the database service"
-  pkill -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context kind-$CLUSTER_NAME"
+  pkill -f "kubectl port-forward service/$SERVICE_NAME -n $NAMESPACE $DATABASE_PORT:5432 --context $CONTEXT" --kubeconfig $KUBECONFIG
 fi
 
 echo "Dummy data inserted successfully."
