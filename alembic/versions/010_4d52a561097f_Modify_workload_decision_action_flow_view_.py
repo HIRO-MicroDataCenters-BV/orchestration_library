@@ -78,11 +78,11 @@ def upgrade() -> None:
             AND d.node_name = a.created_node_name)
         OR (d.action_type = 'move'
             AND d.pod_name = a.deleted_pod_name
-            AND d.namespace = a.deleted_pod_name
+            AND d.namespace = a.deleted_pod_namespace
             AND d.node_name = a.created_node_name)
         OR (d.action_type IN ('delete', 'swap_x', 'swap_y')
             AND d.pod_name = a.deleted_pod_name
-            AND d.namespace = a.deleted_pod_name
+            AND d.namespace = a.deleted_pod_namespace
             AND d.node_name = a.deleted_node_name)
      );
     """)
