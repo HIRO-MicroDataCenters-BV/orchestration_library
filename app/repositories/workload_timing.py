@@ -8,12 +8,15 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.metrics.helper import record_workload_request_decision_metrics, record_workload_timing_metrics
+from app.metrics.helper import (
+    record_workload_request_decision_metrics,
+    record_workload_timing_metrics,
+)
 from app.models.workload_timing import WorkloadTiming
 from app.schemas.workload_timing_schema import WorkloadTimingCreate
 from app.utils.db_utils import handle_db_exception
-from app.utils.exceptions import (DBEntryCreationException,
-                                  OrchestrationBaseException)
+from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
+from app.utils.time_utils import get_ts, ms_diff
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -37,7 +40,21 @@ async def create_workload_timing(
     """
     exception = None
     try:
+
         db_obj = WorkloadTiming(**data.model_dump())
+        db_obj.creation_to_ready_ms = ms_diff(
+            get_ts(db_obj.created_timestamp), get_ts(db_obj.ready_timestamp)
+        )
+        db_obj.creation_to_scheduled_ms = ms_diff(
+            get_ts(db_obj.created_timestamp), get_ts(db_obj.scheduled_timestamp)
+        )
+        db_obj.scheduled_to_ready_ms = ms_diff(
+            get_ts(db_obj.scheduled_timestamp), get_ts(db_obj.ready_timestamp)
+        )
+        db_obj.total_lifecycle_ms = ms_diff(
+            get_ts(db_obj.created_timestamp), get_ts(db_obj.deleted_timestamp)
+        )
+
         db_session.add(db_obj)
         await db_session.commit()
         await db_session.refresh(db_obj)
@@ -51,25 +68,19 @@ async def create_workload_timing(
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
-            pod_name=data.pod_name,
-            error=str(exc),
-            error_type="workload_timing_database_integrity_error",
+            details={"error": str(exception)}
         )
     except OperationalError as exc:
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
-            pod_name=data.pod_name,
-            error=str(exc),
-            error_type="workload_timing_database_operational_error",
+            details={"error": str(exception)}
         )
     except SQLAlchemyError as exc:
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
-            pod_name=data.pod_name,
-            error=str(exc),
-            error_type="workload_timing_database_error",
+            details={"error": str(exception)}
         )
     finally:
         if exception:
