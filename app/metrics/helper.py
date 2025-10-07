@@ -16,6 +16,8 @@ from app.metrics.custom_metrics import (
     workload_request_decision_requests_latency_seconds,
     workload_decision_action_flow_total,
     workload_decision_action_flow_latency_seconds,
+    workload_timing_requests_total,
+    workload_timing_requests_latency_seconds,
     alerts_requests_total,
     alerts_requests_latency_seconds,
     tuning_parameters_requests_total,
@@ -166,6 +168,34 @@ def record_workload_decision_action_flow_metrics(
         exception=exception,
         counter_metrics=[workload_decision_action_flow_total],
         histogram_metrics=[workload_decision_action_flow_latency_seconds],
+    )
+
+def record_workload_timing_metrics(
+    metrics_details: Dict[str, Any],
+    status_code: int,
+    exception: Optional[Exception] = None,
+):
+    """
+    Record metrics for workload timing API requests.
+
+    Args:
+        metrics_details (Dict[str, Any]): Details about the request for metrics.
+        status_code (int): HTTP status code of the response.
+        exception (Optional[Exception]): Exception raised during the request, if any.
+    """
+    if (
+        not metrics_details
+        or "method" not in metrics_details
+        or "endpoint" not in metrics_details
+        or "start_time" not in metrics_details
+    ):
+        return
+    record_api_metrics(
+        metrics_details=metrics_details,
+        status_code=status_code,
+        exception=exception,
+        counter_metrics=[workload_timing_requests_total],
+        histogram_metrics=[workload_timing_requests_latency_seconds],
     )
 
 def record_alerts_metrics(
