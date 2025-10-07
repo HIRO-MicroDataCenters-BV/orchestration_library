@@ -2,6 +2,7 @@
 SQLAlchemy models for the Workload timings.
 """
 
+from os import name
 from uuid import uuid4
 from sqlalchemy import (
     Column,
@@ -10,20 +11,19 @@ from sqlalchemy import (
     Boolean,
     TIMESTAMP,
     text,
-    UUID
+    UUID,
+    Enum as SAEnum,
 )
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
 from app.utils.constants import (
-    POD_PARENT_TYPE_ENUM,
-    WORKLOAD_ACTION_TYPE_ENUM,
-    WORKLOAD_REQUEST_DECISION_STATUS_ENUM,
+    WorkloadTimingSchedulerEnum,
 )
 
 
 class WorkloadTiming(Base, BaseDictMixin):
     """
-    Model representing the pod timings.
+    Model representing the workload(pod) timings.
     """
 
     __tablename__ = "workload_timing"
@@ -32,13 +32,19 @@ class WorkloadTiming(Base, BaseDictMixin):
     pod_name = Column(String(255), nullable=False)
     namespace = Column(String(255), nullable=False)
     node_name = Column(String(255))
-    scheduler_type = Column(String(50))
-    pod_uid = Column(String(255))
+    scheduler_type = Column(
+        SAEnum(
+            WorkloadTimingSchedulerEnum,
+            name="workload_timing_scheduler_enum",
+            validate_strings=True
+        ), nullable=False
+    )
+    pod_uid = Column(String(255), nullable=False)
 
-    created_timestamp = Column(TIMESTAMP(timezone=True, precision=6))
-    scheduled_timestamp = Column(TIMESTAMP(timezone=True, precision=6))
-    ready_timestamp = Column(TIMESTAMP(timezone=True, precision=6))
-    deleted_timestamp = Column(TIMESTAMP(timezone=True, precision=6))
+    created_timestamp = Column(TIMESTAMP(timezone=True))
+    scheduled_timestamp = Column(TIMESTAMP(timezone=True))
+    ready_timestamp = Column(TIMESTAMP(timezone=True))
+    deleted_timestamp = Column(TIMESTAMP(timezone=True))
 
     creation_to_scheduled_ms = Column(Double)
     scheduled_to_ready_ms = Column(Double)
@@ -48,6 +54,4 @@ class WorkloadTiming(Base, BaseDictMixin):
     phase = Column(String(50))
     reason = Column(String)
     is_completed = Column(Boolean, default=False)
-    recorded_at = Column(
-        TIMESTAMP(timezone=True), server_default=text("now()")
-    )
+    recorded_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))

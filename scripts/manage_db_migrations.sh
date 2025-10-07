@@ -121,7 +121,7 @@ case $choice in
     # Get the latest file before creating a new revision
     latest_file=$(ls -t "$versions_dir"/*.py | head -n 1)
     read -rp "Enter migration message: " message
-    alembic revision --autogenerate -m "$message"
+    alembic revision --autogenerate -m "$message" || true
     rename_latest_revision_file "$message" "$latest_file" "$versions_dir"
     ;;
   2)
@@ -130,7 +130,7 @@ case $choice in
     latest_file=$(ls -t "$versions_dir"/*.py | head -n 1)
     read -rp "Enter migration message: " message
     echo "Creating revision (allowing empty)..."
-    ALEMBIC_ALLOW_EMPTY=1 alembic revision --autogenerate -m "$message"
+    ALEMBIC_ALLOW_EMPTY=1 alembic revision --autogenerate -m "$message" || true
     rename_latest_revision_file "$message" "$latest_file" "$versions_dir"
     ;;
   3)
