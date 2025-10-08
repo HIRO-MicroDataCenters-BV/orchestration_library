@@ -39,29 +39,29 @@ async def create_workload_timing(
     exception = None
     try:
 
-        db_obj = WorkloadTiming(**data.model_dump())
-        db_obj.creation_to_ready_ms = ms_diff(
-            get_ts(db_obj.created_timestamp), get_ts(db_obj.ready_timestamp)
+        wt_obj = WorkloadTiming(**data.model_dump())
+        wt_obj.creation_to_ready_ms = ms_diff(
+            get_ts(wt_obj.created_timestamp), get_ts(wt_obj.ready_timestamp)
         )
-        db_obj.creation_to_scheduled_ms = ms_diff(
-            get_ts(db_obj.created_timestamp), get_ts(db_obj.scheduled_timestamp)
+        wt_obj.creation_to_scheduled_ms = ms_diff(
+            get_ts(wt_obj.created_timestamp), get_ts(wt_obj.scheduled_timestamp)
         )
-        db_obj.scheduled_to_ready_ms = ms_diff(
-            get_ts(db_obj.scheduled_timestamp), get_ts(db_obj.ready_timestamp)
+        wt_obj.scheduled_to_ready_ms = ms_diff(
+            get_ts(wt_obj.scheduled_timestamp), get_ts(wt_obj.ready_timestamp)
         )
-        db_obj.total_lifecycle_ms = ms_diff(
-            get_ts(db_obj.created_timestamp), get_ts(db_obj.deleted_timestamp)
+        wt_obj.total_lifecycle_ms = ms_diff(
+            get_ts(wt_obj.created_timestamp), get_ts(wt_obj.deleted_timestamp)
         )
 
-        db_session.add(db_obj)
+        db_session.add(wt_obj)
         await db_session.commit()
-        await db_session.refresh(db_obj)
+        await db_session.refresh(wt_obj)
         logger.info("successfully created workload timing for %s", data.pod_name)
         record_workload_timing_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return db_obj
+        return wt_obj
     except IntegrityError as exc:
         exception = exc
         raise DBEntryCreationException(
@@ -109,14 +109,14 @@ async def get_all_workload_timings(
     """
     exception = None
     try:
-        result = await db_session.execute(
+        wt_result = await db_session.execute(
             select(WorkloadTiming).offset(skip).limit(limit)
         )
         record_workload_timing_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return result.scalars().all()
+        return wt_result.scalars().all()
     except SQLAlchemyError as exc:
         exception = exc
         logger.error("Error retrieving all pod timings %s", str(exc))
