@@ -81,7 +81,7 @@ class WorkloadTimingCreate(BaseModel):
     ready_timestamp: datetime
     deleted_timestamp: Optional[datetime] = None
 
-    # The following fields are calculated from the timestamps 
+    # The following fields are calculated from the timestamps
     # above and are not required in the create request:
     # - creation_to_scheduled_ms
     # - scheduled_to_ready_ms

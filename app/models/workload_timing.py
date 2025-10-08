@@ -2,7 +2,6 @@
 SQLAlchemy models for the Workload timings.
 """
 
-from os import name
 from uuid import uuid4
 from sqlalchemy import (
     Column,

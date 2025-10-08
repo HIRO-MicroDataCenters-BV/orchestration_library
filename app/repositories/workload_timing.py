@@ -9,12 +9,10 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.metrics.helper import (
-    record_workload_request_decision_metrics,
     record_workload_timing_metrics,
 )
 from app.models.workload_timing import WorkloadTiming
 from app.schemas.workload_timing_schema import WorkloadTimingCreate
-from app.utils.db_utils import handle_db_exception
 from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
 from app.utils.time_utils import get_ts, ms_diff
 
@@ -69,19 +67,19 @@ async def create_workload_timing(
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
             details={"error": str(exception)}
-        )
+        ) from exception
     except OperationalError as exc:
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
             details={"error": str(exception)}
-        )
+        ) from exception
     except SQLAlchemyError as exc:
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
             details={"error": str(exception)}
-        )
+        ) from exception
     finally:
         if exception:
             record_workload_timing_metrics(
