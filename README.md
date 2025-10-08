@@ -17,6 +17,8 @@ orchestration_library/
 │   ├── main.py                     # FastAPI app entry point
 │   ├── api/                        # API route definitions (FastAPI routers)
 │   ├── db/                         # Database connection and session management
+│   ├── logger/                     # Logging for entire app
+│   ├── metrics/                    # Custome metrics collection
 │   ├── models/                     # SQLAlchemy ORM models
 │   ├── repositories/               # Data access logic (CRUD operations)
 │   ├── schemas/                    # Pydantic models for request/response validation
@@ -35,7 +37,9 @@ orchestration_library/
 ├── scripts/                        # Shell scripts for setup, deployment, and DB migrations
 │   ├── create_kind_cluster.sh      # Script to create a local kind Kubernetes cluster
 │   ├── deploy_orchestration_api.sh # Script to build and deploy the API to kind
-│   └── manage_db_migrations.sh     # Script to manage Alembic DB migrations
+│   ├── manage_db_migrations.sh     # Script to manage Alembic DB migrations
+│   ├── insert_dummy_data.sh        # Script to insert dummy data(It uses dummy_data.sql file)
+│   └── dummy_data.sql              # SQL commands to insert dummy data
 ├── Dockerfile                      # Docker build instructions for the FastAPI app
 ├── docker-compose.yml              # Docker Compose setup for local development (app + DB)
 ├── README.md                       # Project documentation and usage instructions
@@ -136,12 +140,15 @@ Follow these steps to modify the database schema using Alembic:
 
    #### Script Usage
    ```bash
-   bash scripts/manage_db_migrations.sh [DB_PORT] [CLUSTER_NAME] [--local]
+   bash scripts/manage_db_migrations.sh [DB_PORT] [CONTEXT] [KUBECONFIG] [NAMESPACE] [SERVICE_NAME] [--local]
    ```
 
-   - `DB_PORT` (default: `5432`)
-   - `CLUSTER_NAME` (default: `sample`)
-   - `--local` (use for Docker setup)
+   - `DB_PORT`       (default: `5432`)
+   - `CONTEXT`       (default: `kind-sample`)
+   - `KUBECONFIG`    (default: `~/.kube/config`)
+   - `NAMESPACE`     (default: `aces-orchestration-api`)
+   - `SERVICE_NAME`  (default: `aces-postgres`)
+   - `--local`       (use for Docker setup)
 
    #### Upgrade Before Creating Migration
    
@@ -233,11 +240,14 @@ A helper script is provided to insert the dummy data into your database, support
 #### Usage
 
 ```bash
-bash scripts/insert_dummy_data.sh [DB_PORT] [CLUSTER_NAME] [--local]
+bash scripts/insert_dummy_data.sh [DB_PORT] [CONTEXT] [KUBECONFIG] [NAMESPACE] [SERVICE_NAME] [--local]
 ```
 
 - `DB_PORT` (default: `5432`) — The port your PostgreSQL instance is exposed on.
-- `CLUSTER_NAME` (default: `sample`) — The name of your kind cluster (if using Kubernetes).
+- `CONTEXT` (default: `kind-sample`) — The name of your cluster context (if using Kubernetes).
+- `KUBECONFIG` (default: `~/.kube/config`) — Path to your kubeconfig file (for Kubernetes access).
+- `NAMESPACE` (default: `aces-orchestration-api`) — Kubernetes namespace where the database service is running.
+- `SERVICE_NAME` (default: `aces-postgres`) — Name of the PostgreSQL service in your Kubernetes cluster.
 - `--local` — Use this flag if your database is running locally (e.g., via Docker Compose).
 
 #### Examples
