@@ -259,7 +259,7 @@ bash scripts/insert_dummy_data.sh [DB_PORT] [CONTEXT] [KUBECONFIG] [NAMESPACE] [
 
 - **For a custom port/cluster:**
   ```bash
-  bash scripts/insert_dummy_data.sh 25432 my-cluster
+  bash scripts/insert_dummy_data.sh 25432 my-cluster-context ,y-cluster-kubeconfig db-hosted-namespacce db-service-name
   ```
 
 - **For a local Docker setup:**
