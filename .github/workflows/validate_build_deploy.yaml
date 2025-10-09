@@ -108,8 +108,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     outputs:
-      image_name: ${{ steps.set-image.outputs.image_name }}
-      image_tag: ${{ steps.set-image.outputs.image_tag }}
+      image_name: ${{ steps.set-orchestration-image.outputs.image_name }}
+      image_tag: ${{ steps.set-orchestration-image.outputs.image_tag }}
+      workload_timing_watcher_image_name: ${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_name }}
+      workload_timing_watcher_image_tag: ${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -120,18 +122,31 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        id: set-image
+      - name: Build Orchestration API Docker image
+        id: set-orchestration-image
         run: |
           IMAGE_TAG=${{ vars.ORCHESTRATION_API_IMAGE_TAG }}-$(date +%Y%m%d%H%M%S)
           docker build -t ${{ vars.ORCHESTRATION_API_IMAGE_NAME }}:$IMAGE_TAG .
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "image_name=${{ vars.ORCHESTRATION_API_IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
-      - name: Push Docker image
+      - name: Push Orchestration API Docker image
         if: github.event_name == 'push'
         run: |
-          docker push ${{ vars.ORCHESTRATION_API_IMAGE_NAME }}:${{ steps.set-image.outputs.image_tag }}
+          docker push ${{ vars.ORCHESTRATION_API_IMAGE_NAME }}:${{ steps.set-orchestration-image.outputs.image_tag }}
+
+      - name: Build Workload Timing Watcher Docker image
+        id: set-workload-timing-watcher-image
+        run: |
+          IMAGE_TAG=${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_TAG }}-$(date +%Y%m%d%H%M%S)
+          docker build -t ${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_NAME }}:$IMAGE_TAG .
+          echo "workload_timing_watcher_image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "workload_timing_watcher_image_name=${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Push Workload Timing Watcher Docker image
+        if: github.event_name == 'push'
+        run: |
+          docker push ${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_NAME }}:${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_tag }}
 
   helmPublish:
     name: Publish Helm Charts
@@ -163,6 +178,12 @@ jobs:
       - name: Build Helm dependencies for k8s-dashboard chart
         run: helm dependency build ./charts/k8s-dashboard
 
+      - name: Update Helm dependencies for ./charts/pod_timing_watcher chart
+        run: helm dependency update ./charts/pod_timing_watcher
+
+      - name: Build Helm dependencies for ./charts/pod_timing_watcher chart
+        run: helm dependency build ./charts/pod_timing_watcher
+
       - name: Update Helm dependencies for orchestration-api chart
         run: helm dependency update ./charts/orchestration-api
 
@@ -193,6 +214,7 @@ jobs:
           echo "helm repo add orchestration_library https://${{ github.repository_owner }}.github.io/orchestration_library"
           echo "helm repo update"
           echo "helm install my-release orchestration_library/k8s-dashboard"
+          echo "helm install my-release orchestration_library/pod_timing_watcher"
           echo "helm install my-release orchestration_library/orchestration-api"
 
   deploy:
@@ -232,6 +254,9 @@ jobs:
 
       - name: Update Helm dependencies for k8s-dashboard chart
         run: helm dependency build ./charts/k8s-dashboard
+
+      - name: Update Helm dependencies for pod_timing_watcher chart
+        run: helm dependency build ./charts/pod_timing_watcher
 
       - name: Update Helm dependencies for orchestration-api chart
         run: helm dependency build ./charts/orchestration-api
@@ -334,6 +359,8 @@ jobs:
             --set runMigration=true \
             --set global.postgresql.auth.postgresPassword=postgress \
             --set global.postgresql.auth.password=postgress \
+            --set podTimingWatcher.image.repository=${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_NAME }} \
+            --set podTimingWatcher.image.tag=${{ needs.build-and-push.outputs.workload_timing_watcher_image_tag }} \
             --timeout=600s \
             --wait \
             --debug \

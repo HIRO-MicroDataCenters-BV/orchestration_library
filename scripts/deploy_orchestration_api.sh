@@ -111,7 +111,6 @@ kubectl get service -n $ORCHRESTRATION_API_APP_NAME --context kind-$CLUSTER_NAME
 #   --set image.repository=$POD_TIMING_WATCHER_IMAGE_NAME \
 #   --set image.tag=$POD_TIMING_WATCHER_IMAGE_TAG \
 #   --set image.pullPolicy=IfNotPresent \
-#   --set service.type=NodePort \
 #   --set service.port=$POD_TIMING_WATCHER_SERVICE_PORT \
 
 # echo "Wait for the $POD_TIMING_WATCHER_APP_NAME to be ready"
