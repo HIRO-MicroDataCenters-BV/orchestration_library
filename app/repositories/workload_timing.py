@@ -12,7 +12,10 @@ from app.metrics.helper import (
     record_workload_timing_metrics,
 )
 from app.models.workload_timing import WorkloadTiming
-from app.schemas.workload_timing_schema import WorkloadTimingCreate, WorkloadTimingUpdate
+from app.schemas.workload_timing_schema import (
+    WorkloadTimingCreate,
+    WorkloadTimingUpdate,
+)
 from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
 from app.utils.time_utils import get_ts, ms_diff
 
@@ -66,19 +69,19 @@ async def create_workload_timing(
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
-            details={"error": str(exception)}
+            details={"error": str(exception)},
         ) from exception
     except OperationalError as exc:
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
-            details={"error": str(exception)}
+            details={"error": str(exception)},
         ) from exception
     except SQLAlchemyError as exc:
         exception = exc
         raise DBEntryCreationException(
             message=f"Failed to create workload_timing with name '{data.pod_name}'",
-            details={"error": str(exception)}
+            details={"error": str(exception)},
         ) from exception
     finally:
         if exception:
@@ -130,6 +133,7 @@ async def get_all_workload_timings(
                 metrics_details=metrics_details, status_code=500, exception=exception
             )
 
+
 async def get_workload_timings(
     db_session: AsyncSession,
     pod_name: str,
@@ -173,6 +177,7 @@ async def get_workload_timings(
                 metrics_details=metrics_details, status_code=500, exception=exception
             )
 
+
 async def update_workload_timing(
     db_session: AsyncSession,
     workload_timing_id: str,
@@ -209,7 +214,12 @@ async def update_workload_timing(
             setattr(wt_obj, key, value)
 
         # Recalculate timing fields if relevant timestamps are updated
-        if data.created_timestamp or data.scheduled_timestamp or data.ready_timestamp or data.deleted_timestamp:
+        if (
+            data.created_timestamp
+            or data.scheduled_timestamp
+            or data.ready_timestamp
+            or data.deleted_timestamp
+        ):
             wt_obj.creation_to_ready_ms = ms_diff(
                 get_ts(wt_obj.created_timestamp), get_ts(wt_obj.ready_timestamp)
             )
@@ -225,7 +235,9 @@ async def update_workload_timing(
 
         await db_session.commit()
         await db_session.refresh(wt_obj)
-        logger.info("successfully updated workload timing for id %s", workload_timing_id)
+        logger.info(
+            "successfully updated workload timing for id %s", workload_timing_id
+        )
         record_workload_timing_metrics(
             metrics_details=metrics_details,
             status_code=200,
@@ -235,5 +247,5 @@ async def update_workload_timing(
         exception = exc
         raise OrchestrationBaseException(
             message=f"Failed to update workload_timing with id '{workload_timing_id}'",
-            details={"error": str(exception)}
+            details={"error": str(exception)},
         ) from exception
