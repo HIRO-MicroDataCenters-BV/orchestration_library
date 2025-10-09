@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import sys
 import uuid
 from datetime import datetime, timezone
 
@@ -14,6 +15,11 @@ API_URL = os.environ.get(
 
 # Configure logger
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    stream=sys.stdout,
+)
 
 
 def to_utc(dt):
@@ -94,6 +100,20 @@ def parse_pod_event(pod):
     logger.debug("Parsed pod data: %s", payload)
     return payload
 
+
+async def wait_for_table(session: aiohttp.ClientSession):
+    params = {"limit": 1}
+    for attempt in range(30):
+        try:
+            async with session.get(API_URL, params=params, timeout=5) as resp:
+                if resp.status == 200:
+                    logger.info("workload_timing endpoint reachable.")
+                    return
+        except Exception:
+            pass
+        logger.info("Waiting for workload_timing table (attempt %s)...", attempt + 1)
+        await asyncio.sleep(2)
+    logger.error("Timeout waiting for workload_timing table.")
 
 async def _fetch_existing_id(session: aiohttp.ClientSession, pod_name: str, namespace: str) -> str | None:
     """
@@ -181,6 +201,7 @@ async def watch_pods(session: aiohttp.ClientSession):
 async def main():
     # Reuse one HTTP session
     async with aiohttp.ClientSession() as session:
+        await wait_for_table(session)
         while True:
             try:
                 await watch_pods(session)
