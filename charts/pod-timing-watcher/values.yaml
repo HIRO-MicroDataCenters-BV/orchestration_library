@@ -1,0 +1,15 @@
+name: pod-timing-watcher
+replicaCount: 1
+
+image:
+  repository: pod-timing-watcher
+  tag: alpha1
+  pullPolicy: Always
+
+serviceAccount:
+  create: true
+  name: pod-timing-watcher-sa
+
+env:
+  - name: WORKLOAD_TIMING_API_URL
+    value: "http://orchestration-api-svc.hiros.svc.cluster.local:8000/workload_timing/"
