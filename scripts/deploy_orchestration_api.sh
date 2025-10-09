@@ -34,7 +34,7 @@ if [ -z "$CLUSTER_NAME" ]; then
 fi
 
 echo "Build Docker image for Pod Timing Watcher"
-docker build -t $POD_TIMING_WATCHER_IMAGE_NAME:$POD_TIMING_WATCHER_IMAGE_TAG -f service/pod_timing_watcher/Dockerfile service/pod_timing_watcher
+docker build -t $POD_TIMING_WATCHER_IMAGE_NAME:$POD_TIMING_WATCHER_IMAGE_TAG -f service/pod-timing-watcher/Dockerfile service/pod-timing-watcher
 
 echo "Build Docker image for Orchestration API"
 docker build -t $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG -f Dockerfile .
