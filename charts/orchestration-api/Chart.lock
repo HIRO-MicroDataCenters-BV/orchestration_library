@@ -6,4 +6,4 @@ dependencies:
   repository: file://../workload-timing-watcher
   version: 1.0.0
 digest: sha256:45e5b7c813e9c8c5e3260aaf3caba9a24a7d25bc3ddf96f9b84547e88a4f1932
-generated: "2025-10-10T01:35:48.361234+02:00"
+generated: "2025-10-10T01:53:46.730523+02:00"
