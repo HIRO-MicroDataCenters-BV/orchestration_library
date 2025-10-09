@@ -73,16 +73,16 @@ global:
       password: postgres
 
 
-# The below values are for the Pod Timing Watcher
-podTimingWatcher:
+# The below values are for the Workload Timing Watcher
+workloadTimingWatcher:
   enabled: true
-  name: pod-timing-watcher
+  name: workload-timing-watcher
   replicaCount: 1
   serviceAccount:
     create: true
-    name: pod-timing-watcher-sa
+    name: workload-timing-watcher-sa
   image:
-    repository: pod-timing-watcher
+    repository: workload-timing-watcher
     tag: alpha1
     pullPolicy: Always
   service:

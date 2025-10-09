@@ -1,14 +1,14 @@
-name: pod-timing-watcher
+name: workload-timing-watcher
 replicaCount: 1
 
 image:
-  repository: pod-timing-watcher
+  repository: workload-timing-watcher
   tag: alpha1
   pullPolicy: Always
 
 serviceAccount:
   create: true
-  name: pod-timing-watcher-sa
+  name: workload-timing-watcher-sa
 
 service:
   type: ClusterIP
