@@ -3,7 +3,7 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T23:55:02.439501308Z"
+    created: "2025-10-09T23:55:45.716595043Z"
     dependencies:
     - alias: dashboard
       condition: dashboard.enabled
@@ -11,7 +11,7 @@ entries:
       repository: https://kubernetes.github.io/dashboard/
       version: 7.13.0
     description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
-    digest: ee7ffa74a4a1fcd4e6f6da3c2d041a0259184dce73bbdc0b3aaee6947dda4b6c
+    digest: 720021d0d0ebd9d67c67c0c46fb0622be0129af5ffab55ef8fed157ca38a2fb4
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: k8s-dashboard
     type: application
@@ -38,7 +38,7 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T23:55:02.459265188Z"
+    created: "2025-10-09T23:55:45.737081977Z"
     dependencies:
     - alias: k8sDashboard
       condition: k8sDashboard.enabled
@@ -51,7 +51,7 @@ entries:
       repository: file://../workload-timing-watcher
       version: 1.0.0
     description: A Helm chart for deploying the orchestration api
-    digest: b52ea379a74739bf607893adbede1e7064b71b08160269121d529c6bc95625e8
+    digest: 3ee7b29f3dedd8aad1a7a64ec3e88ea7553da857b9caae4d61747b862f1a4b27
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: orchestration-api
     type: application
@@ -83,12 +83,12 @@ entries:
   workload-timing-watcher:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T23:55:02.459493125Z"
+    created: "2025-10-09T23:55:45.737293423Z"
     description: A Helm chart for the workload timing watcher sidecar service
-    digest: 83be79df9edaacb1697ec1683b7c298f405179b0eaf8c32097d15470ee6bcf1e
+    digest: ac83e86fd4fc35fc22aecc9e82274820e57cf91f72b2daa380f01fd3640a0ce1
     name: workload-timing-watcher
     type: application
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/workload-timing-watcher-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-09T23:55:02.418449285Z"
+generated: "2025-10-09T23:55:45.695912975Z"
