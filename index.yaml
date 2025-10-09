@@ -3,7 +3,7 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T21:04:54.044336169Z"
+    created: "2025-10-09T22:49:07.241808588Z"
     dependencies:
     - alias: dashboard
       condition: dashboard.enabled
@@ -11,7 +11,7 @@ entries:
       repository: https://kubernetes.github.io/dashboard/
       version: 7.13.0
     description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
-    digest: 7580b6f225723151bb2705aece17aa636ab23425e10ec374c47ff0bd168463df
+    digest: bf3b31e504c41b91aa3b9e9d18aec2dfcbac7902e68384972325f453b40f35a0
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: k8s-dashboard
     type: application
@@ -38,7 +38,7 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T21:04:54.064384594Z"
+    created: "2025-10-09T22:49:07.26303511Z"
     dependencies:
     - alias: k8sDashboard
       condition: k8sDashboard.enabled
@@ -51,7 +51,7 @@ entries:
       repository: file://../pod-timing-watcher
       version: 0.1.0
     description: A Helm chart for deploying the orchestration api
-    digest: 17c85b23003777d5a99959d0cf240764c9b0e4faf8ab56e02c2ce36b2ec8ff60
+    digest: a9cd07ed98973e61e0f8c3a244a6f82314a7715a6274ed6f0785e346c36022fb
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: orchestration-api
     type: application
@@ -72,12 +72,12 @@ entries:
   pod-timing-watcher:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T21:04:54.064602802Z"
+    created: "2025-10-09T22:49:07.263268026Z"
     description: A Helm chart for the pod timing watcher sidecar service
-    digest: 185bd6347ad0c1e19db75e4f72401de66ef905a77feccf7b0024dcdf3636d442
+    digest: 2718d108c16aa9b86a67ad80a06115dd66f336726b9f8c68b56c8135a6bd71b5
     name: pod-timing-watcher
     type: application
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/pod-timing-watcher-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-09T21:04:54.023051273Z"
+generated: "2025-10-09T22:49:07.220586761Z"
