@@ -80,4 +80,15 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/pod-timing-watcher-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-09T22:49:07.220586761Z"
+  workload-timing-watcher:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-10-09T23:39:51.526991018Z"
+    description: A Helm chart for the workload timing watcher sidecar service
+    digest: a4276f4bc9faa8386badcfefe1a45a7c810b553b48f8f0bb15235c391082d0d6
+    name: workload-timing-watcher
+    type: application
+    urls:
+    - workload-timing-watcher-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-10-09T23:39:51.527004894Z"
