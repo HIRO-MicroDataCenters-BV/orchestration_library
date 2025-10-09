@@ -3,7 +3,7 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T22:49:07.241808588Z"
+    created: "2025-10-09T23:39:55.935426475Z"
     dependencies:
     - alias: dashboard
       condition: dashboard.enabled
@@ -11,7 +11,7 @@ entries:
       repository: https://kubernetes.github.io/dashboard/
       version: 7.13.0
     description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
-    digest: bf3b31e504c41b91aa3b9e9d18aec2dfcbac7902e68384972325f453b40f35a0
+    digest: 23ba88d6236d033b31e1580f1d8c35938161924fd10eca6a8d2e70b3dc515e9a
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: k8s-dashboard
     type: application
@@ -38,20 +38,20 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T22:49:07.26303511Z"
+    created: "2025-10-09T23:39:55.956197319Z"
     dependencies:
     - alias: k8sDashboard
       condition: k8sDashboard.enabled
       name: k8s-dashboard
       repository: file://../k8s-dashboard
       version: 1.0.1
-    - alias: podTimingWatcher
-      condition: podTimingWatcher.enabled
-      name: pod-timing-watcher
-      repository: file://../pod-timing-watcher
-      version: 0.1.0
+    - alias: workloadTimingWatcher
+      condition: workloadTimingWatcher.enabled
+      name: workload-timing-watcher
+      repository: file://../workload-timing-watcher
+      version: 1.0.0
     description: A Helm chart for deploying the orchestration api
-    digest: a9cd07ed98973e61e0f8c3a244a6f82314a7715a6274ed6f0785e346c36022fb
+    digest: 90a4903cbf6727ddc786450ffd5d7c60fab02d3d1438e97b60a930194cba3062
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: orchestration-api
     type: application
@@ -83,12 +83,12 @@ entries:
   workload-timing-watcher:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T23:39:51.526991018Z"
+    created: "2025-10-09T23:39:55.956436565Z"
     description: A Helm chart for the workload timing watcher sidecar service
-    digest: a4276f4bc9faa8386badcfefe1a45a7c810b553b48f8f0bb15235c391082d0d6
+    digest: b9880c950b8e3d3650e658cd11dc7ea7fe7b0d99b26dd036d7ab8a58438d5f40
     name: workload-timing-watcher
     type: application
     urls:
-    - workload-timing-watcher-1.0.0.tgz
+    - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/workload-timing-watcher-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-09T23:39:51.527004894Z"
+generated: "2025-10-09T23:39:55.913475043Z"
