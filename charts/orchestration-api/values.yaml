@@ -14,7 +14,7 @@ postgres:
     nodePort: 
   persistence:
     enabled: true
-    size: 1Gi
+    size: 5Gi
   credentials:
     username: postgres
     password: postgres
@@ -71,3 +71,33 @@ global:
     auth:
       postgresPassword: postgres
       password: postgres
+
+
+# The below values are for the Pod Timing Watcher
+podTimingWatcher:
+  enabled: true
+  name: pod-timing-watcher
+  replicaCount: 1
+  serviceAccount:
+    create: true
+    name: pod-timing-watcher-sa
+  image:
+    repository: pod-timing-watcher
+    tag: alpha1
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  env:
+    # this values is orchestration-api's API for workload_timing DB. 
+    # Use same values as app.name:app.service.port.
+    - name: WORKLOAD_TIMING_API_URL
+      value: "http://aces-orchestration-api/workload_timing/"
+  # ingress:
+  #   enabled: true
+  #   className: nginx
+  #   host: pod-timing-watcher.aces.hiro-develop.nl
+  #   path: /
+  #   tls: true
+  #   tlsSecretName: pod-timing-watcher-tls-secret

@@ -11,3 +11,8 @@ dependencies:
     condition: k8sDashboard.enabled
     version: "1.0.1"
     repository: "file://../k8s-dashboard"
+  - name: pod-timing-watcher
+    alias: podTimingWatcher
+    condition: podTimingWatcher.enabled
+    version: "0.1.0"
+    repository: "file://../pod-timing-watcher"

@@ -2,5 +2,8 @@ dependencies:
 - name: k8s-dashboard
   repository: file://../k8s-dashboard
   version: 1.0.1
-digest: sha256:a9f28865d9b6d6580b011ccddf2b87ab5a9a6e6f0c238f55d09028f922012fe4
-generated: "2025-07-07T14:47:15.547569+02:00"
+- name: pod-timing-watcher
+  repository: file://../pod-timing-watcher
+  version: 0.1.0
+digest: sha256:82723c2398eb6f0bfc47b47bf45324fc381f27b6006eb7cd6db68728aec9dd37
+generated: "2025-10-09T03:03:46.405057+02:00"

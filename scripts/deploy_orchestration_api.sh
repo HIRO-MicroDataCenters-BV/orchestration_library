@@ -21,27 +21,43 @@ ORCHRESTRATION_API_IMAGE_TAG="alpha1-$TIMESTAMP"
 ORCHRESTRATION_API_SERVICE_PORT=80
 ORCHRESTRATION_API_NODE_PORT=30015
 
+POD_TIMING_WATCHER_NAMESPACE="aces-pod-timing-watcher"
+POD_TIMING_WATCHER_RELEASE_NAME="aces-pod-timing-watcher"
+POD_TIMING_WATCHER_APP_NAME="aces-pod-timing-watcher"
+POD_TIMING_WATCHER_IMAGE_NAME="pod-timing-watcher"
+POD_TIMING_WATCHER_IMAGE_TAG="alpha1-$TIMESTAMP"
+POD_TIMING_WATCHER_SERVICE_PORT=8080
+
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
   exit 1
 fi
 
-echo "Build Docker image"
+echo "Build Docker image for Pod Timing Watcher"
+docker build -t $POD_TIMING_WATCHER_IMAGE_NAME:$POD_TIMING_WATCHER_IMAGE_TAG -f service/pod_timing_watcher/Dockerfile service/pod_timing_watcher
+
+echo "Build Docker image for Orchestration API"
 docker build -t $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG -f Dockerfile .
 
 echo "Set the kubectl context to $CLUSTER_NAME cluster"
 kubectl cluster-info --context kind-$CLUSTER_NAME
 kubectl config use-context kind-$CLUSTER_NAME
 
-echo "Load Image to Kind cluster named '$CLUSTER_NAME'"
+echo "Load Orchestration API Image to Kind cluster named '$CLUSTER_NAME'"
 kind load docker-image --name $CLUSTER_NAME $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG
+
+echo "Load Pod Timing Watcher Image to Kind cluster named '$CLUSTER_NAME'"
+kind load docker-image --name $CLUSTER_NAME $POD_TIMING_WATCHER_IMAGE_NAME:$POD_TIMING_WATCHER_IMAGE_TAG
 
 echo "Add and Update Helm repository for Kubernetes Dashboard"
 helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
 helm repo update
 
-echo "Update Helm dependencies for k8s-dashboard chart"
-helm dependency build ./charts/k8s-dashboard
+echo "Rebuilding dependencies for orchestration-api chart"
+( cd charts/orchestration-api
+  rm -f Chart.lock
+  helm dependency build
+)
 
 # echo "Deploy the Kubernetes Dashboard with reverse proxy to the cluster"
 # helm upgrade --install $KUBERNETES_DASHBOARD_RELEASE_NAME ./charts/k8s-dashboard \
@@ -73,7 +89,11 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --set app.service.type=NodePort \
   --set app.service.port=$ORCHRESTRATION_API_SERVICE_PORT \
   --set app.service.nodePort=$ORCHRESTRATION_API_NODE_PORT \
-  --set runMigration=true 
+  --set runMigration=true \
+  --set podTimingWatcher.enabled=true \
+  --set podTimingWatcher.image.repository=$POD_TIMING_WATCHER_IMAGE_NAME \
+  --set podTimingWatcher.image.tag=$POD_TIMING_WATCHER_IMAGE_TAG \
+  --set podTimingWatcher.image.pullPolicy=IfNotPresent
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
 
@@ -82,4 +102,21 @@ kubectl wait --for=condition=available --timeout=60s deployment/$ORCHRESTRATION_
 
 echo "Get the $ORCHRESTRATION_API_APP_NAME service"
 kubectl get service -n $ORCHRESTRATION_API_APP_NAME --context kind-$CLUSTER_NAME
+
+# echo "Deploy the Pod Timing Watcher to Kind cluster"
+# RELEASE_NAME=$POD_TIMING_WATCHER_RELEASE_NAME
+# helm upgrade --install $RELEASE_NAME ./charts/pod-timing-watcher \
+#   --namespace $POD_TIMING_WATCHER_NAMESPACE \
+#   --create-namespace \
+#   --set image.repository=$POD_TIMING_WATCHER_IMAGE_NAME \
+#   --set image.tag=$POD_TIMING_WATCHER_IMAGE_TAG \
+#   --set image.pullPolicy=IfNotPresent \
+#   --set service.type=NodePort \
+#   --set service.port=$POD_TIMING_WATCHER_SERVICE_PORT \
+
+# echo "Wait for the $POD_TIMING_WATCHER_APP_NAME to be ready"
+# kubectl wait --for=condition=available --timeout=60s deployment/$POD_TIMING_WATCHER_APP_NAME -n $POD_TIMING_WATCHER_NAMESPACE --context kind-$CLUSTER_NAME
+
+# echo "Get the $POD_TIMING_WATCHER_APP_NAME service"
+# kubectl get service -n $POD_TIMING_WATCHER_APP_NAME --context kind-$CLUSTER_NAME
 
