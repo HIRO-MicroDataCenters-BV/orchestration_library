@@ -14,6 +14,7 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      # Use the service account created in orchestration-api chart
       serviceAccountName: {{ .Release.Name }}-service-account
       containers:
         - name: {{ .Values.name }}

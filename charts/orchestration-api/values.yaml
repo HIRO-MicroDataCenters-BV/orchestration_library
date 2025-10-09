@@ -78,9 +78,6 @@ workloadTimingWatcher:
   enabled: true
   name: workload-timing-watcher
   replicaCount: 1
-  serviceAccount:
-    create: true
-    name: workload-timing-watcher-sa
   image:
     repository: workload-timing-watcher
     tag: alpha1

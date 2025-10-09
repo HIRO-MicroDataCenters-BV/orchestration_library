@@ -6,10 +6,6 @@ image:
   tag: alpha1
   pullPolicy: Always
 
-serviceAccount:
-  create: true
-  name: workload-timing-watcher-sa
-
 service:
   type: ClusterIP
   port: 8080
