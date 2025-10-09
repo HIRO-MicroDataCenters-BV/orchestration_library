@@ -14,7 +14,7 @@ postgres:
     nodePort: 
   persistence:
     enabled: true
-    size: 5Gi
+    size: 10Gi
   credentials:
     username: postgres
     password: postgres
