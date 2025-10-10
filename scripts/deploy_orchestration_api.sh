@@ -36,7 +36,7 @@ ALERTS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
 ALERTS_POPULATOR_SERVICE_PORT=8080
 ALERTS_POPULATOR_NATS_SERVER="nats://demo.nats.io:4222"
 ALERTS_POPULATOR_NATS_TOPICS='["alerts.network-attach", "alerts.abnormal"]'
-ALERTS_POPULATOR_ALERT_API_URL="http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
+ALERTS_POPULATOR_ALERTS_API_URL="http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
 
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
@@ -61,6 +61,9 @@ kind load docker-image --name $CLUSTER_NAME $ORCHRESTRATION_API_IMAGE_NAME:$ORCH
 
 echo "Load Workload Timing Watcher Image to Kind cluster named '$CLUSTER_NAME'"
 kind load docker-image --name $CLUSTER_NAME $WORKLOAD_TIMING_WATCHER_IMAGE_NAME:$WORKLOAD_TIMING_WATCHER_IMAGE_TAG
+
+echo "Load Alerts Populator Image to Kind cluster named '$CLUSTER_NAME'"
+kind load docker-image --name $CLUSTER_NAME $ALERTS_POPULATOR_IMAGE_NAME:$ALERTS_POPULATOR_IMAGE_TAG
 
 echo "Add and Update Helm repository for Kubernetes Dashboard"
 helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL

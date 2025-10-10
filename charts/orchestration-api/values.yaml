@@ -115,8 +115,10 @@ alertsPopulator:
     targetPort: 8080
   env:
     NATS_SERVER: "nats://nats:4222"
-    NATS_TOPICS: '["alerts.network-attach", "alerts.abnormal"]'
+    NATS_TOPICS: 
+      - "alerts.network-attach"
+      - "alerts.abnormal"
     # this values is orchestration-api's API for alerts DB. 
     # Use same values as app.name:app.service.port.
-    ALERT_API_URL: "http://aces-orchestration-api/alerts"
+    ALERTS_API_URL: "http://aces-orchestration-api/alerts"
   

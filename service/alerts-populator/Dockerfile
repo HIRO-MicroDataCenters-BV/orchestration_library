@@ -18,6 +18,6 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY async_nats_listener.py .
+COPY . .
 
 CMD ["python", "async_nats_listener.py"]

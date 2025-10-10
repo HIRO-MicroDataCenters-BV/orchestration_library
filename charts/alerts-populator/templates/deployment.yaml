@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Values.name }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      app: {{ .Values.name }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        app: {{ .Values.name }}
     spec:
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Values.name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
           env:
             - name: NATS_SERVER
-              value: "{{ .Values.env.NATS_SERVER }}"
+              value: {{ .Values.env.NATS_SERVER | quote }}
             - name: NATS_TOPICS
-              value: "{{ .Values.env.NATS_TOPICS }}"
-            - name: POST_API_URL
-              value: "{{ .Values.env.POST_API_URL }}"
+              value: "{{ include "alerts-populator.natsTopics" . }}"
+            - name: ALERTS_API_URL
+              value: {{ .Values.env.ALERTS_API_URL | quote }}
           command: ["python", "async_nats_listener.py"]
 

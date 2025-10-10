@@ -1,19 +1,21 @@
+name: alerts-populator
 replicaCount: 1
 
 image:
   repository: your-registry/alerts-populator
-  tag: "1.0.0"
-  pullPolicy: IfNotPresent
+  tag: alpha1
+  pullPolicy: Always
 
 service:
   enabled: true
   type: ClusterIP
   port: 8080
   targetPort: 8080
-  nodePort: 30019
 
 env:
   NATS_SERVER: "nats://nats:4222"
-  NATS_TOPICS: '["alerts.network-attach", "alerts.abnormal"]'
-  ALERT_API_URL: "http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
+  NATS_TOPICS: 
+    - "alerts.network-attach"
+    - "alerts.abnormal"
+  ALERTS_API_URL: "http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
 
