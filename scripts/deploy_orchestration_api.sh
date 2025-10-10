@@ -28,6 +28,16 @@ WORKLOAD_TIMING_WATCHER_IMAGE_NAME="workload-timing-watcher"
 WORKLOAD_TIMING_WATCHER_IMAGE_TAG="alpha1-$TIMESTAMP"
 WORKLOAD_TIMING_WATCHER_SERVICE_PORT=8080
 
+ALERTS_POPULATOR_NAMESPACE="aces-alerts-populator"
+ALERTS_POPULATOR_RELEASE_NAME="aces-alerts-populator"
+ALERTS_POPULATOR_APP_NAME="aces-alerts-populator"
+ALERTS_POPULATOR_IMAGE_NAME="alerts-populator"
+ALERTS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
+ALERTS_POPULATOR_SERVICE_PORT=8080
+ALERTS_POPULATOR_NATS_SERVER="nats://demo.nats.io:4222"
+ALERTS_POPULATOR_NATS_TOPICS='["alerts.network-attach", "alerts.abnormal"]'
+ALERTS_POPULATOR_ALERT_API_URL="http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
+
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
   exit 1
@@ -35,6 +45,9 @@ fi
 
 echo "Build Docker image for Workload Timing Watcher"
 docker build -t $WORKLOAD_TIMING_WATCHER_IMAGE_NAME:$WORKLOAD_TIMING_WATCHER_IMAGE_TAG -f service/workload-timing-watcher/Dockerfile service/workload-timing-watcher
+
+echo "Build Docker image for Alerts Populator"
+docker build -t $ALERTS_POPULATOR_IMAGE_NAME:$ALERTS_POPULATOR_IMAGE_TAG -f service/alerts-populator/Dockerfile service/alerts-populator
 
 echo "Build Docker image for Orchestration API"
 docker build -t $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG -f Dockerfile .
@@ -93,7 +106,11 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --set workloadTimingWatcher.enabled=true \
   --set workloadTimingWatcher.image.repository=$WORKLOAD_TIMING_WATCHER_IMAGE_NAME \
   --set workloadTimingWatcher.image.tag=$WORKLOAD_TIMING_WATCHER_IMAGE_TAG \
-  --set workloadTimingWatcher.image.pullPolicy=IfNotPresent
+  --set workloadTimingWatcher.image.pullPolicy=IfNotPresent \
+  --set alertsPopulator.enabled=true \
+  --set alertsPopulator.image.repository=$ALERTS_POPULATOR_IMAGE_NAME \
+  --set alertsPopulator.image.tag=$ALERTS_POPULATOR_IMAGE_TAG \
+  --set alertsPopulator.image.pullPolicy=IfNotPresent
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
 
