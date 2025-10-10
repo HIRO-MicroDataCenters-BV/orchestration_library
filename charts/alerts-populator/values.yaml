@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: your-registry/alerts-populator
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+env:
+  NATS_SERVER: "nats://nats:4222"
+  NATS_TOPICS: '["alerts.critical", "alerts.warning"]'
+  POST_API_URL: "http://api-service.default.svc.cluster.local:8080/alerts"
+
