@@ -76,13 +76,61 @@ class WorkloadTimingCreate(BaseModel):
     scheduler_type: WorkloadTimingSchedulerEnum
     pod_uid: str
 
-    created_timestamp: datetime
-    scheduled_timestamp: datetime
-    ready_timestamp: datetime
+    created_timestamp: Optional[datetime] = None
+    scheduled_timestamp: Optional[datetime] = None
+    ready_timestamp: Optional[datetime] = None
     deleted_timestamp: Optional[datetime] = None
 
     # The following fields are calculated from the timestamps
     # above and are not required in the create request:
+    # - creation_to_scheduled_ms
+    # - scheduled_to_ready_ms
+    # - creation_to_ready_ms
+    # - total_lifecycle_ms
+
+    phase: Optional[str] = None
+    reason: Optional[str] = None
+    is_completed: Optional[bool] = False
+    recorded_at: Optional[datetime] = datetime.now(timezone.utc)
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
+
+class WorkloadTimingUpdate(BaseModel):
+    """
+    Schema for updating a workload timing.
+    """
+
+    created_timestamp: Optional[datetime] = None
+    scheduled_timestamp: Optional[datetime] = None
+    ready_timestamp: Optional[datetime] = None
+    deleted_timestamp: Optional[datetime] = None
+
+    # The following fields are calculated from the timestamps
+    # above and are not required in the update request:
     # - creation_to_scheduled_ms
     # - scheduled_to_ready_ms
     # - creation_to_ready_ms

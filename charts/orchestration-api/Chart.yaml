@@ -11,3 +11,8 @@ dependencies:
     condition: k8sDashboard.enabled
     version: "1.0.1"
     repository: "file://../k8s-dashboard"
+  - name: workload-timing-watcher
+    alias: workloadTimingWatcher
+    condition: workloadTimingWatcher.enabled
+    version: "1.0.0"
+    repository: "file://../workload-timing-watcher"
