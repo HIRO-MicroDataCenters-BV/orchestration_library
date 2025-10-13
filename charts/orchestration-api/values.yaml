@@ -98,3 +98,27 @@ workloadTimingWatcher:
   #   path: /
   #   tls: true
   #   tlsSecretName: pod-timing-watcher-tls-secret
+
+# The below values are for the Alerts Populator
+alertsPopulator:
+  enabled: true
+  name: alerts-populator
+  replicaCount: 1
+  image:
+    repository: alerts-populator
+    tag: alpha1
+    pullPolicy: Always
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  env:
+    NATS_SERVER: "nats://nats:4222"
+    NATS_TOPICS: 
+      - "alerts.network-attack"
+      - "alerts.abnormal"
+    # this values is orchestration-api's API for alerts DB. 
+    # Use same values as app.name:app.service.port.
+    ALERTS_API_URL: "http://aces-orchestration-api/alerts"
+  
