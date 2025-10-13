@@ -1,5 +1,15 @@
 apiVersion: v1
 entries:
+  alerts-populator:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-10-13T16:44:35.368574781Z"
+    description: A Helm chart for deploying Alerts Populator service
+    digest: 157b0e160ae4bdbfb5392245abe28f557fca0dcb4d89a79c0a80690522c20b4d
+    name: alerts-populator
+    urls:
+    - alerts-populator-1.0.0.tgz
+    version: 1.0.0
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
@@ -91,4 +101,4 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/workload-timing-watcher-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-10T00:11:20.490531172Z"
+generated: "2025-10-13T16:44:36.091069699Z"
