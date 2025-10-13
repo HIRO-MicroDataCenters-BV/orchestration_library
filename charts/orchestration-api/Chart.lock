@@ -9,4 +9,4 @@ dependencies:
   repository: file://../alerts-populator
   version: 1.0.0
 digest: sha256:92596bd4bee00614b21ccd3c721327fb1ce964eb951478d5841e3753ee5ad717
-generated: "2025-10-10T19:06:53.012247+02:00"
+generated: "2025-10-13T12:49:44.751003+02:00"

@@ -35,8 +35,8 @@ ALERTS_POPULATOR_IMAGE_NAME="alerts-populator"
 ALERTS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
 ALERTS_POPULATOR_SERVICE_PORT=8080
 ALERTS_POPULATOR_NATS_SERVER="nats://demo.nats.io:4222"
-ALERTS_POPULATOR_NATS_TOPICS='["alerts.network-attach", "alerts.abnormal"]'
-ALERTS_POPULATOR_ALERTS_API_URL="http://aces-orchestration-api.aces-orchestration-api.svc.cluster.local:8080/alerts"
+ALERTS_POPULATOR_NATS_TOPICS=("alerts.network-attach" "alerts.abnormal")
+ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRATION_API_NAMESPACE.svc.cluster.local:$ORCHRESTRATION_API_SERVICE_PORT/alerts"
 
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
@@ -85,9 +85,16 @@ echo "Rebuilding dependencies for orchestration-api chart"
 #   --set reverseProxy.service.type=NodePort \
 #   --set reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
 
+# Prepare --set arguments for NATS_TOPICS array
+nats_topics_set=""
+for i in "${!ALERTS_POPULATOR_NATS_TOPICS[@]}"; do
+  nats_topics_set+="--set alertsPopulator.env.NATS_TOPICS[$i]=${ALERTS_POPULATOR_NATS_TOPICS[$i]} "
+done
+nats_topics_set=${nats_topics_set% }  # Remove trailing space
+
 echo "Deploy the orchestration-api with dependencies(K8S Dashboard with reverse proxy) to the Kind cluster"
 RELEASE_NAME=$ORCHRESTRATION_API_RELEASE_NAME
-helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
+helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-api \
   --post-renderer ./charts/orchestration-api/add-common-labels.sh \
   --namespace $ORCHRESTRATION_API_NAMESPACE \
   --create-namespace \
@@ -111,12 +118,15 @@ helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts/orchestration-a
   --set workloadTimingWatcher.image.tag=$WORKLOAD_TIMING_WATCHER_IMAGE_TAG \
   --set workloadTimingWatcher.image.pullPolicy=IfNotPresent \
   --set alertsPopulator.enabled=true \
-  --set alertsPopulator.nats.server=$ALERTS_POPULATOR_NATS_SERVER \
-  --set alertsPopulator.nats.topics=$ALERTS_POPULATOR_NATS_TOPICS \
-  --set alertsPopulator.alertsApi.url=$ALERTS_POPULATOR_ALERTS_API_URL \
   --set alertsPopulator.image.repository=$ALERTS_POPULATOR_IMAGE_NAME \
   --set alertsPopulator.image.tag=$ALERTS_POPULATOR_IMAGE_TAG \
-  --set alertsPopulator.image.pullPolicy=IfNotPresent
+  --set alertsPopulator.image.pullPolicy=IfNotPresent \
+  --set alertsPopulator.env.NATS_SERVER=$ALERTS_POPULATOR_NATS_SERVER \
+  ${nats_topics_set} \
+  --set alertsPopulator.env.ALERTS_API_URL=$ALERTS_POPULATOR_ALERTS_API_URL
+  """
+echo "Helm command: $helm_command"
+eval $helm_command
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy
 
