@@ -15,7 +15,7 @@ service:
 env:
   NATS_SERVER: "nats://nats:4222"
   NATS_TOPICS: 
-    - "alerts.network-attach"
+    - "alerts.network-attack"
     - "alerts.abnormal"
   ALERTS_API_URL: "http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
 

@@ -35,7 +35,7 @@ ALERTS_POPULATOR_IMAGE_NAME="alerts-populator"
 ALERTS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
 ALERTS_POPULATOR_SERVICE_PORT=8080
 ALERTS_POPULATOR_NATS_SERVER="nats://demo.nats.io:4222"
-ALERTS_POPULATOR_NATS_TOPICS=("alerts.network-attach" "alerts.abnormal")
+ALERTS_POPULATOR_NATS_TOPICS=("alerts.network-attack" "alerts.abnormal")
 ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRATION_API_NAMESPACE.svc.cluster.local:$ORCHRESTRATION_API_SERVICE_PORT/alerts"
 
 if [ -z "$CLUSTER_NAME" ]; then
@@ -125,7 +125,7 @@ helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts
   ${nats_topics_set} \
   --set alertsPopulator.env.ALERTS_API_URL=$ALERTS_POPULATOR_ALERTS_API_URL
   """
-echo "Helm command: $helm_command"
+# echo "Helm command: $helm_command"
 eval $helm_command
   # set to pullPolicy=IfNotPresent to avoid pulling the image from the registry only for kind cluster
   # set dummyRedeployTimestamp to force redeploy

@@ -116,7 +116,7 @@ alertsPopulator:
   env:
     NATS_SERVER: "nats://nats:4222"
     NATS_TOPICS: 
-      - "alerts.network-attach"
+      - "alerts.network-attack"
       - "alerts.abnormal"
     # this values is orchestration-api's API for alerts DB. 
     # Use same values as app.name:app.service.port.
