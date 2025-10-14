@@ -5,5 +5,8 @@ dependencies:
 - name: workload-timing-watcher
   repository: file://../workload-timing-watcher
   version: 1.0.0
-digest: sha256:45e5b7c813e9c8c5e3260aaf3caba9a24a7d25bc3ddf96f9b84547e88a4f1932
-generated: "2025-10-10T01:53:46.730523+02:00"
+- name: alerts-populator
+  repository: file://../alerts-populator
+  version: 1.0.0
+digest: sha256:92596bd4bee00614b21ccd3c721327fb1ce964eb951478d5841e3753ee5ad717
+generated: "2025-10-13T18:36:13.242398+02:00"

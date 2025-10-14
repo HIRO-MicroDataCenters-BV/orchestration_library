@@ -112,6 +112,8 @@ jobs:
       image_tag: ${{ steps.set-orchestration-image.outputs.image_tag }}
       workload_timing_watcher_image_name: ${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_name }}
       workload_timing_watcher_image_tag: ${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_tag }}
+      alerts_populator_image_name: ${{ steps.set-alerts-populator-image.outputs.alerts_populator_image_name }}
+      alerts_populator_image_tag: ${{ steps.set-alerts-populator-image.outputs.alerts_populator_image_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -147,6 +149,19 @@ jobs:
         if: github.event_name == 'push'
         run: |
           docker push ${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_NAME }}:${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_tag }}
+
+      - name: Build Alerts Populator Docker image
+        id: set-alerts-populator-image
+        run: |
+          IMAGE_TAG=${{ vars.ALERTS_POPULATOR_IMAGE_TAG }}-$(date +%Y%m%d%H%M%S)
+          docker build -t ${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}:$IMAGE_TAG -f ./service/alerts-populator/Dockerfile ./service/alerts-populator
+          echo "alerts_populator_image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "alerts_populator_image_name=${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Push Alerts Populator Docker image
+        if: github.event_name == 'push'
+        run: |
+          docker push ${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}:${{ steps.set-alerts-populator-image.outputs.alerts_populator_image_tag }}
 
   helmPublish:
     name: Publish Helm Charts
@@ -258,6 +273,9 @@ jobs:
       - name: Update Helm dependencies for workload-timing-watcher chart
         run: helm dependency build ./charts/workload-timing-watcher
 
+      - name: Update Helm dependencies for alerts-populator chart
+        run: helm dependency build ./charts/alerts-populator
+
       - name: Update Helm dependencies for orchestration-api chart
         run: helm dependency build ./charts/orchestration-api
 
@@ -332,6 +350,17 @@ jobs:
           fi
           echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
 
+      - name: Prepare --set arguments for NATS_TOPICS array
+        id: set-nats-topics
+        run: |
+          nats_topics_set=""
+          IFS=',' read -ra TOPICS <<< "${{ vars.ALERTS_POPULATOR_NATS_TOPICS }}"
+          for i in "${!TOPICS[@]}"; do
+          nats_topics_set+="--set alertsPopulator.env.NATS_TOPICS[$i]=${TOPICS[$i]} "
+          done
+          nats_topics_set=${nats_topics_set% }
+          echo "nats_topics_set=$nats_topics_set" >> $GITHUB_OUTPUT
+
       - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
         env:
           RELEASE_NAME: ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} # used in post-renderer script
@@ -361,6 +390,10 @@ jobs:
             --set global.postgresql.auth.password=postgress \
             --set workloadTimingWatcher.image.repository=${{ vars.WORKLOAD_TIMING_WATCHER_IMAGE_NAME }} \
             --set workloadTimingWatcher.image.tag=${{ needs.build-and-push.outputs.workload_timing_watcher_image_tag }} \
+            --set alertsPopulator.image.repository=${{ vars.ALERTS_POPULATOR_IMAGE_NAME }} \
+            --set alertsPopulator.image.tag=${{ needs.build-and-push.outputs.alerts_populator_image_tag }} \
+            --set alertsPopulator.env.NATS_SERVER=${{ vars.ALERTS_POPULATOR_NATS_SERVER }} \
+            ${{ steps.set-nats-topics.outputs.nats_topics_set }} \
             --timeout=600s \
             --wait \
             --debug \
