@@ -26,11 +26,12 @@ def get_nodes() -> List[Dict[str, Optional[str]]]:
     nodes: List[Dict[str, Optional[str]]] = []
     for item in v1.list_node().items:
         node_name = item.metadata.name
+        node_id = item.metadata.uid
         internal_ip = next(
             (addr.address for addr in item.status.addresses if addr.type == "InternalIP"),
             None,
         )
-        nodes.append({"id": node_name, "ip": internal_ip})
+        nodes.append({"id": node_id, "name": node_name, "ip": internal_ip})
     return nodes
 
 
@@ -51,7 +52,6 @@ def get_node_name_by_ip(ip: str) -> Optional[str]:
     Convenience: return node name for an InternalIP or None.
     """
     node = get_node_by_ip(ip)
-    print("node:", node)
     return node["name"] if node else None
 
 def get_node_id_by_ip(ip: str) -> Optional[str]:
@@ -59,7 +59,6 @@ def get_node_id_by_ip(ip: str) -> Optional[str]:
     Convenience: return node ID for an InternalIP or None.
     """
     node = get_node_by_ip(ip)
-    print("node:", node)
     return node["id"] if node else None
 
 def get_pod_id_by_name(pod_name: str) -> Optional[str]:

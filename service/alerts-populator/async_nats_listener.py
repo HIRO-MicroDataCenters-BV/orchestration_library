@@ -74,7 +74,7 @@ async def connect_nats(topics, alerts_api_url):
                 closed_cb=closed_cb,
                 name="alerts-populator-client",
             )
-            print(f"Connected to NATS server: {nats_server}")
+            logger.info(f"Connected to NATS server: {nats_server}")
 
             for topic in topics:
                 await nc.subscribe(topic, cb=nats_callback)
