@@ -68,11 +68,28 @@ class AlertCreateRequest(BaseModel):
         description="ID of the pod",
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
+
+    pod_name: Optional[str] = Field(
+        None,
+        description="Name of the pod",
+        min_length=1,
+        max_length=1000,
+        examples=["agent-644d8b675-jfxw8"],
+    )
     node_id: Optional[UUID] = Field(
         None,
         description="ID of the node",
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
+
+    node_name: Optional[str] = Field(
+        None,
+        description="Name of the node",
+        min_length=1,
+        max_length=1000,
+        examples=["ip-172-31-33-42.us-west-2.compute.internal"],
+    )
+
     source_ip: Optional[str] = Field(
         None, description="Source IP address", examples=["192.168.1.1", "10.0.0.1"]
     )

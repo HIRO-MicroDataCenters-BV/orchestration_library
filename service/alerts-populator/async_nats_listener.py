@@ -31,13 +31,15 @@ async def message_handler(msg, alerts_api_url):
     data = msg.data.decode()
 
     transform_func = get_transformation_func(subject)
-    transformed = transform_func(data)
+    transformed_alerts = transform_func(data)
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(alerts_api_url, json=transformed)
-        logger.info(f"Response status: {response.status_code}, body: {response.text}")
-
-    logger.info(f"Sent transformed data {transformed} from {subject} to {alerts_api_url}")
+    for payload in transformed_alerts:
+        if "alert_type" not in payload:
+            payload["alert_type"] = "Other"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(alerts_api_url, json=payload)
+            logger.info(f"Response status: {response.status_code}, body: {response.text}")
+        logger.info(f"Sent transformed data {payload} from {subject} to {alerts_api_url}")
 
 
 async def connect_nats(topics, alerts_api_url):

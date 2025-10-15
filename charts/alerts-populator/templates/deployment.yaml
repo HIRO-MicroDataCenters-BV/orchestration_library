@@ -12,6 +12,8 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      # Use the same service account created in orchestration-api chart
+      serviceAccountName: {{ .Release.Name }}-service-account
       containers:
         - name: {{ .Values.name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
