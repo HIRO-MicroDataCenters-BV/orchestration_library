@@ -47,8 +47,14 @@ class Alert(Base, BaseDictMixin):
     # Pod ID - UUID
     pod_id = Column(UUID, nullable=True, index=True)  # Index for pod queries
 
+    # Pod Name - TEXT
+    pod_name = Column(Text, nullable=True)
+
     # Node ID - UUID
     node_id = Column(UUID, nullable=True, index=True)  # Index for node queries
+
+    # Node Name - TEXT
+    node_name = Column(Text, nullable=True)
 
     # Additional fields for network-related alerts
     # Source IP - TEXT
