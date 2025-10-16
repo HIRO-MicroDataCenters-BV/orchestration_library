@@ -47,31 +47,26 @@ def transform_abnormal(data: str) -> json:
     #   },
     #   "model_name": "tis"
     # }
-    alert_payloads = []
     input_json = json.loads(data)
     data = input_json.get("data", {})
-    pod_name = data.get("pod", None)
-    node_name = data.get("instance", None)
-    pod_id = get_pod_id_by_name(pod_name)
-    node_id = get_node_id_by_name(node_name)
-    timestamp = data.get("timestamp", None)
+    pod_name = data.get("pod")
+    node_name = data.get("instance")
     payload = {
         "alert_type": "Abnormal",
         "alert_model": input_json.get("model_name", pod_name),
-        "alert_description": input_json.get("prediction", pod_name),
+        "alert_description": data.get("prediction", pod_name),
         "pod_name": pod_name,
-        "pod_id": pod_id,
-        "node_id": node_id,
+        "pod_id": get_pod_id_by_name(pod_name),
+        "node_id": get_node_id_by_name(node_name),
         "node_name": node_name,
-        "source_ip": input_json.get("source_ip", None),
-        "source_port": input_json.get("source_port", None),
-        "destination_ip": input_json.get("destination_ip", None),
-        "destination_port": input_json.get("destination_port", None),
-        "protocol": input_json.get("protocol", None),
-        "created_at": timestamp,
+        "source_ip": input_json.get("source_ip"),
+        "source_port": input_json.get("source_port"),
+        "destination_ip": input_json.get("destination_ip"),
+        "destination_port": input_json.get("destination_port"),
+        "protocol": input_json.get("protocol"),
+        "created_at": data.get("timestamp"),
     }
-    alert_payloads.append(payload)
-    return alert_payloads
+    return [payload]
 
 
 def default_transform_func(data: str) -> json:
