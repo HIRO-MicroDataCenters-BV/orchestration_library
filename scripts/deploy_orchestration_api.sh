@@ -34,8 +34,12 @@ ALERTS_POPULATOR_APP_NAME="aces-alerts-populator"
 ALERTS_POPULATOR_IMAGE_NAME="alerts-populator"
 ALERTS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
 ALERTS_POPULATOR_SERVICE_PORT=8080
-ALERTS_POPULATOR_NATS_SERVER="nats://demo.nats.io:4222"
+# ALERTS_POPULATOR_NATS_SERVER="nats://demo.nats.io:4222"
+ALERTS_POPULATOR_NATS_SERVER=nats://nats-server.aces-monitoring-observability.svc.cluster.local:4222
 ALERTS_POPULATOR_NATS_TOPICS=("alerts.network-attack" "alerts.abnormal")
+ALERTS_POPULATOR_NATS_JS_STREAM="PREDICTIONS"
+ALERTS_POPULATOR_NATS_JS_SUBJECTS=("anomalies" "network-attacks")
+ALERTS_POPULATOR_NATS_JS_DURABLE="alerts-populator"
 ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRATION_API_NAMESPACE.svc.cluster.local:$ORCHRESTRATION_API_SERVICE_PORT/alerts"
 
 if [ -z "$CLUSTER_NAME" ]; then
@@ -85,12 +89,62 @@ echo "Rebuilding dependencies for orchestration-api chart"
 #   --set reverseProxy.service.type=NodePort \
 #   --set reverseProxy.service.nodePort=$NGINX_DASHBOARD_REVERSE_PROXY_NODE_PORT \
 
-# Prepare --set arguments for NATS_TOPICS array
-nats_topics_set=""
-for i in "${!ALERTS_POPULATOR_NATS_TOPICS[@]}"; do
-  nats_topics_set+="--set alertsPopulator.env.NATS_TOPICS[$i]=${ALERTS_POPULATOR_NATS_TOPICS[$i]} "
+# Prepare JetStream NATS locally (host) so Kind cluster can use it.
+# Mac/Kind: pods can reach host via host.docker.internal
+NATS_CONTAINER_NAME="${ALERTS_POPULATOR_NATS_JS_DURABLE}-nats-js"
+echo "Check if local NATS JetStream container '${NATS_CONTAINER_NAME}' is running"
+if ! docker ps --format '{{.Names}}' | grep -q "^${NATS_CONTAINER_NAME}$"; then
+  echo "Starting local NATS JetStream container '${NATS_CONTAINER_NAME}'"
+  docker run -d --name ${NATS_CONTAINER_NAME} \
+    -p 4222:4222 -p 6222:6222 -p 8222:8222 \
+    nats:2.10 -js
+else
+  echo "NATS JetStream container '${NATS_CONTAINER_NAME}' already running"
+fi
+
+# Ensure stream exists (uses nats-box + nats CLI)
+echo "Ensuring JetStream stream '${ALERTS_POPULATOR_NATS_JS_STREAM}' exists"
+SUBJECTS_CSV="$(printf "%s," "${ALERTS_POPULATOR_NATS_JS_SUBJECTS[@]}" | sed 's/,$//')"
+echo "Subjects for the stream: ${SUBJECTS_CSV}"
+
+# Create stream if not exists
+for subject in "${ALERTS_POPULATOR_NATS_JS_SUBJECTS[@]}"; do
+  echo "JetStream subject: $subject"
+  # Check first
+  docker run --rm --network host natsio/nats-box \
+    nats --server nats://localhost:4222 stream info "${ALERTS_POPULATOR_NATS_JS_STREAM}" >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Creating stream ${ALERTS_POPULATOR_NATS_JS_STREAM} with subjects: ${SUBJECTS_CSV}"
+    docker run --rm --network host natsio/nats-box \
+      nats --server nats://localhost:4222 stream add "${ALERTS_POPULATOR_NATS_JS_STREAM}" \
+        --subjects "${SUBJECTS_CSV}" \
+        --storage memory \
+        --retention limits \
+        --discard old \
+        --dupe-window 2m \
+        --max-msgs=-1 --max-bytes=-1 --replicas=1 --allow-rollup --no-allow-direct \
+        --defaults || echo "Stream creation failed"
+  else
+    echo "Stream ${ALERTS_POPULATOR_NATS_JS_STREAM} already exists"
+  fi
 done
-nats_topics_set=${nats_topics_set% }  # Remove trailing space
+
+# Override NATS server to point to host JetStream (instead of in-cluster nats)
+ALERTS_POPULATOR_NATS_SERVER="nats://host.docker.internal:4222"
+
+
+# Prepare --set arguments for NATS_TOPICS array
+# nats_topics_set=""
+# for i in "${!ALERTS_POPULATOR_NATS_TOPICS[@]}"; do
+#   nats_topics_set+="--set alertsPopulator.env.NATS_TOPICS[$i]=${ALERTS_POPULATOR_NATS_TOPICS[$i]} "
+# done
+# nats_topics_set=${nats_topics_set% }  # Remove trailing space
+
+nats_js_subjects=""
+for i in "${!ALERTS_POPULATOR_NATS_JS_SUBJECTS[@]}"; do
+  nats_js_subjects+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${ALERTS_POPULATOR_NATS_JS_SUBJECTS[$i]} "
+done
+nats_js_subjects=${nats_js_subjects% }  # Remove trailing space
 
 echo "Deploy the orchestration-api with dependencies(K8S Dashboard with reverse proxy) to the Kind cluster"
 RELEASE_NAME=$ORCHRESTRATION_API_RELEASE_NAME
@@ -122,7 +176,9 @@ helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts
   --set alertsPopulator.image.tag=$ALERTS_POPULATOR_IMAGE_TAG \
   --set alertsPopulator.image.pullPolicy=IfNotPresent \
   --set alertsPopulator.env.NATS_SERVER=$ALERTS_POPULATOR_NATS_SERVER \
-  ${nats_topics_set} \
+  --set alertsPopulator.env.NATS_JS_STREAM=$ALERTS_POPULATOR_NATS_JS_STREAM \
+  --set alertsPopulator.env.NATS_JS_DURABLE=$ALERTS_POPULATOR_NATS_JS_DURABLE \
+  ${nats_js_subjects} \
   --set alertsPopulator.env.ALERTS_API_URL=$ALERTS_POPULATOR_ALERTS_API_URL
   """
 # echo "Helm command: $helm_command"

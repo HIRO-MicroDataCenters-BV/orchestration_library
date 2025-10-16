@@ -1,5 +1,8 @@
 import json
-from utils import get_node_id_by_ip, get_node_name_by_ip, get_pod_id_by_name
+from utils import (
+    get_pod_id_by_name,
+    get_node_id_by_name,
+)
 
 
 def build_alert_api_payload(input_json: dict, alert_type: str) -> json:
@@ -34,56 +37,40 @@ def transform_network_attack(data: str) -> json:
 def transform_abnormal(data: str) -> json:
     # Example transformation logic for abnormal alerts
     # Expected input json string is :
-    # {
-    #   "outputs": [
     #     {
-    #   "data": [
-    #     "{\"pod\": \"agent-644d8b675-jfxw8\", \"instance\": \"172.31.33.42:10250\", \"timestamp\": \"2025-10-14T21:51:46.454000\", \"prediction\": \"CPU HOG\"}",
-    #     "{\"pod\": \"agent-644d8b675-jfxw8\", \"instance\": \"172.31.33.42:10250\", \"timestamp\": \"2025-10-14T21:52:16.454000\", \"prediction\": \"CPU HOG\"}"
-    #   ]
-    #     }
-    #   ],
-    #   "parameters": {
-    #     "exclude_predictions": "Normal"
-    # }
+    #   "timestamp": "2025-10-15T23:51:31.752364",
+    #   "data": {
+    #     "pod": "submariner-lighthouse-coredns-765db7f584-nsk89",
+    #     "instance": "master",
+    #     "timestamp": "2025-10-15T23:51:01.031000",
+    #     "prediction": "CPU HOG"
+    #   },
+    #   "model_name": "tis"
     # }
     alert_payloads = []
     input_json = json.loads(data)
-    for output in input_json.get("outputs", []):
-        for data_row in output.get("data", []):
-            json_data_row = json.loads(data_row)
-            print("json_data_row:", json_data_row)
-            instance_ip = json_data_row.get("instance", None)
-            if instance_ip and ":" in instance_ip:
-                instance_ip = instance_ip.split(":")[0]
-            print("instance_ip:", instance_ip)
-            pod_name = json_data_row.get("pod", None)
-            print("pod_name:", pod_name)
-            pod_id = get_pod_id_by_name(pod_name)
-            print("pod_id:", pod_id)
-            node_id = get_node_id_by_ip(instance_ip)
-            print("node_id:", node_id)
-            node_name = get_node_name_by_ip(instance_ip)
-            print("node_name:", node_name)
-            payload = {
-                "alert_type": "Abnormal",
-                "alert_model": json_data_row.get("model", pod_name),
-                "alert_description": json_data_row.get(
-                    "prediction", pod_name
-                ),
-                "pod_name": pod_name,
-                "pod_id": pod_id,
-                "node_id": node_id,
-                "node_name": node_name,
-                "source_ip": input_json.get("source_ip", None),
-                "source_port": input_json.get("source_port", None),
-                "destination_ip": input_json.get("destination_ip", None),
-                "destination_port": input_json.get("destination_port", None),
-                "protocol": input_json.get("protocol", None),
-            }
-            if "timestamp" in json_data_row.keys():
-                payload["created_at"] = json_data_row.get("timestamp", None)
-            alert_payloads.append(payload)
+    data = input_json.get("data", {})
+    pod_name = data.get("pod", None)
+    node_name = data.get("instance", None)
+    pod_id = get_pod_id_by_name(pod_name)
+    node_id = get_node_id_by_name(node_name)
+    timestamp = data.get("timestamp", None)
+    payload = {
+        "alert_type": "Abnormal",
+        "alert_model": input_json.get("model_name", pod_name),
+        "alert_description": input_json.get("prediction", pod_name),
+        "pod_name": pod_name,
+        "pod_id": pod_id,
+        "node_id": node_id,
+        "node_name": node_name,
+        "source_ip": input_json.get("source_ip", None),
+        "source_port": input_json.get("source_port", None),
+        "destination_ip": input_json.get("destination_ip", None),
+        "destination_port": input_json.get("destination_port", None),
+        "protocol": input_json.get("protocol", None),
+        "created_at": timestamp,
+    }
+    alert_payloads.append(payload)
     return alert_payloads
 
 
@@ -93,11 +80,11 @@ def default_transform_func(data: str) -> json:
     return alert_payloads
 
 
-def get_transformation_func(alert_type: str):
-    match alert_type:
+def get_transformation_func(subject: str):
+    match subject:
         case "alerts.network-attack":
             return transform_network_attack
-        case "alerts.abnormal":
+        case "anomalies":
             return transform_abnormal
         case _:
             return default_transform_func

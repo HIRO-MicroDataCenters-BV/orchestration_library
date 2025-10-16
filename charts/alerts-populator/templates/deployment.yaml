@@ -25,6 +25,12 @@ spec:
               value: {{ .Values.env.NATS_SERVER | quote }}
             - name: NATS_TOPICS
               value: "{{ include "alerts-populator.natsTopics" . }}"
+            - name: NATS_JS_STREAM
+              value: {{ .Values.env.NATS_JS_STREAM | quote }}
+            - name: NATS_JS_SUBJECTS
+              value: "{{ include "alerts-populator.natsJSSubjects" . }}"
+            - name: NATS_JS_DURABLE
+              value: {{ .Values.env.NATS_JS_DURABLE | quote }}
             - name: ALERTS_API_URL
               value: {{ .Values.env.ALERTS_API_URL | quote }}
           command: ["python", "async_nats_listener.py"]

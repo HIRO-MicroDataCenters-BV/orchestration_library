@@ -61,6 +61,16 @@ def get_node_id_by_ip(ip: str) -> Optional[str]:
     node = get_node_by_ip(ip)
     return node["id"] if node else None
 
+def get_node_id_by_name(node_name: str) -> Optional[str]:
+    """
+    Convenience: return node ID for a node name or None.
+    """
+    if not node_name:
+        return None
+    for node in get_nodes():
+        if node["name"] == node_name:
+            return node["id"]
+
 def get_pod_id_by_name(pod_name: str) -> Optional[str]:
     """
     Convenience: return pod ID for a pod name (searching all namespaces) or None.
