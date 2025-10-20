@@ -1,8 +1,8 @@
 """Add placement_decision table
 
-Revision ID: 3e64b08e1ea4
-Revises: 87e4d5720302
-Create Date: 2025-09-20 01:34:16.895061
+Revision ID: f9d64a71a1ad
+Revises: 4a5ffcff687b
+Create Date: 2025-10-20 14:15:50.486546
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '3e64b08e1ea4'
-down_revision: Union[str, None] = '87e4d5720302'
+revision: str = 'f9d64a71a1ad'
+down_revision: Union[str, None] = '4a5ffcff687b'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -29,7 +29,7 @@ def upgrade() -> None:
     sa.Column('decision_placement_lst', postgresql.ARRAY(sa.String()), nullable=False),
     sa.Column('decision_reason', sa.String(), nullable=False),
     sa.Column('trace', sa.Text(), nullable=True),
-    sa.Column('timestamp', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('timestamp', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('decision_id')
     )
     op.create_index(op.f('ix_placement_decision_decision_id'), 'placement_decision', ['decision_id'], unique=False)
