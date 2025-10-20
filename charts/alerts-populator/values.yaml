@@ -17,5 +17,10 @@ env:
   NATS_TOPICS: 
     - "alerts.network-attack"
     - "alerts.abnormal"
+  NATS_JS_SUBJECTS:
+    - "anomalies"
+    - "network-attacks"
+  NATS_JS_STREAM: "PREDICTIONS"
+  NATS_JS_DURABLE: "alerts-populator"
   ALERTS_API_URL: "http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
 

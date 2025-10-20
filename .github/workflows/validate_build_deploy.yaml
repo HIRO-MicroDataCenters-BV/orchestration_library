@@ -350,16 +350,16 @@ jobs:
           fi
           echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
 
-      - name: Prepare --set arguments for NATS_TOPICS array
-        id: set-nats-topics
+      - name: Prepare --set arguments for NATS_JS_SUBJECTS array
+        id: set-nats-js-subjects
         run: |
-          nats_topics_set=""
-          IFS=',' read -ra TOPICS <<< "${{ vars.ALERTS_POPULATOR_NATS_TOPICS }}"
-          for i in "${!TOPICS[@]}"; do
-          nats_topics_set+="--set alertsPopulator.env.NATS_TOPICS[$i]=${TOPICS[$i]} "
+          nats_js_subjects_set=""
+          IFS=',' read -ra SUBJECTS <<< "${{ vars.ALERTS_POPULATOR_NATS_JS_SUBJECTS }}"
+          for i in "${!SUBJECTS[@]}"; do
+          nats_js_subjects_set+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${SUBJECTS[$i]} "
           done
-          nats_topics_set=${nats_topics_set% }
-          echo "nats_topics_set=$nats_topics_set" >> $GITHUB_OUTPUT
+          nats_js_subjects_set=${nats_js_subjects_set% }
+          echo "nats_js_subjects_set=$nats_js_subjects_set" >> $GITHUB_OUTPUT
 
       - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
         env:
@@ -393,7 +393,9 @@ jobs:
             --set alertsPopulator.image.repository=${{ vars.ALERTS_POPULATOR_IMAGE_NAME }} \
             --set alertsPopulator.image.tag=${{ needs.build-and-push.outputs.alerts_populator_image_tag }} \
             --set alertsPopulator.env.NATS_SERVER=${{ vars.ALERTS_POPULATOR_NATS_SERVER }} \
-            ${{ steps.set-nats-topics.outputs.nats_topics_set }} \
+            --set alertsPopulator.env.NATS_JS_STREAM=${{ vars.ALERTS_POPULATOR_NATS_JS_STREAM }} \
+            --set alertsPopulator.env.NATS_JS_DURABLE=${{ vars.ALERTS_POPULATOR_NATS_JS_DURABLE }} \
+            ${{ steps.set-nats-js-subjects.outputs.nats_js_subjects_set }} \
             --timeout=600s \
             --wait \
             --debug \
