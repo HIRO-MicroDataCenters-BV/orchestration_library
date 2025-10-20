@@ -48,16 +48,16 @@ async def create_workload_decision(
     """
     exception = None
     try:
-        db_obj = WorkloadRequestDecision(**data.model_dump())
-        db_session.add(db_obj)
+        wrd_obj = WorkloadRequestDecision(**data.model_dump())
+        db_session.add(wrd_obj)
         await db_session.commit()
-        await db_session.refresh(db_obj)
+        await db_session.refresh(wrd_obj)
         logger.info("successfully created pod decision with %s", data.pod_name)
         record_workload_request_decision_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return db_obj
+        return wrd_obj
     except IntegrityError as exc:
         exception = exc
         await handle_db_exception(
@@ -190,14 +190,14 @@ async def get_all_workload_decisions(
     """
     exception = None
     try:
-        result = await db_session.execute(
+        wrd_result = await db_session.execute(
             select(WorkloadRequestDecision).offset(skip).limit(limit)
         )
         record_workload_request_decision_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return result.scalars().all()
+        return wrd_result.scalars().all()
     except SQLAlchemyError as exc:
         exception = exc
         logger.error("Error retrieving all pod decisions %s", str(exc))

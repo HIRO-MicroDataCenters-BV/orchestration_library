@@ -1,0 +1,17 @@
+name: workload-timing-watcher
+replicaCount: 1
+
+image:
+  repository: workload-timing-watcher
+  tag: alpha1
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  annotations: {}
+
+env:
+  - name: WORKLOAD_TIMING_API_URL
+    value: "http://orchestration-api-svc.hiros.svc.cluster.local:8000/workload_timing/"

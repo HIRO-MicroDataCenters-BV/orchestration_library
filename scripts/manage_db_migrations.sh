@@ -106,13 +106,14 @@ rename_latest_revision_file() {
 # Ask for action
 echo "Choose an Alembic action:"
 echo "1) Create new revision"
-echo "2) Upgrade to latest"
-echo "3) Upgrade one migration"
-echo "4) Downgrade last migration"
-echo "5) Show current revision"
-echo "6) History"
-echo "7) Stamp head"
-read -rp "Enter your choice [1-7]: " choice
+echo "2) Create new revision (allow empty)"
+echo "3) Upgrade to latest"
+echo "4) Upgrade one migration"
+echo "5) Downgrade last migration"
+echo "6) Show current revision"
+echo "7) History"
+echo "8) Stamp head"
+read -rp "Enter your choice [1-8]: " choice
 
 case $choice in
   1)
@@ -120,25 +121,34 @@ case $choice in
     # Get the latest file before creating a new revision
     latest_file=$(ls -t "$versions_dir"/*.py | head -n 1)
     read -rp "Enter migration message: " message
-    alembic revision --autogenerate -m "$message"
+    alembic revision --autogenerate -m "$message" || true
     rename_latest_revision_file "$message" "$latest_file" "$versions_dir"
     ;;
   2)
-    alembic upgrade head
+    versions_dir="alembic/versions"
+    # Get the latest file before creating a new revision
+    latest_file=$(ls -t "$versions_dir"/*.py | head -n 1)
+    read -rp "Enter migration message: " message
+    echo "Creating revision (allowing empty)..."
+    ALEMBIC_ALLOW_EMPTY=1 alembic revision --autogenerate -m "$message" || true
+    rename_latest_revision_file "$message" "$latest_file" "$versions_dir"
     ;;
   3)
-    alembic upgrade +1
+    alembic upgrade head
     ;;
   4)
-    alembic downgrade -1
+    alembic upgrade +1
     ;;
   5)
-    alembic current
+    alembic downgrade -1
     ;;
   6)
-    alembic history --verbose
+    alembic current
     ;;
   7)
+    alembic history --verbose
+    ;;
+  8)
     alembic stamp head
     ;;
   *)

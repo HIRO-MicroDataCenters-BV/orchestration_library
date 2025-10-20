@@ -75,6 +75,18 @@ workload_decision_action_flow_latency_seconds = Histogram(
     ["method", "endpoint", "status_code", "exception"]
 )
 
+# Workload Timings API
+workload_timing_requests_total = Counter(
+    "workload_timing_requests_total",
+    "Total number of workload timing API requests",
+    ["method", "endpoint", "status_code", "exception"]
+)
+workload_timing_requests_latency_seconds = Histogram(
+    "workload_timing_requests_latency_seconds",
+    "Latency of workload timing API requests in seconds",
+    ["method", "endpoint", "status_code", "exception"]
+)
+
 # K8s Pod API
 k8s_pod_requests_total = Counter(
     "k8s_pod_requests_total",

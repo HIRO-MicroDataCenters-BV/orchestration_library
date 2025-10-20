@@ -28,6 +28,8 @@ async def workload_decision_action_flow(
     """
     Get list of workload decision and action flows with pagination.
     Args:
+        decision_id (UUID, optional): Filter by decision ID.
+        action_id (UUID, optional): Filter by action ID.
         pod_name (str, optional): Filter by pod name.
         namespace (str, optional): Filter by namespace.
         node_name (str, optional): Filter by node name.
@@ -50,6 +52,8 @@ async def workload_decision_action_flow(
     return await get_workload_decision_action_flow(
         db,
         flow_filters={
+            "decision_id": flow_params.decision_id,
+            "action_id": flow_params.action_id,
             "pod_name": flow_params.pod_name,
             "namespace": flow_params.namespace,
             "node_name": flow_params.node_name,

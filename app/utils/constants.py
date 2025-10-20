@@ -61,3 +61,10 @@ class WorkloadRequestDecisionStatusEnum(str, Enum):
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+class WorkloadTimingSchedulerEnum(str, Enum):
+    """
+    Enum for workload timing schedulers.
+    """
+    SCHEDULER_DEFAULT = "default-scheduler"
+    SCHEDULER_RMS = "resource-management-service"

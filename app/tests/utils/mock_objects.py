@@ -2,8 +2,7 @@
 from datetime import datetime, timedelta, timezone
 import time
 from unittest.mock import MagicMock
-from uuid import uuid4
-import uuid
+from uuid import UUID, uuid4
 
 from app.models.alerts import Alert
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse, AlertType
@@ -34,7 +33,7 @@ def to_jsonable(obj):
         return {k: to_jsonable(v) for k, v in obj.items()}
     if isinstance(obj, list):
         return [to_jsonable(i) for i in obj]
-    if isinstance(obj, uuid.UUID):
+    if isinstance(obj, UUID):
         return str(obj)
     if isinstance(obj, datetime):
         return obj.isoformat()
@@ -363,7 +362,9 @@ def mock_alert_create_request_obj(
         alert_model="TestModel",
         alert_description="Test alert",
         pod_id=pod_id or "11111111-1111-1111-1111-111111111111",
+        pod_name="agent-644d8b675-jfxw8",
         node_id=node_id or "22222222-2222-2222-2222-222222222222",
+        node_name="ip-172-31-33-42.us-west-2.compute.internal",
     )
 
 
@@ -384,6 +385,9 @@ def mock_alert_create_request_data(
             "destination_port": 80,
             "protocol": "TCP",
             "pod_id": pod_id or "11111111-1111-1111-1111-111111111111",
+            "pod_name": "agent-644d8b675-jfxw8",
+            "node_id": node_id or "22222222-2222-2222-2222-222222222222",
+            "node_name": "ip-172-31-33-42.us-west-2.compute.internal",
         }
     return {
         "alert_type": alert_type,
@@ -391,6 +395,8 @@ def mock_alert_create_request_data(
         "alert_description": "Test alert",
         "pod_id": pod_id or "11111111-1111-1111-1111-111111111111",
         "node_id": node_id or "22222222-2222-2222-2222-222222222222",
+        "pod_name": "agent-644d8b675-jfxw8",
+        "node_name": "ip-172-31-33-42.us-west-2.compute.internal",
         "source_ip": "192.168.1.1",
         "source_port": 1234,
         "destination_ip": "192.168.1.2",
@@ -410,6 +416,8 @@ def mock_alert_response_obj(alert_type=AlertType.ABNORMAL):
         alert_description="Test alert",
         pod_id="11111111-1111-1111-1111-111111111111",
         node_id="22222222-2222-2222-2222-222222222222",
+        pod_name="agent-644d8b675-jfxw8",
+        node_name="ip-172-31-33-42.us-west-2.compute.internal",
         source_ip="192.168.1.1",
         source_port=1234,
         destination_ip="192.168.1.2",
@@ -430,6 +438,8 @@ def mock_alert_obj(alert_type=AlertType.ABNORMAL, pod_id=None, node_id=None):
         alert_description="Test alert",
         pod_id=pod_id or "11111111-1111-1111-1111-111111111111",
         node_id=node_id or "22222222-2222-2222-2222-222222222222",
+        pod_name="agent-644d8b675-jfxw8",
+        node_name="ip-172-31-33-42.us-west-2.compute.internal",
         source_ip="192.168.1.1",
         source_port=1234,
         destination_ip="192.168.1.2",
@@ -515,9 +525,22 @@ def mock_cluster_info_api():
         ],
     }
 
+def unpack_flow_filters(flow_filters: dict):
+    """
+    Return (decision_id, action_id, pod_name, namespace, node_name, action_type)
+    from a flow_filters dict (values may be None).
+    """
+    return (
+        flow_filters.get("decision_id"),
+        flow_filters.get("action_id"),
+        flow_filters.get("pod_name"),
+        flow_filters.get("namespace"),
+        flow_filters.get("node_name"),
+        flow_filters.get("action_type"),
+    )
 
 def mock_workload_decision_action_flow_item(
-    pod_name: str, namespace: str, node_name: str, action_type: WorkloadActionTypeEnum
+    flow_filters: dict,
 ) -> WorkloadDecisionActionFlowItem:
     """Mock a workload decision action flow item."""
     create_types = {
@@ -526,9 +549,17 @@ def mock_workload_decision_action_flow_item(
         WorkloadActionTypeEnum.SWAP_X,
         WorkloadActionTypeEnum.SWAP_Y,
     }
+    (
+        decision_id,
+        action_id,
+        pod_name,
+        namespace,
+        node_name,
+        action_type,
+    ) = unpack_flow_filters(flow_filters)
     return WorkloadDecisionActionFlowItem(
-        decision_id=uuid4(),
-        action_id=uuid4(),
+        decision_id=decision_id if decision_id else uuid4(),
+        action_id=action_id if action_id else uuid4(),
         action_type=action_type,
         decision_pod_name=pod_name,
         decision_namespace=namespace,
@@ -536,12 +567,22 @@ def mock_workload_decision_action_flow_item(
         created_pod_name=pod_name if action_type in create_types else None,
         created_pod_namespace=namespace if action_type in create_types else None,
         created_node_name=node_name if action_type in create_types else None,
-        deleted_pod_name=pod_name if action_type == WorkloadActionTypeEnum.DELETE else None,
-        deleted_pod_namespace=namespace if action_type == WorkloadActionTypeEnum.DELETE else None,
-        deleted_node_name=node_name if action_type == WorkloadActionTypeEnum.DELETE else None,
+        deleted_pod_name=(
+            pod_name if action_type == WorkloadActionTypeEnum.DELETE else None
+        ),
+        deleted_pod_namespace=(
+            namespace if action_type == WorkloadActionTypeEnum.DELETE else None
+        ),
+        deleted_node_name=(
+            node_name if action_type == WorkloadActionTypeEnum.DELETE else None
+        ),
         bound_pod_name=pod_name if action_type == WorkloadActionTypeEnum.BIND else None,
-        bound_pod_namespace=namespace if action_type == WorkloadActionTypeEnum.BIND else None,
-        bound_node_name=node_name if action_type == WorkloadActionTypeEnum.BIND else None,
+        bound_pod_namespace=(
+            namespace if action_type == WorkloadActionTypeEnum.BIND else None
+        ),
+        bound_node_name=(
+            node_name if action_type == WorkloadActionTypeEnum.BIND else None
+        ),
         decision_status=WorkloadRequestDecisionStatusEnum.SUCCEEDED,
         action_status=WorkloadActionStatusEnum.SUCCEEDED,
         decision_start_time=datetime.now(timezone.utc),
@@ -571,11 +612,13 @@ def mock_workload_decision_action_flow_item(
     )
 
 
-def mock_workload_decision_action_flow_api(
-    pod_name: str, namespace: str, node_name: str, action_type: WorkloadActionTypeEnum
+def mock_workload_decision_action_flow_data(
+    flow_filters: dict
 ):
     """Mock a workload decision action flow item as a dictionary."""
     item = mock_workload_decision_action_flow_item(
-        pod_name, namespace, node_name, action_type
+        flow_filters=flow_filters
     )
-    return to_jsonable(item.model_dump())  # Convert to dict with JSON-serializable values
+    return to_jsonable(
+        item.model_dump()
+    )  # Convert to dict with JSON-serializable values

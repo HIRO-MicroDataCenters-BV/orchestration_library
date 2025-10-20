@@ -2,5 +2,11 @@ dependencies:
 - name: k8s-dashboard
   repository: file://../k8s-dashboard
   version: 1.0.1
-digest: sha256:a9f28865d9b6d6580b011ccddf2b87ab5a9a6e6f0c238f55d09028f922012fe4
-generated: "2025-07-07T14:47:15.547569+02:00"
+- name: workload-timing-watcher
+  repository: file://../workload-timing-watcher
+  version: 1.0.0
+- name: alerts-populator
+  repository: file://../alerts-populator
+  version: 1.0.0
+digest: sha256:92596bd4bee00614b21ccd3c721327fb1ce964eb951478d5841e3753ee5ad717
+generated: "2025-10-17T01:15:08.973469+02:00"

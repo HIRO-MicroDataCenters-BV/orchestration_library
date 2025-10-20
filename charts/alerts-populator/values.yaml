@@ -1,0 +1,26 @@
+name: alerts-populator
+replicaCount: 1
+
+image:
+  repository: your-registry/alerts-populator
+  tag: alpha1
+  pullPolicy: Always
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+env:
+  NATS_SERVER: "nats://nats:4222"
+  NATS_TOPICS: 
+    - "alerts.network-attack"
+    - "alerts.abnormal"
+  NATS_JS_SUBJECTS:
+    - "anomalies"
+    - "network-attacks"
+  NATS_JS_STREAM: "PREDICTIONS"
+  NATS_JS_DURABLE: "alerts-populator"
+  ALERTS_API_URL: "http://orchestration-api-svc.hiros.svc.cluster.local:8080/alerts"
+

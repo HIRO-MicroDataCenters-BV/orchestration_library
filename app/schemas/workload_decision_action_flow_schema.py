@@ -20,6 +20,8 @@ class FlowQueryParams(BaseModel):
     """
     Query parameters for workload decision action flow.
     """
+    decision_id: Optional[UUID] = None
+    action_id: Optional[UUID] = None
     pod_name: Optional[str] = None
     namespace: Optional[str] = None
     node_name: Optional[str] = None
