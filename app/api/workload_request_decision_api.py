@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_db
 from app.schemas.workload_request_decision_schema import (
+    WorkloadRequestDecisionFilter,
     WorkloadRequestDecisionUpdate,
     WorkloadRequestDecisionSchema,
     WorkloadRequestDecisionCreate,
@@ -80,6 +81,7 @@ async def get_workload_decision_route(
 @router.get("/", response_model=list[WorkloadRequestDecisionSchema])
 async def get_all_workload_decisions_route(
     db_session: AsyncSession = Depends(get_async_db),
+    filters: WorkloadRequestDecisionFilter = Depends(),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, gt=0, le=1000),
 ):
@@ -100,7 +102,11 @@ async def get_all_workload_decisions_route(
         "endpoint": "/workload_request_decision",
     }
     return await get_all_workload_decisions(
-        db_session, skip, limit, metrics_details=metrics_details
+        db_session,
+        skip,
+        limit,
+        filters=filters.model_dump(exclude_none=True),
+        metrics_details=metrics_details,
     )
 
 

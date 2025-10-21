@@ -4,11 +4,12 @@ CRUD operations for workload decision in the database.
 
 import logging
 
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import and_, column, select
 
 from app.metrics.helper import record_workload_request_decision_metrics
 from app.models.workload_request_decision import WorkloadRequestDecision
@@ -172,6 +173,7 @@ async def get_all_workload_decisions(
     db_session: AsyncSession,
     skip: int = 0,
     limit: int = 100,
+    filters: Optional[Dict[str, Any]] = None,
     metrics_details: dict = None,
 ):
     """
@@ -181,6 +183,7 @@ async def get_all_workload_decisions(
         db_session (AsyncSession): The async SQLAlchemy database session.
         skip (int): Number of records to skip.
         limit (int): Maximum number of records to retrieve.
+        filters (Optional[Dict[str, Any]]): Optional filters to apply to the query.
 
     Returns:
         List[WorkloadRequestDecision]: A list of pod decision ORM objects.
@@ -190,9 +193,46 @@ async def get_all_workload_decisions(
     """
     exception = None
     try:
-        wrd_result = await db_session.execute(
-            select(WorkloadRequestDecision).offset(skip).limit(limit)
-        )
+        filter_clauses = []
+
+        if filters:
+            filter_map = {
+                "is_elastic": WorkloadRequestDecision.is_elastic,
+                "queue_name": WorkloadRequestDecision.queue_name,
+                "demand_cpu": WorkloadRequestDecision.demand_cpu,
+                "demand_memory": WorkloadRequestDecision.demand_memory,
+                "demand_slack_cpu": WorkloadRequestDecision.demand_slack_cpu,
+                "demand_slack_memory": WorkloadRequestDecision.demand_slack_memory,
+                "pod_name": WorkloadRequestDecision.pod_name,
+                "namespace": WorkloadRequestDecision.namespace,
+                "node_id": WorkloadRequestDecision.node_id,
+                "node_name": WorkloadRequestDecision.node_name,
+                "action_type": WorkloadRequestDecision.action_type,
+                "decision_status": WorkloadRequestDecision.decision_status,
+                "pod_parent_id": WorkloadRequestDecision.pod_parent_id,
+                "pod_parent_name": WorkloadRequestDecision.pod_parent_name,
+                "pod_parent_kind": WorkloadRequestDecision.pod_parent_kind,
+            }
+            for key, column in filter_map.items():
+                if filters.get(key) is not None:
+                    filter_clauses.append(column == filters[key])
+            if filters.get("decision_start_time") is not None:
+                filter_clauses.append(
+                    WorkloadRequestDecision.decision_start_time >= filters["decision_start_time"]
+                )
+            if filters.get("decision_end_time") is not None:
+                filter_clauses.append(
+                    WorkloadRequestDecision.decision_end_time <= filters["decision_end_time"]
+                )
+
+        if filter_clauses:
+            wrd_result = await db_session.execute(
+                select(WorkloadRequestDecision)
+                .where(and_(*filter_clauses))
+                .offset(skip)
+                .limit(limit)
+            )
+
         record_workload_request_decision_metrics(
             metrics_details=metrics_details,
             status_code=200,
