@@ -17,6 +17,7 @@ from app.api.k8s import (
     k8s_cluster_info,
 )
 from app.api import (
+    placement_decision_api,
     tuning_parameters_api,
     alerts_api,
     workload_action_api,
@@ -55,6 +56,8 @@ app.include_router(alerts_api.router, tags=["Alerts API"])
 app.include_router(workload_action_api.router, tags=["Workload Action"])
 app.include_router(workload_decision_action_flow_api.router, tags=["Workload Decision Action Flow"])
 app.include_router(workload_timing_api.router, tags=["Workload Timing"])
+
+app.include_router(placement_decision_api.router, tags=["Placement Decisions"])
 
 init_exception_handlers(app)
 
