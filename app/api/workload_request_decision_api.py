@@ -4,7 +4,6 @@ This module defines the API endpoints for managing nodes in the database.
 It includes routes for creating, retrieving, updating, and deleting nodes.
 """
 
-import time
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +22,7 @@ from app.repositories.workload_request_decision import (
     update_workload_decision,
     delete_workload_decision,
 )
+from app.utils.helper import metrics
 
 router = APIRouter(
     prefix="/workload_request_decision", tags=["Workload Request Decision"]
@@ -44,13 +44,8 @@ async def create_workload_request_decision_route(
     Returns:
         WorkloadRequestDecisionSchema: The newly created pod decision.
     """
-    metrics_details = {
-        "start_time": time.time(),
-        "method": "POST",
-        "endpoint": "/workload_request_decision",
-    }
     return await create_workload_decision(
-        db_session, data, metrics_details=metrics_details
+        db_session, data, metrics_details=metrics("POST", "/workload_request_decision")
     )
 
 
@@ -68,13 +63,10 @@ async def get_workload_decision_route(
     Returns:
         PodRequestDecisionSchema: The pod decision with the given ID.
     """
-    metrics_details = {
-        "start_time": time.time(),
-        "method": "GET",
-        "endpoint": f"/workload_request_decision/{decision_id}",
-    }
     return await get_workload_decision(
-        db_session, decision_id, metrics_details=metrics_details
+        db_session,
+        decision_id,
+        metrics_details=metrics("GET", f"/workload_request_decision/{decision_id}"),
     )
 
 
@@ -96,17 +88,12 @@ async def get_all_workload_decisions_route(
     Returns:
         List[WorkloadRequestDecisionSchema]: List of pod decisions.
     """
-    metrics_details = {
-        "start_time": time.time(),
-        "method": "GET",
-        "endpoint": "/workload_request_decision",
-    }
     return await get_all_workload_decisions(
         db_session,
         skip,
         limit,
         filters=filters.model_dump(exclude_none=True),
-        metrics_details=metrics_details,
+        metrics_details=metrics("GET", "/workload_request_decision"),
     )
 
 
@@ -127,13 +114,11 @@ async def update_workload_decision_route(
     Returns:
         WorkloadDecisionSchema: The updated pod decision.
     """
-    metrics_details = {
-        "start_time": time.time(),
-        "method": "PUT",
-        "endpoint": f"/workload_request_decision/{decision_id}",
-    }
     return await update_workload_decision(
-        db_session, decision_id, data, metrics_details=metrics_details
+        db_session,
+        decision_id,
+        data,
+        metrics_details=metrics("PUT", f"/workload_request_decision/{decision_id}"),
     )
 
 
@@ -151,11 +136,8 @@ async def delete_workload_decision_route(
     Returns:
         dict: Confirmation of deletion or relevant error message.
     """
-    metrics_details = {
-        "start_time": time.time(),
-        "method": "DELETE",
-        "endpoint": f"/workload_request_decision/{decision_id}",
-    }
     return await delete_workload_decision(
-        db_session, decision_id, metrics_details=metrics_details
+        db_session,
+        decision_id,
+        metrics_details=metrics("DELETE", f"/workload_request_decision/{decision_id}"),
     )

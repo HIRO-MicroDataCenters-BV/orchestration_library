@@ -9,7 +9,7 @@ from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import and_, column, select
+from sqlalchemy import and_, select
 
 from app.metrics.helper import record_workload_request_decision_metrics
 from app.models.workload_request_decision import WorkloadRequestDecision
@@ -193,6 +193,7 @@ async def get_all_workload_decisions(
     """
     exception = None
     try:
+        query = select(WorkloadRequestDecision).offset(skip).limit(limit)
         filter_clauses = []
 
         if filters:
@@ -226,12 +227,9 @@ async def get_all_workload_decisions(
                 )
 
         if filter_clauses:
-            wrd_result = await db_session.execute(
-                select(WorkloadRequestDecision)
-                .where(and_(*filter_clauses))
-                .offset(skip)
-                .limit(limit)
-            )
+            query = query.where(and_(*filter_clauses))
+
+        wrd_result = await db_session.execute(query)
 
         record_workload_request_decision_metrics(
             metrics_details=metrics_details,
