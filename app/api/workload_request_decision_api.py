@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.schemas.workload_request_decision_schema import (
     WorkloadRequestDecisionFilter,
+    WorkloadRequestDecisionStatusUpdate,
     WorkloadRequestDecisionUpdate,
     WorkloadRequestDecisionSchema,
     WorkloadRequestDecisionCreate,
@@ -21,6 +22,7 @@ from app.repositories.workload_request_decision import (
     get_workload_decision,
     update_workload_decision,
     delete_workload_decision,
+    update_workload_decision_status,
 )
 from app.utils.helper import metrics
 
@@ -97,7 +99,7 @@ async def get_all_workload_decisions_route(
     )
 
 
-@router.put(path="/{decision_id}", response_model=WorkloadRequestDecisionUpdate)
+@router.put(path="/{decision_id:uuid}", response_model=WorkloadRequestDecisionUpdate)
 async def update_workload_decision_route(
     decision_id: UUID,
     data: WorkloadRequestDecisionUpdate,
@@ -119,6 +121,28 @@ async def update_workload_decision_route(
         decision_id,
         data,
         metrics_details=metrics("PUT", f"/workload_request_decision/{decision_id}"),
+    )
+
+
+@router.put(path="/status", response_model=WorkloadRequestDecisionSchema)
+async def update_workload_decision_status_route(
+    data: WorkloadRequestDecisionStatusUpdate,
+    db_session: AsyncSession = Depends(get_async_db),
+):
+    """
+    Update an existing WorkloadRequestDecision status.
+
+    Args:
+        data (WorkloadRequestDecisionStatusUpdate): Filters and status fields to update.
+        db_session (AsyncSession): Database session dependency.
+
+    Returns:
+        WorkloadDecisionSchema: The updated pod decision.
+    """
+    return await update_workload_decision_status(
+        db_session,
+        data,
+        metrics_details=metrics("PUT", "/workload_request_decision/status"),
     )
 
 

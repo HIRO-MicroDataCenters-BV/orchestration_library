@@ -14,6 +14,7 @@ from sqlalchemy import and_, select
 from app.metrics.helper import record_workload_request_decision_metrics
 from app.models.workload_request_decision import WorkloadRequestDecision
 from app.schemas.workload_request_decision_schema import (
+    WorkloadRequestDecisionStatusUpdate,
     WorkloadRequestDecisionUpdate,
     WorkloadRequestDecisionCreate,
 )
@@ -219,11 +220,13 @@ async def get_all_workload_decisions(
                     filter_clauses.append(column == filters[key])
             if filters.get("decision_start_time") is not None:
                 filter_clauses.append(
-                    WorkloadRequestDecision.decision_start_time >= filters["decision_start_time"]
+                    WorkloadRequestDecision.decision_start_time
+                    >= filters["decision_start_time"]
                 )
             if filters.get("decision_end_time") is not None:
                 filter_clauses.append(
-                    WorkloadRequestDecision.decision_end_time <= filters["decision_end_time"]
+                    WorkloadRequestDecision.decision_end_time
+                    <= filters["decision_end_time"]
                 )
 
         if filter_clauses:
@@ -342,9 +345,113 @@ async def update_workload_decision(
     finally:
         if exception:
             record_workload_request_decision_metrics(
-                metrics_details=metrics_details,
-                status_code=500,
-                exception=exception
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
+
+
+async def update_workload_decision_status(
+    db_session: AsyncSession,
+    data: WorkloadRequestDecisionStatusUpdate,
+    metrics_details: dict,
+):
+    """
+    Update an existing WorkloadRequestDecision record status by its identity.
+
+    Args:
+        db_session (AsyncSession): The async SQLAlchemy database session.
+        data (WorkloadRequestDecisionStatusUpdate): Fields to update in the record.
+
+    Returns:
+        WorkloadRequestDecision: The updated pod decision ORM object.
+
+    Raises:
+        DBEntryNotFoundException: If the pod decision is not found.
+        DBEntryUpdateException: If update fails due to integrity or DB errors.
+    """
+    exception = None
+    try:
+        result = await db_session.execute(
+            select(WorkloadRequestDecision).where(
+                and_(
+                    WorkloadRequestDecision.pod_name == data.pod_name,
+                    WorkloadRequestDecision.namespace == data.namespace,
+                    WorkloadRequestDecision.node_name == data.node_name,
+                    WorkloadRequestDecision.action_type == data.action_type,
+                )
+            )
+        )
+        workload_decision = result.scalar_one_or_none()
+
+        if not workload_decision:
+            exception = DBEntryNotFoundException(
+                message=(
+                    f"Pod decision with identity '{data.pod_name}, "
+                    f"{data.namespace}, {data.node_name}, {data.action_type}' not found."
+                )
+            )
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=404, exception=exception
+            )
+            raise exception
+
+        workload_decision.decision_status = data.decision_status
+
+        await db_session.commit()
+        await db_session.refresh(workload_decision)
+        logger.info("Successfully updated pod decision status for %s", data.pod_name)
+        record_workload_request_decision_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
+        return workload_decision
+
+    except IntegrityError as exc:
+        exception = exc
+        await db_session.rollback()
+        logger.error(
+            "Integrity error while updating pod decision status for %s: %s",
+            data.pod_name,
+            str(exc),
+        )
+        raise DBEntryUpdateException(
+            message="Failed to update pod decision status due to integrity error.",
+            details={"error": str(exc)},
+        ) from exc
+    except OperationalError as exc:
+        exception = exc
+        await db_session.rollback()
+        logger.error(
+            "Database operational error while updating pod decision status for %s: %s",
+            data.pod_name,
+            str(exc),
+        )
+        raise DBEntryUpdateException(
+            message=(
+            f"Failed to update pod decision status for {data.pod_name}: "
+            "Database connection error"
+            ),
+            details={
+            "error_type": "database_connection_error",
+            "error": str(exc),
+            "pod_name": str(data.pod_name),
+            },
+        ) from exc
+    except SQLAlchemyError as exc:
+        exception = exc
+        await db_session.rollback()
+        logger.error(
+            "SQL error while updating pod decision status for %s: %s",
+            data.pod_name,
+            str(exc),
+        )
+        raise DBEntryUpdateException(
+            message="Failed to update pod decision status due to database error.",
+            details={"error": str(exc)},
+        ) from exc
+    finally:
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
             )
 
 

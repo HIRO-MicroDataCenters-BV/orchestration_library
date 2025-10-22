@@ -7,7 +7,10 @@ from typing import Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
-from app.utils.constants import PodParentTypeEnum, WorkloadActionTypeEnum
+from app.utils.constants import (
+    PodParentTypeEnum,
+    WorkloadActionTypeEnum,
+)
 from app.utils.constants import WorkloadRequestDecisionStatusEnum
 
 
@@ -135,6 +138,44 @@ class WorkloadRequestDecisionUpdate(DemandFields, BaseModel):
     decision_start_time: Optional[datetime] = None
     decision_end_time: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
+
+    class Config:
+        """
+        Configuration class for Pydantic model.
+        Provides settings for model behavior and validation.
+        """
+
+        orm_mode = True
+
+        def get_orm_mode(self) -> bool:
+            """
+            Get the ORM mode setting.
+
+            Returns:
+                bool: True if ORM mode is enabled
+            """
+            return self.orm_mode
+
+        def set_orm_mode(self, value: bool) -> None:
+            """
+            Set the ORM mode setting.
+
+            Args:
+                value (bool): New ORM mode value
+            """
+            self.orm_mode = value
+
+
+class WorkloadRequestDecisionStatusUpdate(BaseModel):
+    """
+    Schema for updating a workload request decision status.
+    """
+
+    pod_name: str
+    namespace: str
+    node_name: str
+    action_type: WorkloadActionTypeEnum
+    decision_status: WorkloadRequestDecisionStatusEnum = WorkloadRequestDecisionStatusEnum.SUCCEEDED
 
     class Config:
         """
