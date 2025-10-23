@@ -14,7 +14,7 @@ from app.repositories.k8s.k8s_common import (
     get_k8s_core_v1_client,
     get_k8s_custom_objects_client,
 )
-from app.utils.k8s import get_node_details, handle_k8s_exceptions
+from app.utils.k8s import get_node_details, handle_k8s_exceptions, parse_cpu_to_cores, parse_memory_to_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,20 @@ def get_k8s_nodes(name=None, node_id=None, status=None):
         # Simplify node details
         usage = node_metrics_map.get(node.metadata.name, {}).get("usage", {})
         node_details = get_node_details(node)
+        # Compute utilization
+        cpu_allocatable = node_details.get("allocatable", {}).get("cpu")
+        mem_allocatable = node_details.get("allocatable", {}).get("memory")
+        cpu_usage = usage.get("cpu")
+        mem_usage = usage.get("memory")
+
+        cpu_util_pct = compute_cpu_utilization(cpu_usage, cpu_allocatable)
+        mem_util_pct = compute_memory_utilization(mem_usage, mem_allocatable)
+
         node_details["usage"] = usage
+        node_details["utilization"] = {
+            "cpu": cpu_util_pct,
+            "memory": mem_util_pct,
+        }
         simplified_nodes.append(node_details)
     return simplified_nodes
 
@@ -109,3 +122,31 @@ def get_k8s_node_metric_map():
         else:
             logger.error("Failed to fetch node metrics: %s", e)
         return {}
+
+def compute_cpu_utilization(usage, capacity):
+    """
+    usage: e.g. '2059539221n' (nanocores) or '2500m'
+    capacity: e.g. '16' (cores) or '16000m'
+    """
+    try:
+        usage_cores = parse_cpu_to_cores(usage)
+        capacity_cores = parse_cpu_to_cores(capacity)
+        if capacity_cores == 0:
+            return None
+        return round((usage_cores / capacity_cores) * 100, 2)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def compute_memory_utilization(usage, capacity):
+    """
+    usage/capacity like '10119376Ki', '48731292Ki'
+    """
+    try:
+        usage_bytes = parse_memory_to_bytes(usage)
+        capacity_bytes = parse_memory_to_bytes(capacity)
+        if capacity_bytes == 0:
+            return None
+        return round((usage_bytes / capacity_bytes) * 100, 2)
+    except Exception:  # noqa: BLE001
+        return None

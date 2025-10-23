@@ -273,3 +273,36 @@ def build_pod_filters(namespace=None, name=None, pod_id=None, status=None):
         "pod_id": pod_id,
         "status": status,
     }
+
+def parse_cpu_to_cores(val: str | None) -> float:
+    """Parses a CPU resource string to number of cores as float."""
+    if not val:
+        return 0.0
+    if val.endswith("n"):  # nanocores
+        return int(val[:-1]) / 1_000_000_000
+    if val.endswith("u"):  # microcores (unlikely)
+        return int(val[:-1]) / 1_000_000
+    if val.endswith("m"):  # millicores
+        return int(val[:-1]) / 1000
+    # plain number = cores
+    return float(val)
+
+
+def parse_memory_to_bytes(val: str | None) -> int:
+    """Parses a memory resource string to number of bytes as int."""
+    if not val:
+        return 0
+    # Only handle Ki for now; extend as needed.
+    units_map = {
+        "Ki": 1024,
+        "Mi": 1024**2,
+        "Gi": 1024**3,
+        "Ti": 1024**4,
+        "Pi": 1024**5,
+        "Ei": 1024**6,
+    }
+    for suffix, mult in units_map.items():
+        if val.endswith(suffix):
+            return int(val[:-len(suffix)]) * mult
+    # If plain number assume bytes
+    return int(val)
