@@ -96,21 +96,21 @@ async def get_kpi_metrics(
     try:
         skip = kpi_metrics_request_args.pop("skip", 0)
         limit = kpi_metrics_request_args.pop("limit", 100)
-        start_time = kpi_metrics_request_args.pop("start_time", None)
-        end_time = kpi_metrics_request_args.pop("end_time", None)
+        start_datetime = kpi_metrics_request_args.pop("start_datetime", None)
+        end_datetime = kpi_metrics_request_args.pop("end_datetime", None)
         logger.debug(
-            "Fetching KPI metrics with skip=%d, limit=%d, start_time=%s, end_time=%s",
+            "Fetching KPI metrics with skip=%d, limit=%d, start_datetime=%s, end_datetime=%s",
             skip,
             limit,
-            start_time,
-            end_time,
+            start_datetime,
+            end_datetime,
         )
         query = select(KPIMetrics).offset(skip).limit(limit)
         conditions = []
-        if start_time:
-            conditions.append(KPIMetrics.datetime >= start_time)
-        if end_time:
-            conditions.append(KPIMetrics.datetime <= end_time)
+        if start_datetime:
+            conditions.append(KPIMetrics.datetime >= start_datetime)
+        if end_datetime:
+            conditions.append(KPIMetrics.datetime <= end_datetime)
         if conditions:
             query = query.where(and_(*conditions))
         result = await db_session.execute(query)
@@ -170,22 +170,20 @@ async def get_latest_kpi_metrics(
                 "Node name not provided. Fetching latest KPI metrics for all nodes."
             )
             # Window function to get latest row per node
-            subq = (
-                select(
-                    KPIMetrics.id,
-                    KPIMetrics.node_name,
-                    KPIMetrics.cpu_utilization,
-                    KPIMetrics.mem_utilization,
-                    KPIMetrics.decision_time,
-                    KPIMetrics.datetime,
-                    func.row_number()
-                    .over(
-                        partition_by=KPIMetrics.node_name,
-                        order_by=KPIMetrics.datetime.desc(),
-                    )
-                    .label("rn"),
-                ).subquery()
-            )
+            subq = select(
+                KPIMetrics.id,
+                KPIMetrics.node_name,
+                KPIMetrics.cpu_utilization,
+                KPIMetrics.mem_utilization,
+                KPIMetrics.decision_time,
+                KPIMetrics.datetime,
+                func.row_number()
+                .over(
+                    partition_by=KPIMetrics.node_name,
+                    order_by=KPIMetrics.datetime.desc(),
+                )
+                .label("rn"),
+            ).subquery()
             query = (
                 select(KPIMetrics)
                 .join(subq, KPIMetrics.id == subq.c.id)
