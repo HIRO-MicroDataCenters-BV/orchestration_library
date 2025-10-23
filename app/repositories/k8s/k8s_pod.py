@@ -7,15 +7,18 @@ import logging
 import re
 import time
 from fastapi.responses import JSONResponse
+
+from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
+
 from app.metrics.helper import record_k8s_pod_metrics
 from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
     get_k8s_core_v1_client,
 )
 from app.utils.constants import K8S_IN_USE_NAMESPACE_REGEX
-from kubernetes import client as k8s_client
+
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +207,7 @@ def _wait_for_pod_deletion(
     """
     core_v1 = get_k8s_core_v1_client()
     start = time.time()
-    while ((time.time() - start) < timeout):
+    while time.time() - start < timeout:
         try:
             core_v1.read_namespaced_pod(name=name, namespace=namespace)
             # Pod still exists; sleep and retry
