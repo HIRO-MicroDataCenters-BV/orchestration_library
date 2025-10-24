@@ -4,7 +4,7 @@ This module defines the API endpoints for creating KPI metrics entries in the da
 """
 
 from datetime import datetime
-from typing import List, List, Optional
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -47,7 +47,7 @@ async def create_kpi_metrics(
 
         await db_session.commit()
         await db_session.refresh(new_kpi_metrics)
-        logger.info(f"Created new KPI metrics entry with ID: {new_kpi_metrics.id}")
+        logger.info("Created new KPI metrics entry with ID: %s", new_kpi_metrics.id)
         record_api_metrics(
             metrics_details=metrics_details,
             status_code=200,
@@ -113,12 +113,12 @@ async def get_kpi_metrics(
             conditions.append(KPIMetrics.created_at <= end_datetime)
         if conditions:
             query = query.where(and_(*conditions))
-        result = await db_session.execute(query)
+        kpi_result = await db_session.execute(query)
         record_api_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return result.scalars().all()
+        return kpi_result.scalars().all()
     except SQLAlchemyError as e:
         exception = e
         logger.error("Database error while fetching KPI metrics: %s", str(e))
@@ -191,12 +191,12 @@ async def get_latest_kpi_metrics(
                 .order_by(KPIMetrics.node_name.asc(), KPIMetrics.created_at.desc())
             )
 
-        result = await db_session.execute(query)
+        kpi_result = await db_session.execute(query)
         record_api_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return result.scalars().all()
+        return kpi_result.scalars().all()
     except SQLAlchemyError as e:
         exception = e
         logger.error("Database error while fetching latest KPI metrics: %s", str(e))
