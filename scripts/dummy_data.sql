@@ -46,6 +46,9 @@ WHERE pod_id IN (
     '55555555-5555-5555-5555-555555555555'
 );
 
+DELETE FROM kpi_metrics
+WHERE node_name IN ('node1', 'node2', 'node3');
+
 -- Now insert your dummy data as before...
 
 -- alerts table
@@ -244,3 +247,20 @@ INSERT INTO workload_request_decision (
  'ffff0000-0000-0000-0000-000000000006','parent-job','job','swap_y',
  '2025-09-17 15:00:00','2025-09-17 15:00:01','2025-09-17 15:00:00',NULL);
 
+-- Dummy data for kpi_metrics (latest + previous hours per node)
+INSERT INTO kpi_metrics (node_name, cpu_utilization, mem_utilization, decision_time_in_seconds, created_at) VALUES
+('node1', 0.42, 0.55, 0.120, '2025-10-23 09:00:00+00'),
+('node2', 0.33, 0.61, 0.095, '2025-10-23 09:00:05+00'),
+('node3', 0.77, 0.82, 0.180, '2025-10-23 09:00:10+00'),
+
+('node1', 0.50, 0.57, 0.130, '2025-10-23 10:00:00+00'),
+('node2', 0.40, 0.63, 0.100, '2025-10-23 10:00:05+00'),
+('node3', 0.69, 0.80, 0.175, '2025-10-23 10:00:10+00'),
+
+('node1', 0.47, 0.52, 0.125, '2025-10-23 11:00:00+00'),
+('node2', 0.38, 0.58, 0.098, '2025-10-23 11:00:05+00'),
+('node3', 0.72, 0.78, 0.170, '2025-10-23 11:00:10+00'),
+
+('node1', 0.44, 0.50, 0.118, '2025-10-23 12:00:00+00'),
+('node2', 0.36, 0.54, 0.092, '2025-10-23 12:00:05+00'),
+('node3', 0.68, 0.76, 0.165, '2025-10-23 12:00:10+00');

@@ -248,6 +248,7 @@ def test_list_k8s_pods_api_exception(mock_get_client):
         k8s_pod.list_k8s_pods()
     assert "api error" in str(exc.value).lower()
 
+
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
 def test_delete_k8s_user_pod_success(mock_list_user_pods, mock_get_client):
@@ -265,7 +266,10 @@ def test_delete_k8s_user_pod_success(mock_list_user_pods, mock_get_client):
     response = k8s_pod.delete_k8s_user_pod("test-uid")
     assert response.status_code == 200
     assert json.loads(response.body)["message"] == "Pod deletion triggered successfully"
-    mock_core_v1.delete_namespaced_pod.assert_called_once_with(name="test-pod", namespace="test-ns")
+    mock_core_v1.delete_namespaced_pod.assert_called_once_with(
+        name="test-pod", namespace="test-ns"
+    )
+
 
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
 def test_delete_k8s_user_pod_not_found(mock_list_user_pods):
@@ -278,10 +282,13 @@ def test_delete_k8s_user_pod_not_found(mock_list_user_pods):
     assert response.status_code == 404
     assert "not found" in json.loads(response.body)["message"]
 
+
 @patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
-def test_delete_k8s_pod_api_exception(mock_list_user_pods, mock_get_client, mock_handle):
+def test_delete_k8s_pod_api_exception(
+    mock_list_user_pods, mock_get_client, mock_handle
+):
     """Test pod deletion when Kubernetes API raises an exception."""
     pod_info = {"namespace": "test-ns", "name": "test-pod"}
     mock_response = MagicMock()
@@ -294,12 +301,18 @@ def test_delete_k8s_pod_api_exception(mock_list_user_pods, mock_get_client, mock
 
     k8s_pod.delete_k8s_user_pod("test-uid")
     mock_handle.assert_called()
-    assert "Kubernetes API error while deleting pod" in mock_handle.call_args[1]["context_msg"]
+    assert (
+        "Kubernetes API error while deleting pod"
+        in mock_handle.call_args[1]["context_msg"]
+    )
+
 
 @patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
-def test_delete_k8s_pod_config_exception(mock_list_user_pods, mock_get_client, mock_handle):
+def test_delete_k8s_pod_config_exception(
+    mock_list_user_pods, mock_get_client, mock_handle
+):
     """Test pod deletion when Kubernetes config raises an exception."""
     pod_info = {"namespace": "test-ns", "name": "test-pod"}
     mock_response = MagicMock()
@@ -317,6 +330,7 @@ def test_delete_k8s_pod_config_exception(mock_list_user_pods, mock_get_client, m
         in mock_handle.call_args[1]["context_msg"]
     )
 
+
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
 def test_delete_k8s_user_pod_body_bytes(mock_list_user_pods, mock_get_client):
@@ -332,7 +346,10 @@ def test_delete_k8s_user_pod_body_bytes(mock_list_user_pods, mock_get_client):
     response = k8s_pod.delete_k8s_user_pod("test-uid")
     assert response.status_code == 200
     assert json.loads(response.body)["message"] == "Pod deletion triggered successfully"
-    mock_core_v1.delete_namespaced_pod.assert_called_once_with(name="test-pod", namespace="test-ns")
+    mock_core_v1.delete_namespaced_pod.assert_called_once_with(
+        name="test-pod", namespace="test-ns"
+    )
+
 
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
@@ -349,7 +366,10 @@ def test_delete_k8s_user_pod_body_str(mock_list_user_pods, mock_get_client):
     response = k8s_pod.delete_k8s_user_pod("test-uid")
     assert response.status_code == 200
     assert json.loads(response.body)["message"] == "Pod deletion triggered successfully"
-    mock_core_v1.delete_namespaced_pod.assert_called_once_with(name="test-pod", namespace="test-ns")
+    mock_core_v1.delete_namespaced_pod.assert_called_once_with(
+        name="test-pod", namespace="test-ns"
+    )
+
 
 @patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
 def test_delete_k8s_user_pod_body_none(mock_list_user_pods):
@@ -361,3 +381,132 @@ def test_delete_k8s_user_pod_body_none(mock_list_user_pods):
     response = k8s_pod.delete_k8s_user_pod("test-uid")
     assert response.status_code == 404
     assert "not found" in json.loads(response.body)["message"]
+
+
+@patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
+def test_get_k8s_user_pod_info_found_bytes(mock_list_user_pods):
+    """Test retrieving user pod info when pod is found and body is bytes."""
+    pod_info = {"name": "p1", "namespace": "ns1"}
+    resp = MagicMock()
+    resp.body = json.dumps([pod_info]).encode("utf-8")
+    mock_list_user_pods.return_value = resp
+    result = k8s_pod.get_k8s_user_pod_info("uid-1")
+    assert result == pod_info
+
+
+@patch("app.repositories.k8s.k8s_pod.list_k8s_user_pods")
+def test_get_k8s_user_pod_info_not_found(mock_list_user_pods):
+    """Test retrieving user pod info when pod is not found."""
+    resp = MagicMock()
+    resp.body = json.dumps([])
+    mock_list_user_pods.return_value = resp
+    assert k8s_pod.get_k8s_user_pod_info("uid-x") is None
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_get_k8s_pod_spec_found(mock_get_client):
+    """Test retrieving pod spec when pod is found."""
+    pod_obj = MagicMock()
+    pod_obj.metadata.uid = "u-123"
+    core = MagicMock()
+    core.list_pod_for_all_namespaces.return_value.items = [pod_obj]
+    mock_get_client.return_value = core
+    assert k8s_pod.get_k8s_pod_spec("u-123") is pod_obj
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_get_k8s_pod_spec_not_found(mock_get_client):
+    """Test retrieving pod spec when pod is not found."""
+    core = MagicMock()
+    core.list_pod_for_all_namespaces.return_value.items = []
+    mock_get_client.return_value = core
+    assert k8s_pod.get_k8s_pod_spec("nope") is None
+
+
+@patch("app.repositories.k8s.k8s_pod._is_controller_managed", return_value=True)
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_recreate_pod_controller_managed(mock_get_client, mock_get_spec, _mock_is_ctrl):
+    """Test recreating a controller-managed pod does not attempt recreation."""
+    pod_spec = MagicMock()
+    pod_spec.metadata.namespace = "ns"
+    pod_spec.metadata.name = "p1"
+    owner = MagicMock()
+    owner.controller = True
+    pod_spec.metadata.owner_references = [owner]  # _is_controller_managed should return True
+    mock_get_spec.return_value = pod_spec
+    core = MagicMock()
+    mock_get_client.return_value = core
+    resp = k8s_pod.recreate_k8s_user_pod("uid-1")
+    assert resp.status_code == 200
+    core.delete_namespaced_pod.assert_called_once()
+    core.create_namespaced_pod.assert_not_called()
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_recreate_pod_naked_success(mock_get_client, mock_get_spec):
+    """Naked pod: deletion + implicit wait succeeds (read returns 404 immediately)."""
+    pod_spec = MagicMock()
+    pod_spec.metadata.namespace = "ns"
+    pod_spec.metadata.name = "p1"
+    pod_spec.metadata.owner_references = None  # naked pod
+    mock_get_spec.return_value = pod_spec
+
+    core = MagicMock()
+    api_404 = ApiException()
+    api_404.status = 404
+    # After deletion, first read triggers 404 -> _wait_for_pod_deletion returns True quickly.
+    core.read_namespaced_pod.side_effect = api_404
+    mock_get_client.return_value = core
+
+    resp = k8s_pod.recreate_k8s_user_pod("uid-2")
+    assert resp.status_code == 200
+    core.delete_namespaced_pod.assert_called_once_with(name="p1", namespace="ns")
+    core.create_namespaced_pod.assert_called_once()  # recreation happened
+
+
+
+@patch("app.repositories.k8s.k8s_pod._wait_for_pod_deletion", return_value=False)
+@patch("app.repositories.k8s.k8s_pod._is_controller_managed", return_value=False)
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_recreate_pod_naked_timeout(
+    mock_get_client, mock_get_spec, _mock_is_ctrl, _mock_wait
+):
+    """Test recreating a naked pod times out waiting for deletion."""
+    pod_spec = MagicMock()
+    pod_spec.metadata.namespace = "ns"
+    pod_spec.metadata.name = "p1"
+    pod_spec.metadata.owner_references = None  # _is_controller_managed False
+    mock_get_spec.return_value = pod_spec
+    core = MagicMock()
+    mock_get_client.return_value = core
+    resp = k8s_pod.recreate_k8s_user_pod("uid-3")
+    assert resp.status_code == 409
+    core.create_namespaced_pod.assert_not_called()
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec", return_value=None)
+def test_recreate_pod_not_found(mock_get_spec):
+    """Test recreating a pod that does not exist returns 404."""
+    resp = k8s_pod.recreate_k8s_user_pod("missing")
+    assert resp.status_code == 404
+    mock_get_spec.assert_called_once()
+
+
+@patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
+def test_recreate_pod_api_exception_delete(mock_get_client, mock_get_spec, mock_handle):
+    """Test recreating a pod when deletion raises an API exception."""
+    pod_spec = MagicMock()
+    pod_spec.metadata.namespace = "ns"
+    pod_spec.metadata.name = "p1"
+    mock_get_spec.return_value = pod_spec
+    core = MagicMock()
+    core.delete_namespaced_pod.side_effect = ApiException("boom")
+    mock_get_client.return_value = core
+    k8s_pod.recreate_k8s_user_pod("uid-x")
+    mock_handle.assert_called()
+    assert "recreating pod" in mock_handle.call_args[1]["context_msg"].lower()
