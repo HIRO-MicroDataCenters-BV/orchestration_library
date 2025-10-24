@@ -248,7 +248,7 @@ INSERT INTO workload_request_decision (
  '2025-09-17 15:00:00','2025-09-17 15:00:01','2025-09-17 15:00:00',NULL);
 
 -- Dummy data for kpi_metrics (latest + previous hours per node)
-INSERT INTO kpi_metrics (node_name, cpu_utilization, mem_utilization, decision_time, created_at) VALUES
+INSERT INTO kpi_metrics (node_name, cpu_utilization, mem_utilization, decision_time_in_seconds, created_at) VALUES
 ('node1', 0.42, 0.55, 0.120, '2025-10-23 09:00:00+00'),
 ('node2', 0.33, 0.61, 0.095, '2025-10-23 09:00:05+00'),
 ('node3', 0.77, 0.82, 0.180, '2025-10-23 09:00:10+00'),
