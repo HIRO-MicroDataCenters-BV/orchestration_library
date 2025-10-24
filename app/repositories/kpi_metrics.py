@@ -108,9 +108,9 @@ async def get_kpi_metrics(
         query = select(KPIMetrics).offset(skip).limit(limit)
         conditions = []
         if start_datetime:
-            conditions.append(KPIMetrics.datetime >= start_datetime)
+            conditions.append(KPIMetrics.created_at >= start_datetime)
         if end_datetime:
-            conditions.append(KPIMetrics.datetime <= end_datetime)
+            conditions.append(KPIMetrics.created_at <= end_datetime)
         if conditions:
             query = query.where(and_(*conditions))
         result = await db_session.execute(query)
@@ -162,7 +162,7 @@ async def get_latest_kpi_metrics(
             query = (
                 select(KPIMetrics)
                 .where(KPIMetrics.node_name == node_name)
-                .order_by(KPIMetrics.datetime.desc())
+                .order_by(KPIMetrics.created_at.desc())
                 .limit(safe_limit)
             )
         else:
@@ -175,12 +175,12 @@ async def get_latest_kpi_metrics(
                 KPIMetrics.node_name,
                 KPIMetrics.cpu_utilization,
                 KPIMetrics.mem_utilization,
-                KPIMetrics.decision_time,
-                KPIMetrics.datetime,
+                KPIMetrics.decision_time_in_seconds,
+                KPIMetrics.created_at,
                 func.row_number()
                 .over(
                     partition_by=KPIMetrics.node_name,
-                    order_by=KPIMetrics.datetime.desc(),
+                    order_by=KPIMetrics.created_at.desc(),
                 )
                 .label("rn"),
             ).subquery()
@@ -188,7 +188,7 @@ async def get_latest_kpi_metrics(
                 select(KPIMetrics)
                 .join(subq, KPIMetrics.id == subq.c.id)
                 .where(subq.c.rn <= safe_limit)
-                .order_by(KPIMetrics.node_name.asc(), KPIMetrics.datetime.desc())
+                .order_by(KPIMetrics.node_name.asc(), KPIMetrics.created_at.desc())
             )
 
         result = await db_session.execute(query)

@@ -25,5 +25,5 @@ class KPIMetrics(Base, BaseDictMixin):
     node_name = Column(String(1024), nullable=False)
     cpu_utilization = Column(Double)
     mem_utilization = Column(Double)
-    decision_time = Column(Double)
-    datetime = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    decision_time_in_seconds = Column(Double)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))

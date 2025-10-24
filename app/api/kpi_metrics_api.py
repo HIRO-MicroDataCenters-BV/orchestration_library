@@ -5,7 +5,7 @@ This module defines the API endpoints for creating KPI metrics entries in the da
 
 from datetime import datetime
 from typing import List, List, Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_db
@@ -72,10 +72,10 @@ async def get_kpi_metrics_route(
     )
 
 
-@router.get(path="/latest/{node_name}/{limit}", response_model=List[KPIMetricsSchema])
+@router.get(path="/latest", response_model=List[KPIMetricsSchema])
 async def get_latest_kpi_metrics_route(
-    node_name: str = None,
-    limit: int = 1,
+    node_name: Optional[str] = Query(None, description="Filter by node name"),
+    limit: int = Query(1, description="Number of latest entries to retrieve")   ,
     db_session: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -87,9 +87,13 @@ async def get_latest_kpi_metrics_route(
     Returns:
         List[KPIMetricsSchema]: List of latest KPI metrics entries for the specified node.
     """
+    metrics_path = "/kpi_metrics/latest"
+    if node_name:
+        metrics_path += f"/?node_name={node_name}"
+    metrics_path += f"&limit={limit}"
     return await get_latest_kpi_metrics(
         db_session,
         node_name=node_name,
         limit=limit,
-        metrics_details=metrics("GET", f"/kpi_metrics/latest/{node_name}/{limit}"),
+        metrics_details=metrics("GET", metrics_path),
     )

@@ -1,8 +1,8 @@
 """Add kpi_metrics table
 
-Revision ID: eb39bc4bdb93
+Revision ID: 422d8cbf1539
 Revises: f9d64a71a1ad
-Create Date: 2025-10-24 01:36:16.201797
+Create Date: 2025-10-24 13:18:14.609271
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'eb39bc4bdb93'
+revision: str = '422d8cbf1539'
 down_revision: Union[str, None] = 'f9d64a71a1ad'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,8 +26,8 @@ def upgrade() -> None:
     sa.Column('node_name', sa.String(length=1024), nullable=False),
     sa.Column('cpu_utilization', sa.Double(), nullable=True),
     sa.Column('mem_utilization', sa.Double(), nullable=True),
-    sa.Column('decision_time', sa.Double(), nullable=True),
-    sa.Column('datetime', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('decision_time_in_seconds', sa.Double(), nullable=True),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

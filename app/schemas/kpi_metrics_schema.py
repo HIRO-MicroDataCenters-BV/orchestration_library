@@ -1,6 +1,8 @@
 """
 Pydantic schemas for the KPI metrics.
 """
+from datetime import datetime
+from time import timezone
 from typing import Optional
 from pydantic import BaseModel
 
@@ -9,11 +11,11 @@ class KPIMetricsBase(BaseModel):
     node_name: str
     cpu_utilization: Optional[float] = None
     mem_utilization: Optional[float] = None
-    decision_time: Optional[float] = None
+    decision_time_in_seconds: Optional[float] = None
 
 class KPIMetricsSchema(KPIMetricsBase):
     id: int
-    datetime: Optional[str] = None
+    created_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
