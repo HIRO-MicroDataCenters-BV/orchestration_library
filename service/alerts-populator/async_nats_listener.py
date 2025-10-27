@@ -143,6 +143,9 @@ async def main():
                 reconnected_cb=reconnected_cb,
                 closed_cb=closed_cb,
                 name="alerts-populator-js-client",
+                connect_timeout=10,
+                ping_interval=10,
+                max_ping_out=5,
             )
             logger.info("Connected to NATS: %s", nats_server)
 
