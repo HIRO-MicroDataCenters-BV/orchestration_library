@@ -48,3 +48,20 @@ def delete_pod(
     return k8s_pod.delete_k8s_user_pod(
         pod_id=pod_id, metrics_details=metrics_details
     )
+
+@router.post("/recreate")
+def recreate_pod(
+    pod_id: UUID
+):
+    """
+    Recreate a pod by deleting and letting the controller recreate it.
+    """
+    metrics_details = {
+        "start_time": time.time(),
+        "method": "POST",
+        "endpoint": "/k8s_pod/recreate",
+    }
+
+    return k8s_pod.recreate_k8s_user_pod(
+        pod_id=pod_id, metrics_details=metrics_details
+    )
