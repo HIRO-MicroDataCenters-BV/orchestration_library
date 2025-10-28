@@ -39,6 +39,15 @@ class Alert(Base, BaseDictMixin):
         index=True,  # Add index for faster queries by type
     )
 
+    # Alert Level - VARCHAR(20) with CHECK constraint
+    alert_level = Column(
+        String(20),
+        CheckConstraint("alert_level IN ('Warning', 'Critical')"),
+        nullable=False,
+        default='Warning',
+    )
+
+    # Alert Model - TEXT
     alert_model = Column(Text, nullable=False)
 
     # Alert Description - TEXT

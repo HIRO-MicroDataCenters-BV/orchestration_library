@@ -11,6 +11,32 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class AlertLevel(str, Enum):
+    """
+    Enum for alert levels.
+    """
+
+    WARNING = "Warning"
+    CRITICAL = "Critical"
+
+    def __repr__(self) -> str:
+        """
+        String representation of the alert level.
+
+        Returns:
+            str: String representation
+        """
+        return f"<AlertLevel.{self.name}>"
+
+    def __str__(self) -> str:
+        """
+        Human-readable string representation of the alert level.
+
+        Returns:
+            str: Human-readable string representation
+        """
+        return self.value
+
 class AlertType(str, Enum):
     """
     Enum for alert types.
@@ -48,6 +74,11 @@ class AlertCreateRequest(BaseModel):
         ...,
         description="Type of alert",
         examples=["Abnormal", "Network-Attack", "Other"],
+    )
+    alert_level: AlertLevel = Field(
+        ...,
+        description="Level of alert",
+        examples=["Warning", "Critical"],
     )
     alert_model: str = Field(
         ...,
@@ -142,6 +173,7 @@ class AlertResponse(BaseModel):
 
     id: int = Field(..., description="Unique identifier for the alert")
     alert_type: AlertType = Field(..., description="Type of alert")
+    alert_level: AlertLevel = Field(..., description="Level of alert")
     alert_model: str = Field(..., description="Model used for the alert")
     alert_description: str = Field(..., description="Description of the alert")
     pod_id: Optional[UUID] = Field(..., description="ID of the pod")

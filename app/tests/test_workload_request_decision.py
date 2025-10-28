@@ -14,8 +14,12 @@ from app.repositories.workload_request_decision import (
     get_all_workload_decisions,
     update_workload_decision,
     delete_workload_decision,
+    update_workload_decision_status,
 )
-from app.schemas.workload_request_decision_schema import WorkloadRequestDecisionUpdate
+from app.schemas.workload_request_decision_schema import (
+    WorkloadRequestDecisionStatusUpdate,
+    WorkloadRequestDecisionUpdate,
+)
 from app.utils.exceptions import (
     DBEntryCreationException,
     DBEntryNotFoundException,
@@ -121,6 +125,28 @@ async def test_get_all_workload_decisions_success():
 
 
 @pytest.mark.asyncio
+async def test_get_all_workload_decisions_with_filters_success():
+    """Test fetching all workload decisions with filters."""
+    mock_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_scalars = MagicMock()
+
+    expected_data = [WorkloadRequestDecision(id=uuid4())]
+    mock_scalars.all.return_value = expected_data
+
+    mock_result.scalars.return_value = mock_scalars
+    mock_session.execute.return_value = mock_result
+
+    filters = {"pod_name": "pod-a"}
+    # Act
+    result = await get_all_workload_decisions(mock_session, filters=filters)
+
+    # Assert
+    assert result == expected_data
+    mock_session.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_update_workload_decision_success():
     """Test successful update of workload decision."""
     decision_id = uuid4()
@@ -187,6 +213,115 @@ async def test_update_workload_decision_not_found():
 #         await update_workload_decision(mock_session, decision_id, update_data)
 
 #     mock_session.rollback.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_update_workload_decision_status_success():
+    """Test successful status update."""
+    existing = WorkloadRequestDecision(
+        pod_name="pod-a",
+        namespace="ns1",
+        node_name="node-x",
+        action_type="bind",
+        decision_status="pending",
+    )
+    mock_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = existing
+    mock_session.execute.return_value = mock_result
+    mock_session.commit = AsyncMock()
+    mock_session.refresh = AsyncMock()
+
+    payload = WorkloadRequestDecisionStatusUpdate(
+        pod_name="pod-a",
+        namespace="ns1",
+        node_name="node-x",
+        action_type="bind",
+        decision_status="succeeded",
+    )
+
+    updated = await update_workload_decision_status(
+        mock_session,
+        payload,
+        mock_metrics_details(
+            "PATCH", f"/workload_request_decision/status/{payload.pod_name}"
+        ),
+    )
+
+    assert updated.decision_status == "succeeded"
+    mock_session.execute.assert_awaited_once()
+    mock_session.commit.assert_awaited_once()
+    mock_session.refresh.assert_awaited_once_with(existing)
+
+
+@pytest.mark.asyncio
+async def test_update_workload_decision_status_not_found():
+    """Test status update when record not found."""
+    mock_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_session.execute.return_value = mock_result
+
+    payload = WorkloadRequestDecisionStatusUpdate(
+        pod_name="pod-missing",
+        namespace="nsX",
+        node_name="node-missing",
+        action_type="swap_x",
+        decision_status="pending",
+    )
+
+    with pytest.raises(DBEntryNotFoundException):
+        await update_workload_decision_status(
+            mock_session,
+            payload,
+            mock_metrics_details(
+                "PATCH", f"/workload_request_decision/status/{payload.pod_name}"
+            ),
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "exc_cls",
+    [IntegrityError, OperationalError, SQLAlchemyError],
+)
+async def test_update_workload_decision_status_db_errors(exc_cls):
+    """Test status update DB exception branches."""
+    existing = WorkloadRequestDecision(
+        pod_name="pod-a",
+        namespace="ns1",
+        node_name="node-x",
+        action_type="ScaleUp",
+        decision_status="Pending",
+    )
+    mock_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = existing
+    mock_session.execute.return_value = mock_result
+    mock_session.commit.side_effect = (
+        exc_cls("stmt", "params", "orig")
+        if exc_cls is IntegrityError
+        else exc_cls("err", None, None)
+    )
+    mock_session.rollback = AsyncMock()
+
+    payload = WorkloadRequestDecisionStatusUpdate(
+        pod_name="pod-a",
+        namespace="ns1",
+        node_name="node-x",
+        action_type="bind",
+        decision_status="pending",
+    )
+
+    with pytest.raises(DBEntryUpdateException):
+        await update_workload_decision_status(
+            mock_session,
+            payload,
+            mock_metrics_details(
+                "PATCH", f"/workload_request_decision/status/{payload.pod_name}"
+            ),
+        )
+    mock_session.rollback.assert_awaited_once()
 
 
 @pytest.mark.asyncio
