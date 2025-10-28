@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
-from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
+from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse
 from app.utils.exceptions import (
     DBEntryCreationException, OrchestrationBaseException
 )
@@ -95,9 +95,9 @@ async def create_alert(
         alert_model = Alert(**alert.model_dump())
         is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
         if is_critical:
-            alert_model.alert_level = "Critical"
+            alert_model.alert_level = AlertLevel.CRITICAL
         else:
-            alert_model.alert_level = "Warning"
+            alert_model.alert_level = AlertLevel.WARNING
         db.add(alert_model)
         await db.commit()
         await db.refresh(alert_model)
