@@ -56,7 +56,7 @@ async def count_recent_similar_alerts(
         Alert.created_at >= alert_window
     )
     result = await db.execute(count_query)
-    return result.scalars().count()
+    return len(result.scalars().all())
 
 
 async def create_alert(
