@@ -1,8 +1,18 @@
 import json
+import logging
+import os
 from utils import (
     get_pod_id_by_name,
     get_node_id_by_name,
 )
+
+# Configure logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
 
 def safe_json_loads(data: str):
     try:
@@ -54,7 +64,8 @@ def transform_abnormal(data: str) -> json:
     # }
     parsed, err = safe_json_loads(data)
     if err:
-        return [{"alert_type": "ParseError", "alert_description": f"Invalid JSON: {err}", "raw": data[:200]}]
+        logger.error("Error parsing JSON in abnormal alert: %s", err)
+        return []
     input_json = parsed
     data = input_json.get("data", {})
     pod_name = data.get("pod")
