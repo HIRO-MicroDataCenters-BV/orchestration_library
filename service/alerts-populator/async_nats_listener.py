@@ -71,40 +71,70 @@ async def run_jetstream_consumer(nc: NATS, alerts_api_url: str):
     js = nc.jetstream()
     subjects = [subj.strip() for subj in nats_js_subjects.split(",")]
 
-    async with httpx.AsyncClient(follow_redirects=True) as http_client:
-        async def js_callback(msg):
-            attempts = getattr(getattr(msg, "metadata", None), "num_delivered", 1)
-            ok = await handle_js_message(msg, alerts_api_url, http_client)
-            if ok:
-                await msg.ack()
-                logger.debug("Acked message on %s (attempt %s)", msg.subject, attempts)
+    # Single long‑lived HTTP client
+    http_client = httpx.AsyncClient(follow_redirects=True)
+    
+    async def js_callback(msg):
+        attempts = getattr(getattr(msg, "metadata", None), "num_delivered", 1)
+        ok = await handle_js_message(msg, alerts_api_url, http_client)
+        if ok:
+            await msg.ack()
+            logger.debug("Acked message on %s (attempt %s)", msg.subject, attempts)
+        else:
+            if attempts < MAX_REDELIVERIES:
+                await msg.nak()  # redeliver with default policy
+                logger.warning("NAK message on %s (attempt %s)", msg.subject, attempts)
             else:
-                if attempts < MAX_REDELIVERIES:
-                    await msg.nak()  # redeliver with default policy
-                    logger.warning("NAK message on %s (attempt %s)", msg.subject, attempts)
-                else:
-                    # Stop further redelivery to avoid poison message loop
-                    await msg.term()
-                    logger.error("Terminated message on %s after %s attempts", msg.subject, attempts)
+                # Stop further redelivery to avoid poison message loop
+                await msg.term()
+                logger.error("Terminated message on %s after %s attempts", msg.subject, attempts)
 
+    async def ensure_subscription(subject: str):
         # Create/attach durable consumer; manual_ack ensures we control acking
-        for subject in subjects:
-            durable = f"{nats_js_durable}-{subject.replace('.', '_')}"
-            await js.subscribe(
-                subject,
-                stream=nats_js_stream,
-                durable=durable,
-                manual_ack=True,
-                cb=js_callback,
-            )
-            logger.info(
-                "JetStream subscribed: stream=%s subject=%s durable=%s",
-                nats_js_stream, subject, durable
-            )
+        durable = f"{nats_js_durable}-{subject.replace('.', '_')}"
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                sub = await js.subscribe(
+                    subject,
+                    stream=nats_js_stream,
+                    durable=durable,
+                    manual_ack=True,
+                    cb=js_callback,
+                    deliver_policy="all"
+                )
+                logger.info(
+                    "JetStream subscribed: stream=%s subject=%s durable=%s",
+                    nats_js_stream, subject, durable
+                )
+                return sub
+            except Exception as e:
+                msg = str(e)
+                if "consumer is already bound" in msg.lower():
+                    logger.warning("Bind error durable=%s: %s; deleting then retrying", durable, msg)
+                    try:
+                        await js.delete_consumer(nats_js_stream, durable)
+                        logger.info("Deleted durable=%s after bind error", durable)
+                    except Exception as de:
+                        logger.warning("Delete failed durable=%s: %s", durable, de)
+                    await asyncio.sleep(1)
+                    continue
+                logger.error("Subscribe error subject=%s attempt=%s: %s", subject, attempt, msg)
+                await asyncio.sleep(min(5, attempt))
+                continue
 
-        # Keep the subscription alive
+    for subject in subjects:
+        await ensure_subscription(subject)
+        
+    await nc.flush()
+
+    try:
+    # Keep the subscription alive
         while True:
             await asyncio.sleep(1)
+    finally:
+        await http_client.aclose()
 
 
 async def main():

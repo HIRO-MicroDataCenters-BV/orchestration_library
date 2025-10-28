@@ -1,9 +1,24 @@
 import json
+import logging
+import os
 from utils import (
     get_pod_id_by_name,
     get_node_id_by_name,
 )
 
+# Configure logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
+
+def safe_json_loads(data: str):
+    try:
+        return json.loads(data), None
+    except Exception as e:
+        return None, e
 
 def build_alert_api_payload(input_json: dict, alert_type: str) -> json:
     # Example transformation logic for network attack alerts
@@ -47,7 +62,11 @@ def transform_abnormal(data: str) -> json:
     #   },
     #   "model_name": "tis"
     # }
-    input_json = json.loads(data)
+    parsed, err = safe_json_loads(data)
+    if err:
+        logger.error("Error parsing JSON in abnormal alert: %s", err)
+        return []
+    input_json = parsed
     data = input_json.get("data", {})
     pod_name = data.get("pod")
     node_name = data.get("instance")
