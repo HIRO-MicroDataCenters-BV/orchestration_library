@@ -4,6 +4,11 @@ from utils import (
     get_node_id_by_name,
 )
 
+def safe_json_loads(data: str):
+    try:
+        return json.loads(data), None
+    except Exception as e:
+        return None, e
 
 def build_alert_api_payload(input_json: dict, alert_type: str) -> json:
     # Example transformation logic for network attack alerts
@@ -47,7 +52,10 @@ def transform_abnormal(data: str) -> json:
     #   },
     #   "model_name": "tis"
     # }
-    input_json = json.loads(data)
+    parsed, err = safe_json_loads(data)
+    if err:
+        return [{"alert_type": "ParseError", "alert_description": f"Invalid JSON: {err}", "raw": data[:200]}]
+    input_json = parsed
     data = input_json.get("data", {})
     pod_name = data.get("pod")
     node_name = data.get("instance")
