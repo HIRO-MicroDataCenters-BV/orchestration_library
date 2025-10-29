@@ -101,11 +101,16 @@ async def test_create_alert_success():
     db = MagicMock()
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
+    db.execute = AsyncMock()
+    db.rollback = AsyncMock()
 
     alert_data = mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL)
     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
-    with patch("app.repositories.alerts.Alert", return_value=alert_obj):
+    # Patch count_recent_similar_alerts to avoid touching the SQLAlchemy Alert class.
+    # which breaks when Alert is replaced by a MagicMock instance.
+    with patch("app.repositories.alerts.count_recent_similar_alerts", return_value=0), \
+         patch("app.repositories.alerts.Alert", return_value=alert_obj):
         created_alert = await alerts_repo.create_alert(
             db, alert_data, metrics_details=mock_metrics_details("POST", "/alerts")
         )
@@ -116,6 +121,7 @@ async def test_create_alert_success():
 
     assert isinstance(created_alert, AlertResponse)
     assert created_alert.alert_type == alert_data.alert_type
+    assert created_alert.alert_level == "Warning"
     assert created_alert.alert_model is not None
     assert created_alert.alert_description is not None
     assert created_alert.created_at is not None
@@ -135,7 +141,8 @@ async def test_create_alert_triggers_pod_deletion_on_network_attack():
 
     # with patch("app.repositories.alerts.Alert", return_value=alert_obj), \
     #      patch("app.repositories.alerts.delete_k8s_user_pod") as mock_delete_pod:
-    with patch("app.repositories.alerts.Alert", return_value=alert_obj):
+    with patch("app.repositories.alerts.count_recent_similar_alerts", return_value=0), \
+         patch("app.repositories.alerts.Alert", return_value=alert_obj):
         created_alert = await alerts_repo.create_alert(
             db, alert_data, metrics_details=mock_metrics_details("POST", "/alerts")
         )
@@ -176,7 +183,8 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
     alert_data = mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL)
     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
-    with patch("app.repositories.alerts.Alert", return_value=alert_obj):
+    with patch("app.repositories.alerts.count_recent_similar_alerts", return_value=0), \
+         patch("app.repositories.alerts.Alert", return_value=alert_obj):
         with pytest.raises(expected_exception):
             await alerts_repo.create_alert(db, alert_data)
 
