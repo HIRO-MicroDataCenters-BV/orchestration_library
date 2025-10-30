@@ -39,6 +39,8 @@ dashboard: # its alias in Chart.yaml is "dashboard"
     installCRDs: true
   protocolHttp: true
   kong:
+    postgresql:
+      enabled: false
     admin:
       tls:
         enabled: false

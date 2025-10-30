@@ -73,6 +73,12 @@ echo "Add and Update Helm repository for Kubernetes Dashboard"
 helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
 helm repo update
 
+echo "Rebuilding dependencies for k8s-dashboard chart"
+( cd charts/k8s-dashboard
+  rm -f Chart.lock
+  helm dependency build
+)
+
 echo "Rebuilding dependencies for orchestration-api chart"
 ( cd charts/orchestration-api
   rm -f Chart.lock
