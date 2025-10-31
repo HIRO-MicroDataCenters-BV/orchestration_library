@@ -3,6 +3,7 @@ SQLAlchemy models for the KPI metrics.
 """
 
 from sqlalchemy import (
+    UUID,
     Column,
     Double,
     Integer,
@@ -22,6 +23,7 @@ class KPIMetrics(Base, BaseDictMixin):
     __tablename__ = "kpi_metrics"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    request_decision_id = Column(UUID(as_uuid=True), unique=False, nullable=False)
     node_name = Column(String(1024), nullable=False)
     cpu_utilization = Column(Double)
     mem_utilization = Column(Double)

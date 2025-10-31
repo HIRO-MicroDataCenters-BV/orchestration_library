@@ -4,6 +4,7 @@ Pydantic schemas for the KPI metrics.
 
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 from pydantic import BaseModel
 
 
@@ -11,10 +12,11 @@ class KPIMetricsBase(BaseModel):
     """
     Base schema for KPI metrics.
     """
+    request_decision_id: UUID
     node_name: str
     cpu_utilization: Optional[float] = None
     mem_utilization: Optional[float] = None
-    decision_time_in_seconds: Optional[float] = None
+    decision_time_in_seconds: float
 
 
 class KPIMetricsSchema(KPIMetricsBase):
@@ -48,3 +50,4 @@ class KPIMetricsCreate(KPIMetricsBase):
     """
     Schema for creating new KPI metrics.
     """
+    pass
