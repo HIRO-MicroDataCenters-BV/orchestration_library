@@ -14,7 +14,6 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.metrics.helper import record_api_metrics
 from app.models.kpi_metrics import KPIMetrics
 from app.repositories.k8s.k8s_node import get_k8s_nodes
-from app.repositories.workload_request_decision import get_workload_decision
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
@@ -47,7 +46,6 @@ async def create_kpi_metrics(
         simplified_nodes_details = []
         logger.debug("Creating KPI metrics for Request Decision: %s", data.model_dump())
         simplified_nodes_details = get_k8s_nodes()
-        # workload_decision = get_workload_decision(db_session, data.request_decision_id)
 
         kpi_metrics = []
         for node in simplified_nodes_details:

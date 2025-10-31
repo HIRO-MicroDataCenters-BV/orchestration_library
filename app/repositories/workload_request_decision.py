@@ -13,6 +13,8 @@ from sqlalchemy import and_, select
 
 from app.metrics.helper import record_workload_request_decision_metrics
 from app.models.workload_request_decision import WorkloadRequestDecision
+from app.repositories.kpi_metrics import create_kpi_metrics
+from app.schemas.kpi_metrics_schema import KPIMetricsCreate
 from app.schemas.workload_request_decision_schema import (
     WorkloadRequestDecisionStatusUpdate,
     WorkloadRequestDecisionUpdate,
@@ -103,9 +105,19 @@ async def create_workload_decision(
             custom_exception_cls=DBEntryCreationException,
         )
     finally:
-        record_workload_request_decision_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=400, exception=exception
+            )
+        else:
+            logger.debug("create_workload_decision completed without exceptions")
+            logger.info("Send KPI metrics for workload decision creation")
+            kpi_data = KPIMetricsCreate(
+                request_decision_id=wrd_obj.id,
+                node_name=wrd_obj.node_name,
+                decision_time_in_seconds=float(wrd_obj.decision_end_time - wrd_obj.decision_start_time),
+            )
+            create_kpi_metrics(db_session, kpi_data, metrics_details)
 
 
 async def get_workload_decision(

@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.workload_request_decision import WorkloadRequestDecision
+from datetime import datetime, timezone
 from app.repositories.workload_request_decision import (
     create_workload_decision,
     get_workload_decision,
@@ -40,10 +41,18 @@ async def test_create_workload_decision_success():
     mock_obj = MagicMock()
     mock_db.refresh = AsyncMock()
 
+    # Attributes needed for KPI metrics creation in finally else block
+    mock_obj.id = uuid4()
+    mock_obj.node_name = "node-1"
+    mock_obj.decision_start_time = datetime(2024, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    mock_obj.decision_end_time = datetime(2024, 6, 1, 10, 0, 2, tzinfo=timezone.utc)
+
     with patch(
         "app.repositories.workload_request_decision.WorkloadRequestDecision",
         return_value=mock_obj,
-    ):
+    ), patch(
+        "app.repositories.workload_request_decision.create_kpi_metrics"
+    ) as mock_create_kpi:
         result = await create_workload_decision(
             mock_db,
             mock_workload_request_decision_create(),
@@ -54,6 +63,15 @@ async def test_create_workload_decision_success():
     mock_db.commit.assert_called_once()
     mock_db.refresh.assert_called_once_with(mock_obj)
     assert result == mock_obj
+
+    # Assert KPI metrics creation (else branch)
+    assert mock_create_kpi.called
+    args, _ = mock_create_kpi.call_args
+    # args: (db_session, kpi_data, metrics_details)
+    kpi_data = args[1]
+    assert kpi_data.request_decision_id == mock_obj.id
+    assert kpi_data.node_name == mock_obj.node_name
+    assert kpi_data.decision_time_in_seconds == 2.0
 
 
 @pytest.mark.asyncio
