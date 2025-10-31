@@ -194,6 +194,7 @@ async def get_latest_kpi_metrics_by_nodes(
             )
             # Window function to get latest row per node
             subq = select(
+                KPIMetrics.id,
                 KPIMetrics.request_decision_id,
                 KPIMetrics.node_name,
                 KPIMetrics.cpu_utilization,
