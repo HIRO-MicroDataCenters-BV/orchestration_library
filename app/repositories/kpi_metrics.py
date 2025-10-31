@@ -208,7 +208,7 @@ async def get_latest_kpi_metrics_by_nodes(
             ).subquery()
             query = (
                 select(KPIMetrics)
-                .join(subq, KPIMetrics.request_decision_id == subq.c.id)
+                .join(subq, KPIMetrics.request_decision_id == subq.c.request_decision_id)
                 .where(subq.c.rn <= safe_limit)
                 .order_by(KPIMetrics.node_name.asc(), KPIMetrics.created_at.desc())
             )
