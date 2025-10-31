@@ -75,8 +75,8 @@ class AlertCreateRequest(BaseModel):
         description="Type of alert",
         examples=["Abnormal", "Network-Attack", "Other"],
     )
-    alert_level: AlertLevel = Field(
-        ...,
+    alert_level: Optional[AlertLevel] = Field(
+        "Warning",
         description="Level of alert",
         examples=["Warning", "Critical"],
     )
