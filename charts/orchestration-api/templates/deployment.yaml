@@ -35,3 +35,7 @@ spec:
             value: {{ .Values.k8sDashboard.serviceAccountName }}
           - name: KUBERNETES_DASHBOARD_ACCESS_URL
             value: {{ .Values.k8sDashboard.accessURL  }}
+          - name: ALERT_CRITICAL_THRESHOLD
+            value: "{{ .Values.app.env.ALERT_CRITICAL_THRESHOLD }}"
+          - name: ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS
+            value: "{{ .Values.app.env.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS }}"

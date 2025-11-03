@@ -42,6 +42,9 @@ ALERTS_POPULATOR_NATS_JS_SUBJECTS=("anomalies" "network-attacks")
 ALERTS_POPULATOR_NATS_JS_DURABLE="alerts-populator"
 ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRATION_API_NAMESPACE.svc.cluster.local:$ORCHRESTRATION_API_SERVICE_PORT/alerts"
 
+ALERT_CRITICAL_THRESHOLD=5
+ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=60
+
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
   exit 1
@@ -172,6 +175,8 @@ helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts
   --set app.service.type=NodePort \
   --set app.service.port=$ORCHRESTRATION_API_SERVICE_PORT \
   --set app.service.nodePort=$ORCHRESTRATION_API_NODE_PORT \
+  --set app.env.ALERT_CRITICAL_THRESHOLD=$ALERT_CRITICAL_THRESHOLD \
+  --set app.env.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=$ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS \
   --set runMigration=true \
   --set workloadTimingWatcher.enabled=true \
   --set workloadTimingWatcher.image.repository=$WORKLOAD_TIMING_WATCHER_IMAGE_NAME \

@@ -109,8 +109,10 @@ async def create_workload_decision(
             record_workload_request_decision_metrics(
                 metrics_details=metrics_details, status_code=400, exception=exception
             )
+        # Record KPI metrics if the workload decision was created successfully
         if not exception and wrd_obj:
             # Safely compute decision duration in seconds
+            logger.info("Recording KPI metrics for pod decision %s", wrd_obj.id)
             duration_seconds = None
             if getattr(wrd_obj, "decision_start_time", None) and getattr(
                 wrd_obj, "decision_end_time", None
