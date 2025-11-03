@@ -3,9 +3,9 @@ entries:
   alerts-populator:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-31T12:46:58.908150033Z"
+    created: "2025-11-03T18:37:57.2104393Z"
     description: A Helm chart for deploying Alerts Populator service
-    digest: 4fa9d4ab7573c4c9a40ba2549d7abbee5a4f02d682b18c69a25cec588950a7c4
+    digest: df00e946a99c0d59bc00dac9ba44c6f3025bb58f587cc6b82ca62177a9671712
     name: alerts-populator
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/alerts-populator-1.0.0.tgz
@@ -13,7 +13,7 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-31T12:46:58.928082344Z"
+    created: "2025-11-03T18:37:57.232492366Z"
     dependencies:
     - alias: dashboard
       condition: dashboard.enabled
@@ -21,7 +21,7 @@ entries:
       repository: https://kubernetes.github.io/dashboard/
       version: 7.13.0
     description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
-    digest: c0dcef7bf86a2d1ea59a06c1f3a56508df2cbe055b283ceb1e594d526fd4516c
+    digest: bf06e73ce960c6b6a589e68e1dd3303cea7e81af5f85201d4c3bb22be03c7684
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: k8s-dashboard
     type: application
@@ -48,7 +48,7 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-31T12:46:58.949317131Z"
+    created: "2025-11-03T18:37:57.255297285Z"
     dependencies:
     - alias: k8sDashboard
       condition: k8sDashboard.enabled
@@ -66,7 +66,7 @@ entries:
       repository: file://../alerts-populator
       version: 1.0.0
     description: A Helm chart for deploying the orchestration api
-    digest: be53c009fd01c33efc80576299064a5678d419b3cd7e39769c7ea2e91b961617
+    digest: 615776ea3ce5f02aebb18eaf8cd1cf6c7f4ce91e5ec7d51458c763aace57fa19
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: orchestration-api
     type: application
@@ -98,12 +98,12 @@ entries:
   workload-timing-watcher:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-31T12:46:58.949548713Z"
+    created: "2025-11-03T18:37:57.255715378Z"
     description: A Helm chart for the workload timing watcher sidecar service
-    digest: f2a45192c1a18d514391eaf87dba5de8e51e012f63cd4dcabd934b22d13a3e8b
+    digest: 9a50f59fd11a259dacc7b6451c2517293ecea6572c491c93451e0b2384c1f96c
     name: workload-timing-watcher
     type: application
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/workload-timing-watcher-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-31T12:46:58.907726734Z"
+generated: "2025-11-03T18:37:57.210061623Z"
