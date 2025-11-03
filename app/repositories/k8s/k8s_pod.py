@@ -2,6 +2,7 @@
 List the pods in the Kubernetes cluster.
 """
 
+from enum import Enum
 import json
 import logging
 import re
@@ -15,6 +16,7 @@ from kubernetes.config import ConfigException
 from app.metrics.helper import record_k8s_pod_metrics
 from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
+    get_k8s_apps_v1_client,
     get_k8s_core_v1_client,
 )
 from app.utils.constants import K8S_IN_USE_NAMESPACE_REGEX
@@ -22,6 +24,10 @@ from app.utils.constants import K8S_IN_USE_NAMESPACE_REGEX
 
 logger = logging.getLogger(__name__)
 
+
+class ScaleType(str, Enum):
+    UP = "UP"
+    DOWN = "DOWN"
 
 # Suppress R1710: All exception handlers call a function that always raises, so no return needed.
 # pylint: disable=R1710
@@ -167,18 +173,18 @@ def get_k8s_pod_spec(pod_id):
     return None
 
 
-def _is_controller_managed(pod) -> bool:
+def _get_managed_controller(pod):
     """
     Check if the pod is owned by a higher-level controller (ReplicaSet, StatefulSet, etc.).
     """
     owners = getattr(pod.metadata, "owner_references", None)
     if not owners:
-        return False
+        return None
     for owner in owners:
         # owner.controller may be None; treat truthy as controller-managed
         if getattr(owner, "controller", False):
-            return True
-    return False
+            return owner
+    return None
 
 
 def _sanitize_naked_pod_for_recreation(pod):
@@ -239,20 +245,20 @@ def recreate_k8s_user_pod(pod_id, metrics_details=None) -> JSONResponse:
         core_v1 = get_k8s_core_v1_client()
         logger.info("Recreating pod %s in namespace %s", name, namespace)
 
-        controller_managed = _is_controller_managed(pod_spec)
+        managed_controller = _get_managed_controller(pod_spec)
 
         logger.info(
-            "Recreating pod %s (UID=%s) in namespace %s; controller_managed=%s",
+            "Recreating pod %s (UID=%s) in namespace %s; managed_controller=%s",
             name,
             pod_id,
             namespace,
-            controller_managed,
+            managed_controller,
         )
 
         # Delete the existing pod
         core_v1.delete_namespaced_pod(name=name, namespace=namespace)
 
-        if controller_managed:
+        if managed_controller:
             logger.info(
                 "Pod %s (UID=%s) is controller-managed; relying on controller to recreate it.",
                 name,
@@ -316,3 +322,117 @@ def recreate_k8s_user_pod(pod_id, metrics_details=None) -> JSONResponse:
         )
     except ValueError as e:
         handle_k8s_exceptions(e, context_msg="Value error while recreating pod")
+
+
+def scale_k8s_user_pod(
+    pod_id, scale_type: ScaleType, scale_delta=1, metrics_details=None
+) -> JSONResponse:
+    """
+    Scale a pod's controller (Deployment, StatefulSet) by pod_id (UID).
+    scale_type: "UP" to increase by 1, "DOWN" to decrease by 1.
+    Will not scale system pods.
+    """
+    try:
+        pod_spec = get_k8s_pod_spec(pod_id)
+        if not pod_spec:
+            record_k8s_pod_metrics(metrics_details=metrics_details, status_code=404)
+            return JSONResponse(
+                content={"message": f"Pod with id {pod_id} not found."},
+                status_code=404,
+            )
+
+        namespace = pod_spec.metadata.namespace
+
+        controller_owner = _get_managed_controller(pod_spec)
+        if not controller_owner:
+            record_k8s_pod_metrics(metrics_details=metrics_details, status_code=400)
+            return JSONResponse(
+                content={"message": "Pod is not managed by any controller"},
+                status_code=400,
+            )
+
+        apps_v1 = get_k8s_apps_v1_client()
+        current_replicas = None
+        controller_kind = None
+        controller_name = None
+
+        if controller_owner.kind == "ReplicaSet":
+            replica_set = apps_v1.read_namespaced_replica_set(
+                controller_owner.name, namespace
+            )
+            rs_owners = getattr(replica_set.metadata, "owner_references", [])
+            deployment_owner = None
+            for owner in rs_owners:
+                if owner.kind == "Deployment":
+                    deployment_owner = owner
+                    break
+            if not deployment_owner:
+                current_replicas = replica_set.spec.replicas
+                controller_kind = "ReplicaSet"
+                controller_name = controller_owner.name
+            else:
+                deployment = apps_v1.read_namespaced_deployment(
+                    deployment_owner.name, namespace
+                )
+                current_replicas = deployment.spec.replicas
+                controller_kind = "Deployment"
+                controller_name = deployment_owner.name
+        elif controller_owner.kind == "StatefulSet":
+            stateful_set = apps_v1.read_namespaced_stateful_set(
+                controller_owner.name, namespace
+            )
+            current_replicas = stateful_set.spec.replicas
+            controller_kind = "StatefulSet"
+            controller_name = controller_owner.name
+        else:
+            record_k8s_pod_metrics(metrics_details=metrics_details, status_code=400)
+            return JSONResponse(
+                content={
+                    "message": f"Scaling for controller kind '{controller_owner.kind}' is not supported."
+                },
+                status_code=400,
+            )
+
+        if scale_type == ScaleType.UP:
+            replicas = current_replicas + scale_delta
+        elif scale_type == ScaleType.DOWN:
+            replicas = max(current_replicas - scale_delta, 0)
+        else:
+            record_k8s_pod_metrics(metrics_details=metrics_details, status_code=400)
+            return JSONResponse(
+                content={"message": "scale_type must be 'UP' or 'DOWN'."},
+                status_code=400,
+            )
+
+        body = {"spec": {"replicas": replicas}}
+        if controller_kind == "Deployment":
+            apps_v1.patch_namespaced_deployment_scale(controller_name, namespace, body)
+        elif controller_kind == "ReplicaSet":
+            apps_v1.patch_namespaced_replica_set_scale(controller_name, namespace, body)
+        elif controller_kind == "StatefulSet":
+            apps_v1.patch_namespaced_stateful_set_scale(
+                controller_name, namespace, body
+            )
+
+        record_k8s_pod_metrics(metrics_details=metrics_details, status_code=200)
+        return JSONResponse(
+            content={
+                "message": f"Scaled {controller_kind} '{controller_name}' to {replicas} replicas.",
+                "pod_id": str(pod_id),
+                "namespace": namespace,
+                "controller_kind": controller_kind,
+                "controller_name": controller_name,
+                "replicas": replicas,
+            },
+            status_code=200,
+        )
+    except ApiException as e:
+        handle_k8s_exceptions(
+            e, context_msg="Kubernetes API error while scaling pod controller"
+        )
+    except ConfigException as e:
+        handle_k8s_exceptions(
+            e, context_msg="Kubernetes configuration error while scaling pod controller"
+        )
+    except ValueError as e:
+        handle_k8s_exceptions(e, context_msg="Value error while scaling pod controller")
