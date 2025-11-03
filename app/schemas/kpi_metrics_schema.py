@@ -50,4 +50,3 @@ class KPIMetricsCreate(KPIMetricsBase):
     """
     Schema for creating new KPI metrics.
     """
-    pass

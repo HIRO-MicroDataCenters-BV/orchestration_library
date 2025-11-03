@@ -18,8 +18,10 @@ from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseExce
 logger = logging.getLogger(__name__)
 
 
-ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", 5))
-ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(os.getenv("ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS", 60))
+ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", "5"))
+ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
+    os.getenv("ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS", "60")
+)
 
 
 async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> int:
@@ -39,7 +41,9 @@ async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> 
     node_id = alert_details.get("node_id")
     pod_name = alert_details.get("pod_name")
     node_name = alert_details.get("node_name")
-    window_seconds = alert_details.get("window_seconds", ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS)
+    window_seconds = alert_details.get(
+        "window_seconds", ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS
+    )
 
     alert_window = datetime.now(timezone.utc) - timedelta(seconds=window_seconds)
     count_query = select(Alert.id).where(

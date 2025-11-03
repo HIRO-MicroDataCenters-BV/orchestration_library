@@ -77,7 +77,7 @@ async def get_kpi_metrics_route(
 @router.get(path="/latest_by_node", response_model=List[KPIMetricsSchema])
 async def get_latest_kpi_metrics_route(
     node_name: Optional[str] = Query(None, description="Filter by node name"),
-    limit: int = Query(1, description="Number of latest entries to retrieve")   ,
+    limit: int = Query(1, description="Number of latest entries to retrieve"),
     db_session: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -100,9 +100,12 @@ async def get_latest_kpi_metrics_route(
         metrics_details=metrics("GET", metrics_path),
     )
 
+
 @router.get(path="/latest_by_request", response_model=List[KPIMetricsSchema])
 async def get_latest_kpi_metrics_by_request_route(
-    request_decision_id: Optional[UUID] = Query(None, description="Filter by request decision ID"),
+    request_decision_id: Optional[UUID] = Query(
+        None, description="Filter by request decision ID"
+    ),
     limit: int = Query(1, description="Number of latest entries to retrieve"),
     db_session: AsyncSession = Depends(get_async_db),
 ):
@@ -115,7 +118,8 @@ async def get_latest_kpi_metrics_by_request_route(
         db_session (AsyncSession): Database session dependency.
 
     Returns:
-        List[KPIMetricsSchema]: List of latest KPI metrics entries for the specified request decision ID.
+        List[KPIMetricsSchema]: 
+            List of latest KPI metrics entries for the specified request decision ID.
     """
     metrics_path = "/kpi_metrics/latest_by_request"
     if request_decision_id:

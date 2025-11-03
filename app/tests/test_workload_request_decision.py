@@ -2,13 +2,12 @@
 
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
-
+from datetime import datetime, timezone
 import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.workload_request_decision import WorkloadRequestDecision
-from datetime import datetime, timezone
 from app.repositories.workload_request_decision import (
     create_workload_decision,
     get_workload_decision,
