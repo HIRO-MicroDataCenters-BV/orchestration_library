@@ -346,14 +346,17 @@ def resolve_controller(apps_v1, controller_owner, namespace):
         replica_set = apps_v1.read_namespaced_replica_set(
             controller_owner.name, namespace
         )
-        rs_owners = getattr(replica_set.metadata, "owner_references", [])
-        deployment_owner = next((o for o in rs_owners if o.kind == "Deployment"), None)
-        if not deployment_owner:
+        logger.info("replica_set: %s", replica_set)
+        rs_owners = getattr(replica_set.metadata, "owner_references", None)
+        if not rs_owners:
             return replica_set.spec.replicas, "ReplicaSet", controller_owner.name
-        deployment = apps_v1.read_namespaced_deployment(
-            deployment_owner.name, namespace
-        )
-        return deployment.spec.replicas, "Deployment", deployment_owner.name
+        
+        for owner in rs_owners:
+            if owner.kind == "Deployment":
+                deployment = apps_v1.read_namespaced_deployment(
+                    owner.name, namespace
+                )
+                return deployment.spec.replicas, "Deployment", owner.name
     if controller_owner.kind == "StatefulSet":
         stateful_set = apps_v1.read_namespaced_stateful_set(
             controller_owner.name, namespace
@@ -425,19 +428,21 @@ def scale_k8s_user_pod(
         current_replicas, controller_kind, controller_name = resolve_controller(
             apps_v1, controller_owner, namespace
         )
-        target = calculate_target_replicas(current_replicas, scale_type, scale_delta)
-        patch_scale(apps_v1, controller_kind, controller_name, namespace, target)
+        target_replicas = calculate_target_replicas(current_replicas, scale_type, scale_delta)
+        patch_scale(apps_v1, controller_kind, controller_name, namespace, target_replicas)
 
         record_k8s_pod_metrics(metrics_details=metrics_details, status_code=200)
         return JSONResponse(
             content={
-                "message": f"Scaled {controller_kind} '{controller_name}' to {target} replicas.",
+                "message": (
+                    f"Scaled {controller_kind} '{controller_name}' to {target_replicas} replicas."
+                ),
                 "pod_id": str(pod_id),
                 "namespace": namespace,
                 "controller_kind": controller_kind,
                 "controller_name": controller_name,
                 "previous_replicas": current_replicas,
-                "replicas": target,
+                "replicas": target_replicas,
                 "scale_type": scale_type.value,
                 "scale_delta": scale_delta,
             },
