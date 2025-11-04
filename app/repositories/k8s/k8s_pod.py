@@ -346,11 +346,9 @@ def resolve_controller(apps_v1, controller_owner, namespace):
         replica_set = apps_v1.read_namespaced_replica_set(
             controller_owner.name, namespace
         )
-        logger.info("replica_set: %s", replica_set)
         rs_owners = getattr(replica_set.metadata, "owner_references", None)
         if not rs_owners:
             return replica_set.spec.replicas, "ReplicaSet", controller_owner.name
-        
         for owner in rs_owners:
             if owner.kind == "Deployment":
                 deployment = apps_v1.read_namespaced_deployment(
