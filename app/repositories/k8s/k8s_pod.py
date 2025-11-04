@@ -411,7 +411,12 @@ def scale_k8s_user_pod(
         if not controller_owner:
             record_k8s_pod_metrics(metrics_details=metrics_details, status_code=400)
             return JSONResponse(
-                content={"message": "Pod is not managed by any controller"},
+                content={
+                    "message": (
+                        "Pod is not managed by any controller like Deployment, "
+                        "StatefulSet, or ReplicaSet. Cannot scale."
+                    )
+                },
                 status_code=400,
             )
         namespace = pod_spec.metadata.namespace
