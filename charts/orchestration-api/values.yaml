@@ -42,6 +42,9 @@ app:
     path: /
     tls: true
     tlsSecretName: orchestration-api-tls-secret
+  env:
+    ALERT_CRITICAL_THRESHOLD: 5
+    ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS: 60
 
 configmap:
   databaseURLConfig: orchestration-api-config

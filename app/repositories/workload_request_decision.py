@@ -13,6 +13,8 @@ from sqlalchemy import and_, select
 
 from app.metrics.helper import record_workload_request_decision_metrics
 from app.models.workload_request_decision import WorkloadRequestDecision
+from app.repositories.kpi_metrics import create_kpi_metrics
+from app.schemas.kpi_metrics_schema import KPIMetricsCreate
 from app.schemas.workload_request_decision_schema import (
     WorkloadRequestDecisionStatusUpdate,
     WorkloadRequestDecisionUpdate,
@@ -103,9 +105,29 @@ async def create_workload_decision(
             custom_exception_cls=DBEntryCreationException,
         )
     finally:
-        record_workload_request_decision_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_workload_request_decision_metrics(
+                metrics_details=metrics_details, status_code=400, exception=exception
+            )
+        # Record KPI metrics if the workload decision was created successfully
+        if not exception and wrd_obj:
+            # Safely compute decision duration in seconds
+            logger.info("Recording KPI metrics for pod decision %s", wrd_obj.id)
+            duration_seconds = None
+            if getattr(wrd_obj, "decision_start_time", None) and getattr(
+                wrd_obj, "decision_end_time", None
+            ):
+                delta = wrd_obj.decision_end_time - wrd_obj.decision_start_time
+                duration_seconds = float(delta.total_seconds())
+            if duration_seconds is not None and getattr(wrd_obj, "node_name", None):
+                kpi_data = KPIMetricsCreate(
+                    request_decision_id=wrd_obj.id,
+                    node_name=wrd_obj.node_name,
+                    decision_time_in_seconds=duration_seconds,
+                )
+                await create_kpi_metrics(
+                    db_session, kpi_data, metrics_details=None
+                )
 
 
 async def get_workload_decision(

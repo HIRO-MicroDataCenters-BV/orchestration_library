@@ -377,6 +377,8 @@ jobs:
             ${{ steps.helm-app-access.outputs.orchestration_api_service_nodePort }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_ingress_enabled }} \
             ${{ steps.helm-app-access.outputs.orchestration_api_ingress_host }} \
+            --set app.env.ALERT_CRITICAL_THRESHOLD=${{ vars.ALERT_CRITICAL_THRESHOLD }} \
+            --set app.env.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=${{ vars.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS }} \
             --set k8sDashboard.enabled=true \
             --set k8sDashboard.serviceAccountName=${{ vars.KUBERNETES_DASHBOARD_RO_SA }} \
             --set k8sDashboard.accessURL=${{ steps.set-dashboard-url.outputs.dashboard_url }} \

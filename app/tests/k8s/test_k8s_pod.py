@@ -423,17 +423,21 @@ def test_get_k8s_pod_spec_not_found(mock_get_client):
     assert k8s_pod.get_k8s_pod_spec("nope") is None
 
 
-@patch("app.repositories.k8s.k8s_pod._is_controller_managed", return_value=True)
+@patch("app.repositories.k8s.k8s_pod.get_managed_controller")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
-def test_recreate_pod_controller_managed(mock_get_client, mock_get_spec, _mock_is_ctrl):
+def test_recreate_pod_controller_managed(
+    mock_get_client, mock_get_spec, _mock_get_ctrl
+):
     """Test recreating a controller-managed pod does not attempt recreation."""
     pod_spec = MagicMock()
     pod_spec.metadata.namespace = "ns"
     pod_spec.metadata.name = "p1"
     owner = MagicMock()
     owner.controller = True
-    pod_spec.metadata.owner_references = [owner]  # _is_controller_managed should return True
+    pod_spec.metadata.owner_references = [
+        owner
+    ]  # _is_controller_managed should return True
     mock_get_spec.return_value = pod_spec
     core = MagicMock()
     mock_get_client.return_value = core
@@ -466,19 +470,20 @@ def test_recreate_pod_naked_success(mock_get_client, mock_get_spec):
     core.create_namespaced_pod.assert_called_once()  # recreation happened
 
 
-
-@patch("app.repositories.k8s.k8s_pod._wait_for_pod_deletion", return_value=False)
-@patch("app.repositories.k8s.k8s_pod._is_controller_managed", return_value=False)
+@patch("app.repositories.k8s.k8s_pod.wait_for_pod_deletion", return_value=False)
+@patch("app.repositories.k8s.k8s_pod.get_managed_controller", return_value=None)
 @patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_recreate_pod_naked_timeout(
-    mock_get_client, mock_get_spec, _mock_is_ctrl, _mock_wait
+    mock_get_client, mock_get_spec, _mock_get_ctrl, _mock_wait
 ):
     """Test recreating a naked pod times out waiting for deletion."""
     pod_spec = MagicMock()
     pod_spec.metadata.namespace = "ns"
     pod_spec.metadata.name = "p1"
-    pod_spec.metadata.owner_references = None  # _is_controller_managed False
+    pod_spec.metadata.owner_references = (
+        None  # _get_managed_controller None -> naked pod
+    )
     mock_get_spec.return_value = pod_spec
     core = MagicMock()
     mock_get_client.return_value = core
@@ -510,3 +515,204 @@ def test_recreate_pod_api_exception_delete(mock_get_client, mock_get_spec, mock_
     k8s_pod.recreate_k8s_user_pod("uid-x")
     mock_handle.assert_called()
     assert "recreating pod" in mock_handle.call_args[1]["context_msg"].lower()
+
+
+def test_calculate_target_replicas_up():
+    """Test calculating target replicas when scaling up."""
+    assert k8s_pod.calculate_target_replicas(3, k8s_pod.ScaleType.UP, 2) == 5
+
+
+def test_calculate_target_replicas_down_floor_zero():
+    """Test calculating target replicas when scaling down to zero."""
+    assert k8s_pod.calculate_target_replicas(2, k8s_pod.ScaleType.DOWN, 5) == 0
+
+
+def test_patch_scale_deployment():
+    """Test patching scale for a Deployment."""
+    apps = MagicMock()
+    k8s_pod.patch_scale(apps, "Deployment", "dep1", "ns", 4)
+    apps.patch_namespaced_deployment_scale.assert_called_once_with(
+        "dep1", "ns", {"spec": {"replicas": 4}}
+    )
+
+
+def test_patch_scale_replicaset():
+    """Test patching scale for a ReplicaSet."""
+    apps = MagicMock()
+    k8s_pod.patch_scale(apps, "ReplicaSet", "rs1", "ns", 2)
+    apps.patch_namespaced_replica_set_scale.assert_called_once()
+
+
+def test_patch_scale_statefulset():
+    """Test patching scale for a StatefulSet."""
+    apps = MagicMock()
+    k8s_pod.patch_scale(apps, "StatefulSet", "sts1", "ns", 6)
+    apps.patch_namespaced_stateful_set_scale.assert_called_once()
+
+
+def test_patch_scale_unsupported():
+    """Test patching scale for an unsupported controller type raises ValueError."""
+    apps = MagicMock()
+    with pytest.raises(ValueError):
+        k8s_pod.patch_scale(apps, "Job", "job1", "ns", 1)
+
+
+def test_resolve_controller_replicaset_with_deployment():
+    """
+    Test resolving controller when pod is owned by a 
+    ReplicaSet which is owned by a Deployment.
+    """
+    apps = MagicMock()
+    controller_owner = MagicMock()
+    controller_owner.kind = "ReplicaSet"
+    controller_owner.name = "rs-a"
+
+    rs_obj = MagicMock()
+    rs_obj.spec.replicas = 3
+    deploy_owner = MagicMock()
+    deploy_owner.kind = "Deployment"
+    deploy_owner.name = "dep-a"
+    rs_obj.metadata.owner_references = [deploy_owner]
+    apps.read_namespaced_replica_set.return_value = rs_obj
+
+    deploy_obj = MagicMock()
+    deploy_obj.spec.replicas = 3
+    apps.read_namespaced_deployment.return_value = deploy_obj
+
+    replicas, kind, name = k8s_pod.resolve_controller(apps, controller_owner, "ns")
+    assert (replicas, kind, name) == (deploy_obj.spec.replicas, "Deployment", "dep-a")
+
+
+def test_resolve_controller_replicaset_only():
+    """Test resolving controller when pod is owned by a ReplicaSet."""
+    apps = MagicMock()
+    controller_owner = MagicMock()
+    controller_owner.kind = "ReplicaSet"
+    controller_owner.name = "rs-solo"
+
+    rs_obj = MagicMock()
+    rs_obj.spec.replicas = 5
+    rs_obj.metadata.owner_references = []
+    apps.read_namespaced_replica_set.return_value = rs_obj
+
+    replicas, kind, name = k8s_pod.resolve_controller(apps, controller_owner, "ns")
+    assert (replicas, kind, name) == (5, "ReplicaSet", "rs-solo")
+
+
+def test_resolve_controller_statefulset():
+    """Test resolving controller when pod is owned by a StatefulSet."""
+    apps = MagicMock()
+    controller_owner = MagicMock()
+    controller_owner.kind = "StatefulSet"
+    controller_owner.name = "sts-a"
+
+    sts_obj = MagicMock()
+    sts_obj.spec.replicas = 7
+    apps.read_namespaced_stateful_set.return_value = sts_obj
+
+    replicas, kind, name = k8s_pod.resolve_controller(apps, controller_owner, "ns")
+    assert (replicas, kind, name) == (7, "StatefulSet", "sts-a")
+
+
+def test_resolve_controller_unsupported():
+    """Test resolving controller with unsupported kind raises ValueError."""
+    apps = MagicMock()
+    controller_owner = MagicMock()
+    controller_owner.kind = "CronJob"
+    controller_owner.name = "cj1"
+    with pytest.raises(ValueError):
+        k8s_pod.resolve_controller(apps, controller_owner, "ns")
+
+
+# ==== scale_k8s_user_pod integration-like tests ====
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod.patch_scale")
+@patch("app.repositories.k8s.k8s_pod.resolve_controller")
+@patch("app.repositories.k8s.k8s_pod.get_managed_controller")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+def test_scale_k8s_user_pod_up_success(
+    mock_get_spec, mock_get_ctrl, mock_resolve, mock_patch, mock_get_apps
+):
+    """Test scaling up a user pod successfully."""
+    pod = MagicMock()
+    pod.metadata.namespace = "ns"
+    pod.metadata.name = "p1"
+    mock_get_spec.return_value = pod
+    mock_get_ctrl.return_value = MagicMock()  # controller exists
+    mock_resolve.return_value = (3, "Deployment", "dep-a")
+    mock_get_apps.return_value = MagicMock()
+
+    resp = k8s_pod.scale_k8s_user_pod("uid-1", k8s_pod.ScaleType.UP, scale_delta=2)
+    assert resp.status_code == 200
+    # target should be 5
+    args, _ = mock_patch.call_args
+    assert args[4] == 5
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_apps_v1_client")
+@patch("app.repositories.k8s.k8s_pod.patch_scale")
+@patch("app.repositories.k8s.k8s_pod.resolve_controller")
+@patch("app.repositories.k8s.k8s_pod.get_managed_controller")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+def test_scale_k8s_user_pod_down_floor_zero(
+    mock_get_spec, mock_get_ctrl, mock_resolve, mock_patch, mock_get_apps
+):
+    """Test scaling down a user pod successfully, flooring at zero."""
+    pod = MagicMock()
+    pod.metadata.namespace = "ns"
+    pod.metadata.name = "p1"
+    mock_get_spec.return_value = pod
+    mock_get_ctrl.return_value = MagicMock()
+    mock_resolve.return_value = (2, "Deployment", "dep-a")
+    mock_get_apps.return_value = MagicMock()
+
+    resp = k8s_pod.scale_k8s_user_pod("uid-2", k8s_pod.ScaleType.DOWN, scale_delta=5)
+    assert resp.status_code == 200
+    # target should be 0
+    args, _ = mock_patch.call_args
+    assert args[4] == 0
+
+
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+def test_scale_k8s_user_pod_not_found(mock_get_spec):
+    """Test scaling a user pod that does not exist returns 404."""
+    mock_get_spec.return_value = None
+    resp = k8s_pod.scale_k8s_user_pod("missing", k8s_pod.ScaleType.UP)
+    assert resp.status_code == 404
+
+
+@patch("app.repositories.k8s.k8s_pod.get_managed_controller")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+def test_scale_k8s_user_pod_no_controller(mock_get_spec, mock_get_ctrl):
+    """Test scaling a user pod with no managing controller returns 400."""
+    pod = MagicMock()
+    pod.metadata.namespace = "ns"
+    pod.metadata.name = "p1"
+    mock_get_spec.return_value = pod
+    mock_get_ctrl.return_value = None
+    resp = k8s_pod.scale_k8s_user_pod("uid-nc", k8s_pod.ScaleType.UP)
+    assert resp.status_code == 400
+
+
+@patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
+@patch("app.repositories.k8s.k8s_pod.patch_scale", side_effect=ApiException("fail"))
+@patch(
+    "app.repositories.k8s.k8s_pod.resolve_controller",
+    return_value=(3, "Deployment", "dep-a"),
+)
+@patch("app.repositories.k8s.k8s_pod.get_managed_controller")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+def test_scale_k8s_user_pod_api_exception(
+    mock_get_spec, mock_get_ctrl, _mock_resolve, _mock_patch, mock_handle
+):
+    """Test scaling a user pod when Kubernetes API raises an exception."""
+    pod = MagicMock()
+    pod.metadata.namespace = "ns"
+    pod.metadata.name = "p1"
+    mock_get_spec.return_value = pod
+    mock_get_ctrl.return_value = MagicMock()
+    k8s_pod.scale_k8s_user_pod("uid-ex", k8s_pod.ScaleType.UP)
+    mock_handle.assert_called()
+    assert "scaling pod controller" in mock_handle.call_args[1]["context_msg"]
