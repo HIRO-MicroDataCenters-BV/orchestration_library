@@ -13,7 +13,7 @@ MAX_REDELIVERIES = 5  # max redeliveries for JetStream messages
 
 nats_server = os.getenv("NATS_SERVER", "nats://nats:4222")
 nats_js_stream = os.getenv("NATS_JS_STREAM", "PREDICTIONS")
-nats_js_subjects = os.getenv("NATS_JS_SUBJECTS", "anomalies")
+nats_js_subjects = os.getenv("NATS_JS_SUBJECTS", "anomalies,attack")
 nats_js_durable = os.getenv("NATS_JS_DURABLE", "alerts-populator")
 # topics_list = os.getenv("NATS_TOPICS", "alerts.network-attack, alerts.abnormal")
 alerts_api_url = os.getenv(
@@ -34,18 +34,6 @@ def _norm_alerts_url(url: str) -> str:
 
 async def post_alert(client: httpx.AsyncClient, url: str, payload: dict) -> bool:
     try:
-        if payload is None or (
-            payload.get("pod_id") is None
-            and payload.get("pod_name") is None
-            and payload.get("node_id") is None
-            and payload.get("node_name") is None
-            and payload.get("source_ip") is None
-            and payload.get("destination_ip") is None
-            and payload.get("source_port") is None
-            and payload.get("destination_port") is None
-        ):
-            logger.error("Ignoring alert with insufficient data: %s", payload)
-            return True
         resp = await client.post(url, json=payload, timeout=10)
         logger.info("POST %s status=%s payload=%s", url, resp.status_code, payload)
         if 200 <= resp.status_code < 300:

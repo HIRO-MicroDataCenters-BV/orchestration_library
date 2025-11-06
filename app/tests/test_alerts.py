@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 
 from app.repositories import alerts as alerts_repo
-from app.schemas.alerts_request import AlertResponse, AlertType
+from app.schemas.alerts_request import AlertCreateRequest, AlertResponse, AlertType
 from app.tests.utils.mock_objects import (
     mock_alert_create_request_obj,
     mock_alert_obj,
@@ -109,8 +109,9 @@ async def test_create_alert_success():
 
     # Patch count_recent_similar_alerts to avoid touching the SQLAlchemy Alert class.
     # which breaks when Alert is replaced by a MagicMock instance.
-    with patch("app.repositories.alerts.count_recent_similar_alerts", return_value=0), \
-         patch("app.repositories.alerts.Alert", return_value=alert_obj):
+    with patch(
+        "app.repositories.alerts.count_recent_similar_alerts", return_value=0
+    ), patch("app.repositories.alerts.Alert", return_value=alert_obj):
         created_alert = await alerts_repo.create_alert(
             db, alert_data, metrics_details=mock_metrics_details("POST", "/alerts")
         )
@@ -136,13 +137,16 @@ async def test_create_alert_triggers_pod_deletion_on_network_attack():
 
     # Use a valid pod_id and alert_type for the test
     pod_id = "123e4567-e89b-12d3-a456-426614174000"
-    alert_data = mock_alert_create_request_obj(alert_type="Network-Attack", pod_id=pod_id)
+    alert_data = mock_alert_create_request_obj(
+        alert_type="Network-Attack", pod_id=pod_id
+    )
     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type, pod_id=pod_id)
 
     # with patch("app.repositories.alerts.Alert", return_value=alert_obj), \
     #      patch("app.repositories.alerts.delete_k8s_user_pod") as mock_delete_pod:
-    with patch("app.repositories.alerts.count_recent_similar_alerts", return_value=0), \
-         patch("app.repositories.alerts.Alert", return_value=alert_obj):
+    with patch(
+        "app.repositories.alerts.count_recent_similar_alerts", return_value=0
+    ), patch("app.repositories.alerts.Alert", return_value=alert_obj):
         created_alert = await alerts_repo.create_alert(
             db, alert_data, metrics_details=mock_metrics_details("POST", "/alerts")
         )
@@ -183,8 +187,9 @@ async def test_create_alert_db_exceptions(exc, expected_exception):
     alert_data = mock_alert_create_request_obj(alert_type=AlertType.ABNORMAL)
     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type)
 
-    with patch("app.repositories.alerts.count_recent_similar_alerts", return_value=0), \
-         patch("app.repositories.alerts.Alert", return_value=alert_obj):
+    with patch(
+        "app.repositories.alerts.count_recent_similar_alerts", return_value=0
+    ), patch("app.repositories.alerts.Alert", return_value=alert_obj):
         with pytest.raises(expected_exception):
             await alerts_repo.create_alert(db, alert_data)
 
@@ -241,3 +246,49 @@ async def test_get_alerts_unexpected_exception():
     db.execute.side_effect = Exception("unexpected")
     with pytest.raises(OrchestrationBaseException):
         await alerts_repo.get_alerts(db)
+
+
+@pytest.mark.asyncio
+async def test_create_alert_insufficient_data_raises():
+    """Alert with all key data fields None should raise DBEntryCreationException."""
+    db = MagicMock()  # No DB calls expected before raise
+    db.rollback = AsyncMock()
+    db.commit = AsyncMock()
+    db.refresh = AsyncMock()
+    db.add = MagicMock()
+    # Only alert_type provided; all fields checked in is_alert_data_insufficient are None.
+
+    # Provide required fields (alert_model, alert_description) so Pydantic validates,
+    # but leave all fields checked by is_alert_data_insufficient as None.
+    insufficient_alert = AlertCreateRequest(
+        alert_type=AlertType.ABNORMAL,
+        alert_model="TestModel",
+        alert_description="Test description",
+        pod_id=None,
+        pod_name=None,
+        node_id=None,
+        node_name=None,
+        source_ip=None,
+        destination_ip=None,
+        source_port=None,
+        destination_port=None,
+    )
+
+    with pytest.raises(DBEntryCreationException) as exc_info:
+        await alerts_repo.create_alert(db, insufficient_alert)
+
+    assert "Insufficient data to create alert" in str(exc_info.value)
+    details = exc_info.value.details
+    assert "alert_data" in details
+    # All tracked fields should be None
+    for f in [
+        "pod_id",
+        "pod_name",
+        "node_id",
+        "node_name",
+        "source_ip",
+        "destination_ip",
+        "source_port",
+        "destination_port",
+    ]:
+        assert details["alert_data"][f] is None

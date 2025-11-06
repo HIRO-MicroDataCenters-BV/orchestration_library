@@ -24,6 +24,27 @@ ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
 )
 
 
+def is_alert_data_insufficient(alert_obj):
+    """
+    Check if the alert data is insufficient to create an alert.
+    Args:
+        alert_obj (AlertCreateRequest): The alert data to check
+    """
+    if alert_obj is None:
+        return True
+    fields = [
+        alert_obj.pod_id,
+        alert_obj.pod_name,
+        alert_obj.node_id,
+        alert_obj.node_name,
+        alert_obj.source_ip,
+        alert_obj.destination_ip,
+        alert_obj.source_port,
+        alert_obj.destination_port,
+    ]
+    return all(field is None for field in fields)
+
+
 async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> int:
     """
     Count the number of similar alerts in the last `window_seconds` seconds.
@@ -35,24 +56,22 @@ async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> 
     Returns:
         int: Number of similar alerts in the time window
     """
-    alert_type = alert_details.get("alert_type")
-    alert_model = alert_details.get("alert_model")
-    pod_id = alert_details.get("pod_id")
-    node_id = alert_details.get("node_id")
-    pod_name = alert_details.get("pod_name")
-    node_name = alert_details.get("node_name")
     window_seconds = alert_details.get(
         "window_seconds", ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS
     )
 
     alert_window = datetime.now(timezone.utc) - timedelta(seconds=window_seconds)
     count_query = select(Alert.id).where(
-        Alert.alert_type == alert_type,
-        Alert.alert_model == alert_model,
-        Alert.pod_id == pod_id,
-        Alert.node_id == node_id,
-        Alert.pod_name == pod_name,
-        Alert.node_name == node_name,
+        Alert.alert_type == alert_details.get("alert_type"),
+        Alert.alert_model == alert_details.get("alert_model"),
+        Alert.pod_id == alert_details.get("pod_id"),
+        Alert.node_id == alert_details.get("node_id"),
+        Alert.pod_name == alert_details.get("pod_name"),
+        Alert.node_name == alert_details.get("node_name"),
+        Alert.source_ip == alert_details.get("source_ip"),
+        Alert.destination_ip == alert_details.get("destination_ip"),
+        Alert.source_port == alert_details.get("source_port"),
+        Alert.destination_port == alert_details.get("destination_port"),
         Alert.created_at >= alert_window,
     )
     result = await db.execute(count_query)
@@ -78,6 +97,13 @@ async def create_alert(
     """
     exception = None
     try:
+
+        if is_alert_data_insufficient(alert):
+            logger.error("Ignoring alert with insufficient data: %s", alert)
+            raise DBEntryCreationException(
+                "Insufficient data to create alert",
+                details={"alert_data": alert.model_dump() if alert else None},
+            )
         logger.info("Creating alert with data: %s", alert.model_dump())
 
         recent_count = await count_recent_similar_alerts(
@@ -89,6 +115,10 @@ async def create_alert(
                 "node_id": alert.node_id,
                 "pod_name": alert.pod_name,
                 "node_name": alert.node_name,
+                "source_ip": alert.source_ip,
+                "destination_ip": alert.destination_ip,
+                "source_port": alert.source_port,
+                "destination_port": alert.destination_port,
                 "window_seconds": ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             },
         )
