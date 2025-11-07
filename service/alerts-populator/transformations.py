@@ -41,15 +41,40 @@ def build_alert_api_payload(input_json: dict, alert_type: str) -> json:
     return payload
 
 
-def transform_attack(data: str) -> json:
-    # Example transformation logic for network attack alerts
-    alert_payloads = []
-    json_data = json.loads(data)
-    alert_payloads.append(build_alert_api_payload(json_data, "Attack"))
-    return alert_payloads
+def transform_event(data: str, alert_type: str) -> list[dict]:
+    """
+    Shared transformation for attack / abnormal alerts.
+    Returns a single-element list with the normalized payload or [] on parse error.
+    """
+    parsed, err = safe_json_loads(data)
+    if err:
+        logger.error("Error parsing JSON (%s): %s", alert_type, err)
+        return []
 
+    root = parsed or {}
+    data_section = root.get("data", {}) or {}
+    pod_name = data_section.get("pod")
+    node_name = data_section.get("instance")
 
-def transform_abnormal(data: str) -> json:
+    payload = {
+        "alert_type": alert_type,
+        "alert_model": root.get("model_name", pod_name),
+        "alert_description": data_section.get("prediction", pod_name),
+        "pod_name": pod_name,
+        "pod_id": get_pod_id_by_name(pod_name) if pod_name else None,
+        "node_id": get_node_id_by_name(node_name) if node_name else None,
+        "node_name": node_name,
+        "source_ip": root.get("source_ip"),
+        "source_port": root.get("source_port"),
+        "destination_ip": root.get("destination_ip"),
+        "destination_port": root.get("destination_port"),
+        "protocol": root.get("protocol"),
+        "created_at": data_section.get("timestamp"),
+    }
+    return [payload]
+
+def transform_attack(data: str) -> list[dict]:
+    """Transform raw attack alert JSON string into API payload list."""
     # Example transformation logic for abnormal alerts
     # Expected input json string is :
     #     {
@@ -62,30 +87,23 @@ def transform_abnormal(data: str) -> json:
     #   },
     #   "model_name": "tis"
     # }
-    parsed, err = safe_json_loads(data)
-    if err:
-        logger.error("Error parsing JSON in abnormal alert: %s", err)
-        return []
-    input_json = parsed
-    data = input_json.get("data", {})
-    pod_name = data.get("pod")
-    node_name = data.get("instance")
-    payload = {
-        "alert_type": "Abnormal",
-        "alert_model": input_json.get("model_name", pod_name),
-        "alert_description": data.get("prediction", pod_name),
-        "pod_name": pod_name,
-        "pod_id": get_pod_id_by_name(pod_name),
-        "node_id": get_node_id_by_name(node_name),
-        "node_name": node_name,
-        "source_ip": input_json.get("source_ip"),
-        "source_port": input_json.get("source_port"),
-        "destination_ip": input_json.get("destination_ip"),
-        "destination_port": input_json.get("destination_port"),
-        "protocol": input_json.get("protocol"),
-        "created_at": data.get("timestamp"),
-    }
-    return [payload]
+    return transform_event(data, "Attack")
+
+def transform_abnormal(data: str) -> list[dict]:
+    """Transform raw abnormal alert JSON string into API payload list."""
+    # Example transformation logic for abnormal alerts
+    # Expected input json string is :
+    #     {
+    #   "timestamp": "2025-10-15T23:51:31.752364",
+    #   "data": {
+    #     "pod": "submariner-lighthouse-coredns-765db7f584-nsk89",
+    #     "instance": "master",
+    #     "timestamp": "2025-10-15T23:51:01.031000",
+    #     "prediction": "CPU HOG"
+    #   },
+    #   "model_name": "tis"
+    # }
+    return transform_event(data, "Abnormal")
 
 
 def default_transform_func(data: str) -> json:

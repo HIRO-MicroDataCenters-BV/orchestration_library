@@ -51,6 +51,7 @@ async def handle_js_message(
     """Transform and forward a JetStream message; return True to ack, False to redeliver."""
     subject = msg.subject
     data = msg.data.decode()
+    logger.info("Received message on %s: %s", subject, data)
 
     transform = get_transformation_func(subject)
     transformed_alerts = transform(data)
