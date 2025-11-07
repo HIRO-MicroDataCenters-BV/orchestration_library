@@ -56,13 +56,21 @@ def transform_event(data: str, alert_type: str) -> list[dict]:
     pod_name = data_section.get("pod")
     node_name = data_section.get("instance")
 
+    # Short-circuit if both pod_name and node_name are missing
+    if pod_name is None and node_name is None:
+        logger.warning("Both pod_name and node_name are missing in alert: %s", alert_type)
+        return []
+
+    pod_id = get_pod_id_by_name(pod_name) if pod_name else None
+    node_id = get_node_id_by_name(node_name) if node_name else None
+
     payload = {
         "alert_type": alert_type,
         "alert_model": root.get("model_name", pod_name),
         "alert_description": data_section.get("prediction", pod_name),
         "pod_name": pod_name,
-        "pod_id": get_pod_id_by_name(pod_name) if pod_name else None,
-        "node_id": get_node_id_by_name(node_name) if node_name else None,
+        "pod_id": pod_id,
+        "node_id": node_id,
         "node_name": node_name,
         "source_ip": root.get("source_ip"),
         "source_port": root.get("source_port"),
