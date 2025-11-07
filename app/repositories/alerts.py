@@ -61,19 +61,29 @@ async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> 
     )
 
     alert_window = datetime.now(timezone.utc) - timedelta(seconds=window_seconds)
-    count_query = select(Alert.id).where(
-        Alert.alert_type == alert_details.get("alert_type"),
-        Alert.alert_model == alert_details.get("alert_model"),
-        Alert.pod_id == alert_details.get("pod_id"),
-        Alert.node_id == alert_details.get("node_id"),
-        Alert.pod_name == alert_details.get("pod_name"),
-        Alert.node_name == alert_details.get("node_name"),
-        Alert.source_ip == alert_details.get("source_ip"),
-        Alert.destination_ip == alert_details.get("destination_ip"),
-        Alert.source_port == alert_details.get("source_port"),
-        Alert.destination_port == alert_details.get("destination_port"),
-        Alert.created_at >= alert_window,
-    )
+    field_map = {
+        Alert.alert_type: alert_details.get("alert_type"),
+        Alert.alert_model: alert_details.get("alert_model"),
+        Alert.pod_id: alert_details.get("pod_id"),
+        Alert.node_id: alert_details.get("node_id"),
+        Alert.pod_name: alert_details.get("pod_name"),
+        Alert.node_name: alert_details.get("node_name"),
+        Alert.source_ip: alert_details.get("source_ip"),
+        Alert.destination_ip: alert_details.get("destination_ip"),
+        Alert.source_port: alert_details.get("source_port"),
+        Alert.destination_port: alert_details.get("destination_port"),
+    }
+
+    conditions = []
+    for column, value in field_map.items():
+        if value is None:
+            conditions.append(column.is_(None))
+        else:
+            conditions.append(column == value)
+
+    conditions.append(Alert.created_at >= alert_window)
+
+    count_query = select(Alert.id).where(*conditions)
     result = await db.execute(count_query)
     return len(result.scalars().all())
 
