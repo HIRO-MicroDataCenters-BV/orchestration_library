@@ -678,7 +678,7 @@ Listing all alerts...
   },
   {
     "id": 32,
-    "alert_type": "Network-Attack",
+    "alert_type": "Attack",
     "alert_model": "ModelB",
     "alert_description": "Network anomaly",
     "pod_id": "33333333-3333-3333-3333-333333333333",

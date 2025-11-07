@@ -41,11 +41,11 @@ def build_alert_api_payload(input_json: dict, alert_type: str) -> json:
     return payload
 
 
-def transform_network_attack(data: str) -> json:
+def transform_attack(data: str) -> json:
     # Example transformation logic for network attack alerts
     alert_payloads = []
     json_data = json.loads(data)
-    alert_payloads.append(build_alert_api_payload(json_data, "Network-Attack"))
+    alert_payloads.append(build_alert_api_payload(json_data, "Attack"))
     return alert_payloads
 
 
@@ -96,8 +96,8 @@ def default_transform_func(data: str) -> json:
 
 def get_transformation_func(subject: str):
     match subject:
-        case "alerts.network-attack":
-            return transform_network_attack
+        case "attack":
+            return transform_attack
         case "anomalies":
             return transform_abnormal
         case _:

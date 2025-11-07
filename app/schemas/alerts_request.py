@@ -43,7 +43,7 @@ class AlertType(str, Enum):
     """
 
     ABNORMAL = "Abnormal"
-    NETWORK_ATTACK = "Network-Attack"
+    ATTACK = "Attack"
     OTHER = "Other"
 
     def __repr__(self) -> str:
@@ -73,7 +73,7 @@ class AlertCreateRequest(BaseModel):
     alert_type: AlertType = Field(
         ...,
         description="Type of alert",
-        examples=["Abnormal", "Network-Attack", "Other"],
+        examples=["Abnormal", "Attack", "Other"],
     )
     alert_level: Optional[AlertLevel] = Field(
         "Warning",

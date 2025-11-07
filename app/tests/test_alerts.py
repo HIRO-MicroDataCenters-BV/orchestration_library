@@ -130,7 +130,7 @@ async def test_create_alert_success():
 
 @pytest.mark.asyncio
 async def test_create_alert_triggers_pod_deletion_on_network_attack():
-    """Test that pod deletion is triggered for Network-Attack alert with pod_id."""
+    """Test that pod deletion is triggered for Attack alert with pod_id."""
     db = MagicMock()
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
@@ -138,7 +138,7 @@ async def test_create_alert_triggers_pod_deletion_on_network_attack():
     # Use a valid pod_id and alert_type for the test
     pod_id = "123e4567-e89b-12d3-a456-426614174000"
     alert_data = mock_alert_create_request_obj(
-        alert_type="Network-Attack", pod_id=pod_id
+        alert_type="Attack", pod_id=pod_id
     )
     alert_obj = mock_alert_obj(alert_type=alert_data.alert_type, pod_id=pod_id)
 
@@ -216,7 +216,7 @@ async def test_get_alerts_success():
     """Test successful retrieval of alerts."""
     db = AsyncMock()
     alert_obj1 = mock_alert_obj(alert_type=AlertType.ABNORMAL)
-    alert_obj2 = mock_alert_obj(alert_type=AlertType.NETWORK_ATTACK)
+    alert_obj2 = mock_alert_obj(alert_type=AlertType.ATTACK)
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = [alert_obj1, alert_obj2]
     db.execute.return_value = mock_result

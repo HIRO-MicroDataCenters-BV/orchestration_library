@@ -142,10 +142,10 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
-        # # Trigger pod deletion if it's a Network-Attack alert with a pod_id
-        # if alert_model.alert_type == "Network-Attack" and alert_model.pod_id is not None:
+        # # Trigger pod deletion if it's a Attack alert with a pod_id
+        # if alert_model.alert_type == "Attack" and alert_model.pod_id is not None:
         #     logger.info(
-        #         "Network-Attack alert detected for pod_id %s, triggering pod deletion.",
+        #         "Attack alert detected for pod_id %s, triggering pod deletion.",
         #         alert_model.pod_id,
         #     )
         #     # Call the delete function (synchronously, since it's not async)
