@@ -38,7 +38,7 @@ ALERTS_POPULATOR_SERVICE_PORT=8080
 ALERTS_POPULATOR_NATS_SERVER=nats://nats-server.aces-monitoring-observability.svc.cluster.local:4222
 # ALERTS_POPULATOR_NATS_TOPICS=("alerts.network-attack" "alerts.abnormal")
 ALERTS_POPULATOR_NATS_JS_STREAM="PREDICTIONS"
-ALERTS_POPULATOR_NATS_JS_SUBJECTS=("anomalies" "network-attacks")
+ALERTS_POPULATOR_NATS_JS_SUBJECTS=("anomalies" "attack")
 ALERTS_POPULATOR_NATS_JS_DURABLE="alerts-populator"
 ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRATION_API_NAMESPACE.svc.cluster.local:$ORCHRESTRATION_API_SERVICE_PORT/alerts"
 
@@ -149,11 +149,11 @@ echo "Rebuilding dependencies for orchestration-api chart"
 # done
 # nats_topics_set=${nats_topics_set% }  # Remove trailing space
 
-# nats_js_subjects=""
-# for i in "${!ALERTS_POPULATOR_NATS_JS_SUBJECTS[@]}"; do
-#   nats_js_subjects+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${ALERTS_POPULATOR_NATS_JS_SUBJECTS[$i]} "
-# done
-# nats_js_subjects=${nats_js_subjects% }  # Remove trailing space
+nats_js_subjects=""
+for i in "${!ALERTS_POPULATOR_NATS_JS_SUBJECTS[@]}"; do
+  nats_js_subjects+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${ALERTS_POPULATOR_NATS_JS_SUBJECTS[$i]} "
+done
+nats_js_subjects=${nats_js_subjects% }  # Remove trailing space
 
 echo "Deploy the orchestration-api with dependencies(K8S Dashboard with reverse proxy) to the Kind cluster"
 RELEASE_NAME=$ORCHRESTRATION_API_RELEASE_NAME

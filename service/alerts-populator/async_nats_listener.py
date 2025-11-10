@@ -7,13 +7,13 @@ from nats.errors import ConnectionClosedError, TimeoutError, NoServersError
 from transformations import get_transformation_func
 
 
-RECONNECT_DELAY = 2       # seconds
+RECONNECT_DELAY = 2  # seconds
 MAX_RECONNECT_DELAY = 30  # seconds
-MAX_REDELIVERIES = 5       # max redeliveries for JetStream messages
+MAX_REDELIVERIES = 5  # max redeliveries for JetStream messages
 
 nats_server = os.getenv("NATS_SERVER", "nats://nats:4222")
 nats_js_stream = os.getenv("NATS_JS_STREAM", "PREDICTIONS")
-nats_js_subjects = os.getenv("NATS_JS_SUBJECTS", "anomalies")
+nats_js_subjects = os.getenv("NATS_JS_SUBJECTS", "anomalies,attack")
 nats_js_durable = os.getenv("NATS_JS_DURABLE", "alerts-populator")
 # topics_list = os.getenv("NATS_TOPICS", "alerts.network-attack, alerts.abnormal")
 alerts_api_url = os.getenv(
@@ -27,8 +27,10 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 
+
 def _norm_alerts_url(url: str) -> str:
     return url.rstrip("/") + "/"
+
 
 async def post_alert(client: httpx.AsyncClient, url: str, payload: dict) -> bool:
     try:
@@ -42,10 +44,14 @@ async def post_alert(client: httpx.AsyncClient, url: str, payload: dict) -> bool
         logger.error("HTTP error posting alert: %s", e)
         return False
 
-async def handle_js_message(msg, alerts_api_url: str, http_client: httpx.AsyncClient) -> bool:
+
+async def handle_js_message(
+    msg, alerts_api_url: str, http_client: httpx.AsyncClient
+) -> bool:
     """Transform and forward a JetStream message; return True to ack, False to redeliver."""
     subject = msg.subject
     data = msg.data.decode()
+    logger.info("Received message on %s: %s", subject, data)
 
     transform = get_transformation_func(subject)
     transformed_alerts = transform(data)
@@ -54,7 +60,9 @@ async def handle_js_message(msg, alerts_api_url: str, http_client: httpx.AsyncCl
     # if isinstance(transformed_alerts, dict):
     #     transformed_alerts = [transformed_alerts]
     if not isinstance(transformed_alerts, list):
-        logger.error("Transformer returned unexpected type: %s", type(transformed_alerts))
+        logger.error(
+            "Transformer returned unexpected type: %s", type(transformed_alerts)
+        )
         return False
 
     api_url = _norm_alerts_url(alerts_api_url)
@@ -66,6 +74,7 @@ async def handle_js_message(msg, alerts_api_url: str, http_client: httpx.AsyncCl
         all_ok = all_ok and ok
     return all_ok
 
+
 async def run_jetstream_consumer(nc: NATS, alerts_api_url: str):
     """Create a durable JetStream subscription and process messages with manual ack."""
     js = nc.jetstream()
@@ -73,7 +82,7 @@ async def run_jetstream_consumer(nc: NATS, alerts_api_url: str):
 
     # Single long‑lived HTTP client
     http_client = httpx.AsyncClient(follow_redirects=True)
-    
+
     async def js_callback(msg):
         attempts = getattr(getattr(msg, "metadata", None), "num_delivered", 1)
         ok = await handle_js_message(msg, alerts_api_url, http_client)
@@ -87,7 +96,9 @@ async def run_jetstream_consumer(nc: NATS, alerts_api_url: str):
             else:
                 # Stop further redelivery to avoid poison message loop
                 await msg.term()
-                logger.error("Terminated message on %s after %s attempts", msg.subject, attempts)
+                logger.error(
+                    "Terminated message on %s after %s attempts", msg.subject, attempts
+                )
 
     async def ensure_subscription(subject: str):
         # Create/attach durable consumer; manual_ack ensures we control acking
@@ -102,17 +113,23 @@ async def run_jetstream_consumer(nc: NATS, alerts_api_url: str):
                     durable=durable,
                     manual_ack=True,
                     cb=js_callback,
-                    deliver_policy="all"
+                    deliver_policy="all",
                 )
                 logger.info(
                     "JetStream subscribed: stream=%s subject=%s durable=%s",
-                    nats_js_stream, subject, durable
+                    nats_js_stream,
+                    subject,
+                    durable,
                 )
                 return sub
             except Exception as e:
                 msg = str(e)
                 if "consumer is already bound" in msg.lower():
-                    logger.warning("Bind error durable=%s: %s; deleting then retrying", durable, msg)
+                    logger.warning(
+                        "Bind error durable=%s: %s; deleting then retrying",
+                        durable,
+                        msg,
+                    )
                     try:
                         await js.delete_consumer(nats_js_stream, durable)
                         logger.info("Deleted durable=%s after bind error", durable)
@@ -120,17 +137,19 @@ async def run_jetstream_consumer(nc: NATS, alerts_api_url: str):
                         logger.warning("Delete failed durable=%s: %s", durable, de)
                     await asyncio.sleep(1)
                     continue
-                logger.error("Subscribe error subject=%s attempt=%s: %s", subject, attempt, msg)
+                logger.error(
+                    "Subscribe error subject=%s attempt=%s: %s", subject, attempt, msg
+                )
                 await asyncio.sleep(min(5, attempt))
                 continue
 
     for subject in subjects:
         await ensure_subscription(subject)
-        
+
     await nc.flush()
 
     try:
-    # Keep the subscription alive
+        # Keep the subscription alive
         while True:
             await asyncio.sleep(1)
     finally:
@@ -175,7 +194,7 @@ async def main():
                 name="alerts-populator-js-client",
                 connect_timeout=10,
                 ping_interval=10,
-                max_outstanding_pings=5
+                max_outstanding_pings=5,
             )
             logger.info("Connected to NATS: %s", nats_server)
 
@@ -193,6 +212,7 @@ async def main():
         except Exception as e:
             logger.error("Unexpected error: %s", e)
             await asyncio.sleep(reconnect_delay)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

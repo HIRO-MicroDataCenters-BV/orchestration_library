@@ -345,7 +345,7 @@ def mock_alert_create_request_obj(
     """
     Mock an alert creation object with necessary attributes.
     """
-    if alert_type is AlertType.NETWORK_ATTACK:
+    if alert_type is AlertType.ATTACK:
         return AlertCreateRequest(
             alert_type=alert_type,
             alert_level="Warning",
@@ -376,7 +376,7 @@ def mock_alert_create_request_data(
     """
     Mock an alert creation request data dictionary with necessary attributes.
     """
-    if alert_type is AlertType.NETWORK_ATTACK:
+    if alert_type is AlertType.ATTACK:
         return {
             "alert_type": alert_type,
             "alert_level": "Warning",

@@ -179,3 +179,5 @@ cython_debug/
 # Ignore macOS system files
 .DS_Store
 app/.DS_Store
+
+orchestration_app.log

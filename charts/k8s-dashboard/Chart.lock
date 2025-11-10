@@ -3,4 +3,4 @@ dependencies:
   repository: https://kubernetes.github.io/dashboard/
   version: 7.13.0
 digest: sha256:9aac59da6f4ab131ebf7ea824aa7a1e2dd5a6e603ac121f680cee3b356272bfc
-generated: "2025-11-04T11:53:49.341693+01:00"
+generated: "2025-11-07T11:00:53.116917+01:00"
