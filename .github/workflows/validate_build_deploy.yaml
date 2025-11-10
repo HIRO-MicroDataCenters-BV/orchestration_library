@@ -226,10 +226,10 @@ jobs:
         with:
           skip_existing: true
           packages_with_index: true
-          pages_branch : gh-pages
+          pages_branch: gh-pages
           mark_as_latest: true
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}" 
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Publish Helm charts
         uses: stefanprodan/helm-gh-pages@master
@@ -301,7 +301,7 @@ jobs:
       - name: Set Helm dry-run flag
         id: helm-dry-run
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "dry_run_flag=" >> $GITHUB_OUTPUT
           else
             echo "dry_run_flag=--dry-run" >> $GITHUB_OUTPUT
