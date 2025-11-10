@@ -47,6 +47,7 @@ ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=60
 
 TUNING_PARAMETERS_POPULATOR_IMAGE_NAME="tuning-parameters-populator"
 TUNING_PARAMETERS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
+TUNING_PARAMETERS_POPULATOR_NATS_SERVER=nats://nats-server.aces-monitoring-observability.svc.cluster.local:4222
 TUNING_PARAMETERS_POPULATOR_NATS_JS_STREAM="TUNING"
 TUNING_PARAMETERS_POPULATOR_NATS_JS_SUBJECTS=("tuning")
 TUNING_PARAMETERS_POPULATOR_NATS_JS_DURABLE="tuning-parameters-populator"
@@ -215,6 +216,7 @@ helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts
   --set tuningParametersPopulator.image.repository=$TUNING_PARAMETERS_POPULATOR_IMAGE_NAME \
   --set tuningParametersPopulator.image.tag=$TUNING_PARAMETERS_POPULATOR_IMAGE_TAG \
   --set tuningParametersPopulator.image.pullPolicy=IfNotPresent \
+  --set tuningParametersPopulator.env.NATS_SERVER=$TUNING_PARAMETERS_POPULATOR_NATS_SERVER \
   --set tuningParametersPopulator.env.NATS_JS_STREAM=$TUNING_PARAMETERS_POPULATOR_NATS_JS_STREAM \
   --set tuningParametersPopulator.env.NATS_JS_DURABLE=$TUNING_PARAMETERS_POPULATOR_NATS_JS_DURABLE \
   ${tuning_nats_js_subjects} \
