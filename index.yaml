@@ -95,6 +95,16 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/pod-timing-watcher-0.1.0.tgz
     version: 0.1.0
+  tuning-parameters-populator:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-11-10T14:44:36.255585426Z"
+    description: A Helm chart for deploying Tuning Parameters Populator service
+    digest: 1a82ddb65ba2fe484d2352672f85f86cf07913b5a47c7e637f933e8abf20d6f8
+    name: tuning-parameters-populator
+    urls:
+    - tuning-parameters-populator-1.0.0.tgz
+    version: 1.0.0
   workload-timing-watcher:
   - apiVersion: v2
     appVersion: 1.0.0
@@ -106,4 +116,4 @@ entries:
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/workload-timing-watcher-1.0.0.tgz
     version: 1.0.0
-generated: "2025-11-10T09:37:18.830208288Z"
+generated: "2025-11-10T14:44:36.407139725Z"
