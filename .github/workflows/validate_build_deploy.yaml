@@ -115,6 +115,8 @@ jobs:
       workload_timing_watcher_image_tag: ${{ steps.set-workload-timing-watcher-image.outputs.workload_timing_watcher_image_tag }}
       alerts_populator_image_name: ${{ steps.set-alerts-populator-image.outputs.alerts_populator_image_name }}
       alerts_populator_image_tag: ${{ steps.set-alerts-populator-image.outputs.alerts_populator_image_tag }}
+      tuning_parameters_populator_image_name: ${{ steps.set-tuning-parameters-populator-image.outputs.tuning_parameters_populator_image_name }}
+      tuning_parameters_populator_image_tag: ${{ steps.set-tuning-parameters-populator-image.outputs.tuning_parameters_populator_image_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -155,7 +157,7 @@ jobs:
         id: set-alerts-populator-image
         run: |
           IMAGE_TAG=${{ vars.ALERTS_POPULATOR_IMAGE_TAG }}-$(date +%Y%m%d%H%M%S)
-          docker build -t ${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}:$IMAGE_TAG -f ./service/alerts-populator/Dockerfile ./service/alerts-populator
+          docker build -t ${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}:$IMAGE_TAG -f ./service/alerts-populator/Dockerfile .
           echo "alerts_populator_image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "alerts_populator_image_name=${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
@@ -163,6 +165,19 @@ jobs:
         if: github.event_name == 'push'
         run: |
           docker push ${{ vars.ALERTS_POPULATOR_IMAGE_NAME }}:${{ steps.set-alerts-populator-image.outputs.alerts_populator_image_tag }}
+
+      - name: Build Tuning Parameters Populator Docker image
+        id: set-tuning-parameters-populator-image
+        run: |
+          IMAGE_TAG=${{ vars.TUNING_PARAMETERS_POPULATOR_IMAGE_TAG }}-$(date +%Y%m%d%H%M%S)
+          docker build -t ${{ vars.TUNING_PARAMETERS_POPULATOR_IMAGE_NAME }}:$IMAGE_TAG -f ./service/tuning-parameters-populator/Dockerfile .
+          echo "tuning_parameters_populator_image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "tuning_parameters_populator_image_name=${{ vars.TUNING_PARAMETERS_POPULATOR_IMAGE_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Push Tuning Parameters Populator Docker image
+        if: github.event_name == 'push'
+        run: |
+          docker push ${{ vars.TUNING_PARAMETERS_POPULATOR_IMAGE_NAME }}:${{ steps.set-tuning-parameters-populator-image.outputs.tuning_parameters_populator_image_tag }}
 
   helmPublish:
     name: Publish Helm Charts
@@ -277,6 +292,9 @@ jobs:
       - name: Update Helm dependencies for alerts-populator chart
         run: helm dependency build ./charts/alerts-populator
 
+      - name: Update Helm dependencies for tuning-parameters-populator chart
+        run: helm dependency build ./charts/tuning-parameters-populator
+
       - name: Update Helm dependencies for orchestration-api chart
         run: helm dependency build ./charts/orchestration-api
 
@@ -351,16 +369,27 @@ jobs:
           fi
           echo "dashboard_url=$DASHBOARD_URL" >> $GITHUB_OUTPUT
 
-      - name: Prepare --set arguments for NATS_JS_SUBJECTS array
-        id: set-nats-js-subjects
+      - name: Prepare --set arguments for NATS_JS_SUBJECTS array of Alerts Populator Service
+        id: set-alerts-nats-js-subjects
         run: |
-          nats_js_subjects_set=""
+          alerts_nats_js_subjects_set=""
           IFS=',' read -ra SUBJECTS <<< "${{ vars.ALERTS_POPULATOR_NATS_JS_SUBJECTS }}"
           for i in "${!SUBJECTS[@]}"; do
-          nats_js_subjects_set+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${SUBJECTS[$i]} "
+          alerts_nats_js_subjects_set+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${SUBJECTS[$i]} "
           done
-          nats_js_subjects_set=${nats_js_subjects_set% }
-          echo "nats_js_subjects_set=$nats_js_subjects_set" >> $GITHUB_OUTPUT
+          alerts_nats_js_subjects_set=${alerts_nats_js_subjects_set% }
+          echo "alerts_nats_js_subjects_set=$alerts_nats_js_subjects_set" >> $GITHUB_OUTPUT
+
+      - name: Prepare --set arguments for NATS_JS_SUBJECTS array of Tuning Parameters Populator Service
+        id: set-tuning-nats-js-subjects
+        run: |
+          tuning_nats_js_subjects_set=""
+          IFS=',' read -ra SUBJECTS <<< "${{ vars.TUNING_PARAMETERS_POPULATOR_NATS_JS_SUBJECTS }}"
+          for i in "${!SUBJECTS[@]}"; do
+          tuning_nats_js_subjects_set+="--set tuningParametersPopulator.env.NATS_JS_SUBJECTS[$i]=${SUBJECTS[$i]} "
+          done
+          tuning_nats_js_subjects_set=${tuning_nats_js_subjects_set% }
+          echo "tuning_nats_js_subjects=$tuning_nats_js_subjects_set" >> $GITHUB_OUTPUT
 
       - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
         env:
@@ -398,7 +427,13 @@ jobs:
             --set alertsPopulator.env.NATS_SERVER=${{ vars.ALERTS_POPULATOR_NATS_SERVER }} \
             --set alertsPopulator.env.NATS_JS_STREAM=${{ vars.ALERTS_POPULATOR_NATS_JS_STREAM }} \
             --set alertsPopulator.env.NATS_JS_DURABLE=${{ vars.ALERTS_POPULATOR_NATS_JS_DURABLE }} \
-            ${{ steps.set-nats-js-subjects.outputs.nats_js_subjects_set }} \
+            ${{ steps.set-alerts-nats-js-subjects.outputs.alerts_nats_js_subjects_set }} \
+            --set tuningParametersPopulator.image.repository=${{ vars.TUNING_PARAMETERS_POPULATOR_IMAGE_NAME }} \
+            --set tuningParametersPopulator.image.tag=${{ needs.build-and-push.outputs.tuning_parameters_populator_image_tag }} \
+            --set tuningParametersPopulator.env.NATS_SERVER=${{ vars.TUNING_PARAMETERS_POPULATOR_NATS_SERVER }} \
+            --set tuningParametersPopulator.env.NATS_JS_STREAM=${{ vars.TUNING_PARAMETERS_POPULATOR_NATS_JS_STREAM }} \
+            --set tuningParametersPopulator.env.NATS_JS_DURABLE=${{ vars.TUNING_PARAMETERS_POPULATOR_NATS_JS_DURABLE }} \
+            ${{ steps.set-tuning-nats-js-subjects.outputs.tuning_nats_js_subjects }} \
             --timeout=600s \
             --wait \
             --debug \
