@@ -13,12 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /code
 
 # Copy dependency files
-COPY service/alerts-populator /code/alerts-populator
+COPY service/tuning-parameters-populator /code/tuning-parameters-populator
 COPY service/shared /code/shared
 
 # Install dependencies
-RUN pip install --no-cache-dir -r alerts-populator/requirements.txt
+RUN pip install --no-cache-dir -r tuning-parameters-populator/requirements.txt
 
 ENV PYTHONPATH=/code
 
-CMD ["python", "alerts-populator/async_nats_listener.py"]
+CMD ["python", "tuning-parameters-populator/async_nats_listener.py"]

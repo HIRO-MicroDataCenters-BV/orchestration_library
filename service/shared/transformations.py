@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from utils import (
+from .utils import (
     get_pod_id_by_name,
     get_node_id_by_name,
 )
@@ -119,8 +119,25 @@ def default_transform_func(data: str) -> json:
     alert_payloads.append(build_alert_api_payload(json.loads(data), "Other"))
     return alert_payloads
 
+def transform_tuning_params(data: str):
+    parsed, err = safe_json_loads(data)
+    if err:
+        logger.error("Error parsing JSON: %s", err)
+        return []
+    metrics = parsed.get("metrics", {})
+    coeff = parsed.get("coefficients", {})
+    payload = {
+        "output_1": metrics.get("o1", 0.0),
+        "output_2": metrics.get("o2", 0.0),
+        "output_3": metrics.get("o3", 0.0),
+        "alpha": coeff.get("alpha", 0.0),
+        "beta": coeff.get("beta", 0.0),
+        "gamma": coeff.get("gamma", 0.0),
+    }
+    return [payload]
 
-def get_transformation_func(subject: str):
+
+def get_alert_transformation_func(subject: str):
     match subject:
         case "attack":
             return transform_attack
@@ -128,3 +145,17 @@ def get_transformation_func(subject: str):
             return transform_abnormal
         case _:
             return default_transform_func
+
+def get_tuning_transformation_func(subject: str):
+    match subject:
+        case "tuning":
+            return transform_tuning_params
+        case _:
+            return default_transform_func
+
+def get_transformation_func(stream: str):
+    match stream:
+        case "PREDICTIONS":
+            return get_alert_transformation_func
+        case "TUNING":
+            return get_tuning_transformation_func
