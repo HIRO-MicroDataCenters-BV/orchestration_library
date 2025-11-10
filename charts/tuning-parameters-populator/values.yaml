@@ -1,0 +1,24 @@
+name: alerts-populator
+replicaCount: 1
+
+image:
+  repository: your-registry/alerts-populator
+  tag: alpha1
+  pullPolicy: Always
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+env:
+  NATS_SERVER: "nats://nats:4222"
+  NATS_TOPICS: 
+    - "tuning"
+  NATS_JS_SUBJECTS:
+    - "tuning"
+  NATS_JS_STREAM: "TUNING"
+  NATS_JS_DURABLE: "tuning-parameters-populator"
+  TUNING_PARAMETERS_API_URL: "http://orchestration-api-svc.hiros.svc.cluster.local:8080/tuning-parameters"
+

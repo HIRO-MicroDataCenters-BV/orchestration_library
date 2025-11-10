@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      # Use the same service account created in orchestration-api chart
+      serviceAccountName: {{ .Release.Name }}-service-account
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: NATS_SERVER
+              value: {{ .Values.env.NATS_SERVER | quote }}
+            - name: NATS_TOPICS
+              value: "{{ include "tuning-parameters-populator.natsTopics" . }}"
+            - name: NATS_JS_STREAM
+              value: {{ .Values.env.NATS_JS_STREAM | quote }}
+            - name: NATS_JS_SUBJECTS
+              value: "{{ include "tuning-parameters-populator.natsJSSubjects" . }}"
+            - name: NATS_JS_DURABLE
+              value: {{ .Values.env.NATS_JS_DURABLE | quote }}
+            - name: ALERTS_API_URL
+              value: {{ .Values.env.TUNING_PARAMETERS_API_URL | quote }}
+          command: ["python", "tuning-parameters-populator/async_nats_listener.py"]
+

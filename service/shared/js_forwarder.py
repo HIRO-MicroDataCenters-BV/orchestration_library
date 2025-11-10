@@ -6,8 +6,12 @@ subjects and processes them using a user-defined async handler.
 import asyncio
 import logging
 import os
+import httpx
 from nats.aio.client import Client as NATS
 from nats.errors import ConnectionClosedError, TimeoutError, NoServersError
+
+from .http_post import post_json
+from .transformations import get_transformation_func
 
 
 logger = logging.getLogger(__name__)
@@ -15,6 +19,30 @@ logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
+
+
+def make_post_api_handler(post_api_url: str):
+    """Generate a handler function that posts messages to the given API URL."""
+
+    async def handler(subject: str, data_bytes: bytes, attempt: int) -> bool:
+        """Handle incoming NATS message."""
+        logger.info("Handling message for subject: %s", subject)
+        data = data_bytes.decode()
+        transform = get_transformation_func(subject)
+        payloads = transform(data)
+        if not isinstance(payloads, list):
+            logger.error("Transformer returned non-list: %s", type(payloads))
+            return False
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            all_ok = True
+            for p in payloads:
+                if "alert_type" not in p:
+                    p["alert_type"] = "Other"
+                ok = await post_json(client, post_api_url, p)
+                all_ok = all_ok and ok
+            return all_ok
+
+    return handler
 
 
 class JetStreamForwarder:

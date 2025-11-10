@@ -45,6 +45,9 @@ ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRA
 ALERT_CRITICAL_THRESHOLD=5
 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=60
 
+TUNING_PARAMETERS_POPULATOR_IMAGE_NAME="tuning-parameters-populator"
+TUNING_PARAMETERS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
+
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
   exit 1
@@ -55,6 +58,9 @@ docker build -t $WORKLOAD_TIMING_WATCHER_IMAGE_NAME:$WORKLOAD_TIMING_WATCHER_IMA
 
 echo "Build Docker image for Alerts Populator"
 docker build -t $ALERTS_POPULATOR_IMAGE_NAME:$ALERTS_POPULATOR_IMAGE_TAG -f service/alerts-populator/Dockerfile .
+
+echo "Build Docker image for Tuning Parameters Populator"
+docker build -t $TUNING_PARAMETERS_POPULATOR_IMAGE_NAME:$TUNING_PARAMETERS_POPULATOR_IMAGE_TAG -f service/tuning-parameters-populator/Dockerfile .
 
 echo "Build Docker image for Orchestration API"
 docker build -t $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG -f Dockerfile .

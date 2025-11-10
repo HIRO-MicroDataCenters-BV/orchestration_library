@@ -1,0 +1,10 @@
+nats-py==2.11.0
+aiohttp==3.13.0
+httpx~=0.28.1
+pytest~=8.3.5
+pytest-cov~=6.1.1
+pytest-asyncio~=0.26.0
+pylint~=3.3.7
+pyyaml~=6.0.3
+kubernetes_asyncio==33.3.0
+kubernetes~=34.1.0

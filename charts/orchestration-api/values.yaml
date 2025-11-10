@@ -125,3 +125,24 @@ alertsPopulator:
     # Use same values as app.name:app.service.port.
     ALERTS_API_URL: "http://aces-orchestration-api/alerts"
   
+# The below values are for the Tuning Parameters Populator
+tuningParametersPopulator:
+  enabled: true
+  name: tuning-parameters-populator
+  replicaCount: 1
+  image:
+    repository: tuning-parameters-populator
+    tag: alpha1
+    pullPolicy: Always
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  env:
+    NATS_SERVER: "nats://nats:4222"
+    NATS_TOPICS: 
+      - "tuning"
+    # this values is orchestration-api's API for tuning parameters DB. 
+    # Use same values as app.name:app.service.port.
+    TUNING_PARAMETERS_API_URL: "http://aces-orchestration-api/tuning-parameters"

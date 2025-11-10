@@ -21,3 +21,8 @@ dependencies:
     condition: alertsPopulator.enabled
     version: "1.0.0"
     repository: "file://../alerts-populator"
+  - name: tuning-parameters-populator
+    alias: tuningParametersPopulator
+    condition: tuningParametersPopulator.enabled
+    version: "1.0.0"
+    repository: "file://../tuning-parameters-populator"
