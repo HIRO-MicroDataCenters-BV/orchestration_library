@@ -8,5 +8,8 @@ dependencies:
 - name: alerts-populator
   repository: file://../alerts-populator
   version: 1.0.0
-digest: sha256:92596bd4bee00614b21ccd3c721327fb1ce964eb951478d5841e3753ee5ad717
-generated: "2025-11-10T11:59:56.056312+01:00"
+- name: tuning-parameters-populator
+  repository: file://../tuning-parameters-populator
+  version: 1.0.0
+digest: sha256:3600f3f93835e014eba7cedb406b17b5e04177a72dd3f7dc5617a994d7af5372
+generated: "2025-11-10T12:58:03.685517+01:00"

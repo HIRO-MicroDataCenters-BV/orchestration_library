@@ -3,11 +3,8 @@
 import asyncio
 import logging
 import os
-import httpx
 
 from shared.js_forwarder import JetStreamForwarder, make_post_api_handler
-from shared.http_post import post_json
-from shared.transformations import get_transformation_func
 
 
 MAX_REDELIVERIES = int(os.getenv("MAX_REDELIVERIES", "5"))
@@ -48,7 +45,7 @@ async def main():
         max_redeliveries=MAX_REDELIVERIES,
         init_reconnect_delay=INIT_RECONNECT_DELAY,
         max_reconnect_delay=MAX_RECONNECT_DELAY,
-        handler=make_post_api_handler(TUNING_PARAMS_API_URL),
+        handler=make_post_api_handler(TUNING_PARAMS_API_URL, NATS_JS_STREAM),
     )
     await forwarder.run()
 

@@ -47,6 +47,11 @@ ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=60
 
 TUNING_PARAMETERS_POPULATOR_IMAGE_NAME="tuning-parameters-populator"
 TUNING_PARAMETERS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
+TUNING_PARAMETERS_POPULATOR_NATS_JS_STREAM="TUNING"
+TUNING_PARAMETERS_POPULATOR_NATS_JS_SUBJECTS=("tuning")
+TUNING_PARAMETERS_POPULATOR_NATS_JS_DURABLE="tuning-parameters-populator"
+TUNING_PARAMETERS_POPULATOR_TUNING_PARAMETERS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRATION_API_NAMESPACE.svc.cluster.local:$ORCHRESTRATION_API_SERVICE_PORT/tuning-parameters"
+
 
 if [ -z "$CLUSTER_NAME" ]; then
   echo "Usage: $0 <cluster-name> <docker-user> <docker-password>"
@@ -77,6 +82,9 @@ kind load docker-image --name $CLUSTER_NAME $WORKLOAD_TIMING_WATCHER_IMAGE_NAME:
 
 echo "Load Alerts Populator Image to Kind cluster named '$CLUSTER_NAME'"
 kind load docker-image --name $CLUSTER_NAME $ALERTS_POPULATOR_IMAGE_NAME:$ALERTS_POPULATOR_IMAGE_TAG
+
+echo "Load Tuning Parameters Populator Image to Kind cluster named '$CLUSTER_NAME'"
+kind load docker-image --name $CLUSTER_NAME $TUNING_PARAMETERS_POPULATOR_IMAGE_NAME:$TUNING_PARAMETERS_POPULATOR_IMAGE_TAG
 
 echo "Add and Update Helm repository for Kubernetes Dashboard"
 helm repo add $KUBERNETES_DASHBOARD_REPO_NAME $KUBERNETES_DASHBOARD_REPO_URL
@@ -155,11 +163,17 @@ echo "Rebuilding dependencies for orchestration-api chart"
 # done
 # nats_topics_set=${nats_topics_set% }  # Remove trailing space
 
-nats_js_subjects=""
+alerts_nats_js_subjects=""
 for i in "${!ALERTS_POPULATOR_NATS_JS_SUBJECTS[@]}"; do
-  nats_js_subjects+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${ALERTS_POPULATOR_NATS_JS_SUBJECTS[$i]} "
+  alerts_nats_js_subjects+="--set alertsPopulator.env.NATS_JS_SUBJECTS[$i]=${ALERTS_POPULATOR_NATS_JS_SUBJECTS[$i]} "
 done
-nats_js_subjects=${nats_js_subjects% }  # Remove trailing space
+alerts_nats_js_subjects=${alerts_nats_js_subjects% }  # Remove trailing space
+
+tuning_nats_js_subjects=""
+for i in "${!TUNING_PARAMETERS_POPULATOR_NATS_JS_SUBJECTS[@]}"; do
+  tuning_nats_js_subjects+="--set tuningParametersPopulator.env.NATS_JS_SUBJECTS[$i]=${TUNING_PARAMETERS_POPULATOR_NATS_JS_SUBJECTS[$i]} "
+done
+tuning_nats_js_subjects=${tuning_nats_js_subjects% }  # Remove trailing space
 
 echo "Deploy the orchestration-api with dependencies(K8S Dashboard with reverse proxy) to the Kind cluster"
 RELEASE_NAME=$ORCHRESTRATION_API_RELEASE_NAME
@@ -197,6 +211,14 @@ helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts
   --set alertsPopulator.env.NATS_JS_DURABLE=$ALERTS_POPULATOR_NATS_JS_DURABLE \
   ${nats_js_subjects} \
   --set alertsPopulator.env.ALERTS_API_URL=$ALERTS_POPULATOR_ALERTS_API_URL
+  --set tuningParametersPopulator.enabled=true \
+  --set tuningParametersPopulator.image.repository=$TUNING_PARAMETERS_POPULATOR_IMAGE_NAME \
+  --set tuningParametersPopulator.image.tag=$TUNING_PARAMETERS_POPULATOR_IMAGE_TAG \
+  --set tuningParametersPopulator.image.pullPolicy=IfNotPresent \
+  --set tuningParametersPopulator.env.NATS_JS_STREAM=$TUNING_PARAMETERS_POPULATOR_NATS_JS_STREAM \
+  --set tuningParametersPopulator.env.NATS_JS_DURABLE=$TUNING_PARAMETERS_POPULATOR_NATS_JS_DURABLE \
+  ${tuning_nats_js_subjects} \
+  --set tuningParametersPopulator.env.TUNING_PARAMETERS_API_URL=$TUNING_PARAMETERS_POPULATOR_TUNING_PARAMETERS_API_URL
   """
 # echo "Helm command: $helm_command"
 eval $helm_command

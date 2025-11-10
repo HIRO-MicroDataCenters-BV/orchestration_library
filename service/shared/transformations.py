@@ -137,13 +137,25 @@ def transform_tuning_params(data: str):
     return [payload]
 
 
-def get_transformation_func(subject: str):
+def get_alert_transformation_func(subject: str):
     match subject:
         case "attack":
             return transform_attack
         case "anomalies":
             return transform_abnormal
+        case _:
+            return default_transform_func
+
+def get_tuning_transformation_func(subject: str):
+    match subject:
         case "tuning":
             return transform_tuning_params
         case _:
             return default_transform_func
+
+def get_transformation_func(stream: str):
+    match stream:
+        case "PREDICTIONS":
+            return get_alert_transformation_func
+        case "TUNING":
+            return get_tuning_transformation_func

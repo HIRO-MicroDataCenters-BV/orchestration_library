@@ -21,15 +21,16 @@ logging.basicConfig(
 )
 
 
-def make_post_api_handler(post_api_url: str):
+def make_post_api_handler(post_api_url: str, stream: str):
     """Generate a handler function that posts messages to the given API URL."""
 
     async def handler(subject: str, data_bytes: bytes, attempt: int) -> bool:
         """Handle incoming NATS message."""
         logger.info("Handling message for subject: %s", subject)
         data = data_bytes.decode()
-        transform = get_transformation_func(subject)
-        payloads = transform(data)
+        transform_type_func = get_transformation_func(stream)
+        transform_func = transform_type_func(subject)
+        payloads = transform_func(data)
         if not isinstance(payloads, list):
             logger.error("Transformer returned non-list: %s", type(payloads))
             return False
@@ -38,7 +39,8 @@ def make_post_api_handler(post_api_url: str):
             for p in payloads:
                 if "alert_type" not in p:
                     p["alert_type"] = "Other"
-                ok = await post_json(client, post_api_url, p)
+                ok, status_code, response_text = await post_json(client, post_api_url, p)
+                logger.info("Posted payload to %s: status=%s response=%s", post_api_url, status_code, response_text)
                 all_ok = all_ok and ok
             return all_ok
 
