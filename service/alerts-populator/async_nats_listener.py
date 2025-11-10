@@ -6,7 +6,7 @@ import httpx
 
 from shared.js_forwarder import JetStreamForwarder
 from shared.http_post import post_json
-from transformations import get_transformation_func
+from shared.transformations import get_transformation_func
 
 MAX_REDELIVERIES = int(os.getenv("MAX_REDELIVERIES", "5"))
 INIT_RECONNECT_DELAY = int(os.getenv("INIT_RECONNECT_DELAY", "2"))
