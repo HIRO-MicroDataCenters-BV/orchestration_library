@@ -33,5 +33,5 @@ spec:
               value: {{ .Values.env.NATS_JS_DURABLE | quote }}
             - name: ALERTS_API_URL
               value: {{ .Values.env.ALERTS_API_URL | quote }}
-          command: ["python", "async_nats_listener.py"]
+          command: ["python", "alerts-populator/async_nats_listener.py"]
 

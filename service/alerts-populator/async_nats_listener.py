@@ -3,8 +3,9 @@ import asyncio
 import logging
 import os
 import httpx
+
 from shared.js_forwarder import JetStreamForwarder
-from shared.http_post import post_json, norm_url
+from shared.http_post import post_json
 from transformations import get_transformation_func
 
 MAX_REDELIVERIES = int(os.getenv("MAX_REDELIVERIES", "5"))

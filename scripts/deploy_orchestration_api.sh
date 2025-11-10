@@ -54,7 +54,7 @@ echo "Build Docker image for Workload Timing Watcher"
 docker build -t $WORKLOAD_TIMING_WATCHER_IMAGE_NAME:$WORKLOAD_TIMING_WATCHER_IMAGE_TAG -f service/workload-timing-watcher/Dockerfile service/workload-timing-watcher
 
 echo "Build Docker image for Alerts Populator"
-docker build -t $ALERTS_POPULATOR_IMAGE_NAME:$ALERTS_POPULATOR_IMAGE_TAG -f service/alerts-populator/Dockerfile service/alerts-populator
+docker build -t $ALERTS_POPULATOR_IMAGE_NAME:$ALERTS_POPULATOR_IMAGE_TAG -f service/alerts-populator/Dockerfile .
 
 echo "Build Docker image for Orchestration API"
 docker build -t $ORCHRESTRATION_API_IMAGE_NAME:$ORCHRESTRATION_API_IMAGE_TAG -f Dockerfile .
