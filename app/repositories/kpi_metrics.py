@@ -13,7 +13,9 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.metrics.helper import record_api_metrics
 from app.models.kpi_metrics import KPIMetrics
+from app.models.kpi_metrics_geometric_mean import KPIMetricsGeometricMean
 from app.repositories.k8s.k8s_node import get_k8s_nodes
+from app.schemas.kpi_metrics_geometric_mean_schema import KPIMetricsGeometricMeanItem
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
@@ -320,6 +322,94 @@ async def get_latest_kpi_metrics_by_request_decision_ids(
         )
         raise DatabaseConnectionException(
             "An unexpected error occurred while fetching latest KPI metrics by "
+            "request_decision_id",
+            details={"error": str(e)},
+        ) from e
+    finally:
+        if exception:
+            record_api_metrics(
+                metrics_details=metrics_details, status_code=503, exception=exception
+            )
+
+async def get_latest_kpi_geometric_mean_metrics_by_request_decision_ids(
+        db_session: AsyncSession,
+        request_decision_id: UUID,
+        metrics_details: dict,
+        skip: int = 0,
+        limit: int = 1,
+) -> List[KPIMetricsGeometricMeanItem]:
+    """
+    Get the latest geometric mean KPI metrics entry from the database by request decision ID.
+
+    Args:
+        db_session (AsyncSession): The database session.
+        request_decision_id (UUID): The request decision ID to filter KPI metrics.
+        metrics_details (dict): Details for metrics logging.
+        limit (int): The number of latest entries to retrieve.
+
+    Returns:
+        List[KPIMetricsGeometricMeanItem]: The latest geometric mean KPI metrics entries.
+        If request_decision_id is not provided, fetches latest entries for limited
+        request decision IDs. If request_decision_id is provided, fetches entries
+        for that specific request decision ID.
+    """
+    exception = None
+    try:
+        safe_limit = max(1, limit)
+        safe_skip = max(0, skip)
+        if request_decision_id:
+            query = (
+                select(KPIMetricsGeometricMean)
+                .where(KPIMetricsGeometricMean.request_decision_id == request_decision_id)
+            )
+        else:
+            latest_request_ids_subq = (
+                select(
+                    KPIMetrics.request_decision_id,
+                    func.max(KPIMetrics.id).label("max_row_id"),
+                )
+                .group_by(KPIMetrics.request_decision_id)
+                .order_by(func.max(KPIMetrics.id).desc())
+                .limit(safe_limit)
+                .subquery()
+            )
+
+            query = (
+                select(KPIMetrics)
+                .join(
+                    latest_request_ids_subq,
+                    KPIMetrics.request_decision_id
+                    == latest_request_ids_subq.c.request_decision_id,
+                )
+                .order_by(
+                    latest_request_ids_subq.c.max_row_id.desc(), KPIMetrics.id.desc()
+                )
+            )
+
+        kpi_result = await db_session.execute(query)
+        record_api_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+        )
+        return kpi_result.scalars().all()
+    except SQLAlchemyError as e:
+        exception = e
+        logger.error(
+            "Database error while fetching latest geometric mean KPI metrics by "
+            "request_decision_id: %s", str(e)
+        )
+        raise DatabaseConnectionException(
+            "Failed to fetch latest geometric mean KPI metrics by request_decision_id",
+            details={"error": str(e)},
+        ) from e
+    except Exception as e:
+        exception = e
+        logger.error(
+            "Unexpected error while fetching latest geometric mean KPI metrics by "
+            "request_decision_id: %s", str(e)
+        )
+        raise DatabaseConnectionException(
+            "An unexpected error occurred while fetching latest geometric mean KPI metrics by "
             "request_decision_id",
             details={"error": str(e)},
         ) from e

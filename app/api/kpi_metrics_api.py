@@ -6,6 +6,8 @@ This module defines the API endpoints for creating KPI metrics entries in the da
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
+
+from requests import get
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -129,5 +131,36 @@ async def get_latest_kpi_metrics_by_request_route(
         db_session,
         request_decision_id=request_decision_id,
         limit=limit,
+        metrics_details=metrics("GET", metrics_path),
+    )
+
+@router.get(path="/latest_geometric_mean_by_request", response_model=List[KPIMetricsSchema])
+async def get_latest_geometric_mean_kpi_metrics_by_request_route(
+    request_decision_id: Optional[UUID] = Query(
+        None, description="Filter by request decision ID"
+    ),
+    limit: int = Query(1, description="Number of latest entries to retrieve"),
+    db_session: AsyncSession = Depends(get_async_db),
+):
+    """
+    Retrieve the latest geometric mean KPI metrics entries for a specific request decision ID.
+
+    Args:
+        request_decision_id (str): The ID of the request decision to filter KPI metrics.
+        limit (int): The number of latest entries to retrieve.
+        db_session (AsyncSession): Database session dependency.
+    Returns:
+        List[KPIMetricsSchema]: 
+            List of latest geometric mean KPI metrics entries for the specified request decision ID.
+    """
+    metrics_path = "/kpi_metrics/latest_geometric_mean_by_request"
+    if request_decision_id:
+        metrics_path += f"/?request_decision_id={request_decision_id}"
+    metrics_path += f"&limit={limit}"
+    return await get_latest_geometric_mean_kpi_metrics_by_request_route(
+        db_session,
+        request_decision_id=request_decision_id,
+        limit=limit,
+        geometric_mean=True,
         metrics_details=metrics("GET", metrics_path),
     )
