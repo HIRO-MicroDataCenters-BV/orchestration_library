@@ -1,4 +1,4 @@
-"""Create view for kpi metrics
+"""Create view for kpi metrics geometric mean.
 
 Revision ID: 3cd7bd1c74c5
 Revises: 3ba59c9917e6
