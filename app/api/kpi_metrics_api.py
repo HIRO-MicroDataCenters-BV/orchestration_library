@@ -12,6 +12,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_db
+from app.repositories.kpi_metrics_geometric_mean import fetch_latest_geometric_mean_kpis
+from app.schemas.kpi_metrics_geometric_mean_schema import KPIMetricsGeometricMeanItem
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
@@ -120,7 +122,7 @@ async def get_latest_kpi_metrics_by_request_route(
         db_session (AsyncSession): Database session dependency.
 
     Returns:
-        List[KPIMetricsSchema]: 
+        List[KPIMetricsSchema]:
             List of latest KPI metrics entries for the specified request decision ID.
     """
     metrics_path = "/kpi_metrics/latest_by_request"
@@ -134,12 +136,14 @@ async def get_latest_kpi_metrics_by_request_route(
         metrics_details=metrics("GET", metrics_path),
     )
 
-@router.get(path="/latest_geometric_mean_by_request", response_model=List[KPIMetricsSchema])
-async def get_latest_geometric_mean_kpi_metrics_by_request_route(
+
+@router.get(path="/latest_geometric_mean", response_model=List[KPIMetricsGeometricMeanItem])
+async def get_latest_geometric_mean_kpi_metrics_route(
     request_decision_id: Optional[UUID] = Query(
         None, description="Filter by request decision ID"
     ),
-    limit: int = Query(1, description="Number of latest entries to retrieve"),
+    skip: int = Query(0, description="Number of entries to skip"),
+    limit: int = Query(10, description="Number of latest entries to retrieve"),
     db_session: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -147,20 +151,26 @@ async def get_latest_geometric_mean_kpi_metrics_by_request_route(
 
     Args:
         request_decision_id (str): The ID of the request decision to filter KPI metrics.
+        skip (int): The number of entries to skip.
         limit (int): The number of latest entries to retrieve.
         db_session (AsyncSession): Database session dependency.
     Returns:
-        List[KPIMetricsSchema]: 
+        List[KPIMetricsSchema]:
             List of latest geometric mean KPI metrics entries for the specified request decision ID.
+            or
+            List of latest geometric mean KPI metrics entries based on skip and limit if
+            request_decision_id is not provided.
     """
-    metrics_path = "/kpi_metrics/latest_geometric_mean_by_request"
+    metrics_path = "/kpi_metrics/latest_geometric_mean"
     if request_decision_id:
         metrics_path += f"/?request_decision_id={request_decision_id}"
     metrics_path += f"&limit={limit}"
-    return await get_latest_geometric_mean_kpi_metrics_by_request_route(
+    return await fetch_latest_geometric_mean_kpis(
         db_session,
-        request_decision_id=request_decision_id,
-        limit=limit,
-        geometric_mean=True,
+        kpi_geometrics_request_args={
+            "request_decision_id": request_decision_id,
+            "skip": skip,
+            "limit": limit,
+        },
         metrics_details=metrics("GET", metrics_path),
     )

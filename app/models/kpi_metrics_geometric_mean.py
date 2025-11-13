@@ -2,13 +2,14 @@
 SQLAlchemy models for the KPI metrics.
 """
 
+from datetime import datetime
 from sqlalchemy import (
     UUID,
-    Column,
+    BigInteger,
     DateTime,
-    Double,
-    Integer,
+    Float,
 )
+from sqlalchemy.orm import mapped_column, Mapped
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
 
@@ -27,9 +28,16 @@ class KPIMetricsGeometricMean(Base, BaseDictMixin):
     __tablename__ = "kpi_metrics_geometric_mean"
     __table_args__ = {"info": {"is_view": True}}
 
-    request_decision_id = Column(UUID(as_uuid=True), unique=False, nullable=False)
-    gm_cpu_utilization = Column(Double)
-    gm_mem_utilization = Column(Double)
-    gm_decision_time_in_seconds = Column(Double)
-    last_created_at = Column(DateTime)
-    last_seq_id = Column(Integer)
+    # request_decision_id = Column(UUID(as_uuid=True), unique=False, nullable=False, primary_key=True)
+    # gm_cpu_utilization = Column(Double)
+    # gm_mem_utilization = Column(Double)
+    # gm_decision_time_in_seconds = Column(Double)
+    # last_created_at = Column(DateTime)
+    # last_seq_id = Column(Integer, primary_key=True)
+
+    request_decision_id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    gm_cpu_utilization: Mapped[float] = mapped_column(Float)
+    gm_mem_utilization: Mapped[float] = mapped_column(Float)
+    gm_decision_time_in_seconds: Mapped[float] = mapped_column(Float)
+    last_created_at: Mapped[datetime] = mapped_column(DateTime)
+    last_seq_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

@@ -19,14 +19,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    op.execute("DROP MATERIALIZED VIEW IF EXISTS kpi_metrics_geometric_mean;")
     op.execute("""
-    CREATE OR REPLACE MATERIALIZED VIEW kpi_metrics_geometric_mean AS
+    CREATE MATERIALIZED VIEW kpi_metrics_geometric_mean AS
     SELECT
         request_decision_id,
         EXP(AVG(LN(cpu_utilization))) AS gm_cpu_utilization,
         EXP(AVG(LN(mem_utilization))) AS gm_mem_utilization,
-        EXP(AVG(LN(NULLIF(decision_time_in_seconds, 0)))) AS gm_decision_time_in_seconds
-        MAX(created_at) AS last_created_at
+        EXP(AVG(LN(NULLIF(decision_time_in_seconds, 0)))) AS gm_decision_time_in_seconds,
+        MAX(created_at) AS last_created_at,
         MAX(id) AS last_seq_id
     FROM kpi_metrics
     WHERE cpu_utilization > 0 AND mem_utilization > 0
