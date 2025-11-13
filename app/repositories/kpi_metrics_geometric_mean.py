@@ -44,7 +44,7 @@ async def fetch_latest_geometric_mean_kpis(
         If request_decision_id is provided, fetches entries
         for that specific request decision ID.
     """
-    exception = None
+    excep = None
     try:
         skip = kpi_geometrics_request_args.pop("skip", 0)
         limit = kpi_geometrics_request_args.pop("limit", 10)
@@ -61,14 +61,14 @@ async def fetch_latest_geometric_mean_kpis(
                 .limit(limit)
             )
 
-        kpi_result = await db_session.execute(query)
+        kpi_geometrics_result = await db_session.execute(query)
         record_api_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return kpi_result.scalars().all()
+        return kpi_geometrics_result.scalars().all()
     except SQLAlchemyError as e:
-        exception = e
+        excep = e
         logger.error(
             "Database error while fetching latest geometric mean KPI metrics: %s",
             str(e),
@@ -78,7 +78,7 @@ async def fetch_latest_geometric_mean_kpis(
             details={"error": str(e)},
         ) from e
     except Exception as e:
-        exception = e
+        excep = e
         logger.error(
             "Unexpected error while fetching latest geometric mean KPI metrics: %s",
             str(e),
@@ -88,7 +88,7 @@ async def fetch_latest_geometric_mean_kpis(
             details={"error": str(e)},
         ) from e
     finally:
-        if exception:
+        if excep:
             record_api_metrics(
-                metrics_details=metrics_details, status_code=503, exception=exception
+                metrics_details=metrics_details, status_code=503, exception=excep
             )

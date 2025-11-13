@@ -13,9 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.metrics.helper import record_api_metrics
 from app.models.kpi_metrics import KPIMetrics
-from app.models.kpi_metrics_geometric_mean import KPIMetricsGeometricMean
 from app.repositories.k8s.k8s_node import get_k8s_nodes
-from app.schemas.kpi_metrics_geometric_mean_schema import KPIMetricsGeometricMeanItem
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
@@ -308,7 +306,8 @@ async def get_latest_kpi_metrics_by_request_decision_ids(
         exception = e
         logger.error(
             "Database error while fetching latest KPI metrics by "
-            "request_decision_id: %s", str(e)
+            "request_decision_id: %s",
+            str(e),
         )
         raise DatabaseConnectionException(
             "Failed to fetch latest KPI metrics by request_decision_id",
@@ -318,7 +317,8 @@ async def get_latest_kpi_metrics_by_request_decision_ids(
         exception = e
         logger.error(
             "Unexpected error while fetching latest KPI metrics by "
-            "request_decision_id: %s", str(e)
+            "request_decision_id: %s",
+            str(e),
         )
         raise DatabaseConnectionException(
             "An unexpected error occurred while fetching latest KPI metrics by "

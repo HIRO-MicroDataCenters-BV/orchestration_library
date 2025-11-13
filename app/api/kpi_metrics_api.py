@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from requests import get
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -137,7 +136,9 @@ async def get_latest_kpi_metrics_by_request_route(
     )
 
 
-@router.get(path="/latest_geometric_mean", response_model=List[KPIMetricsGeometricMeanItem])
+@router.get(
+    path="/latest_geometric_mean", response_model=List[KPIMetricsGeometricMeanItem]
+)
 async def get_latest_geometric_mean_kpi_metrics_route(
     request_decision_id: Optional[UUID] = Query(
         None, description="Filter by request decision ID"
