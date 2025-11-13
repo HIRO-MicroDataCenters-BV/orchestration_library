@@ -395,8 +395,9 @@ jobs:
         run: |
           ls -l ./charts/orchestration-api/add-common-labels.sh || exit 1
           chmod +x ./charts/orchestration-api/add-common-labels.sh
+          yq --version || echo "yq not installed"
 
-      - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
+      - name: Deploy Orchestration API Helm chart with its dependencies
         env:
           RELEASE_NAME: ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} # used in post-renderer script
         run: |
