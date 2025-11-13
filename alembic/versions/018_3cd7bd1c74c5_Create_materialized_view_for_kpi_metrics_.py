@@ -1,4 +1,4 @@
-"""Create materialized view for kpi metrics
+"""Create view for kpi metrics
 
 Revision ID: 3cd7bd1c74c5
 Revises: 3ba59c9917e6
@@ -19,9 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.execute("DROP MATERIALIZED VIEW IF EXISTS kpi_metrics_geometric_mean;")
     op.execute("""
-    CREATE MATERIALIZED VIEW kpi_metrics_geometric_mean AS
+    CREATE OR REPLACE VIEW kpi_metrics_geometric_mean AS
     SELECT
         request_decision_id,
         EXP(AVG(LN(cpu_utilization))) AS gm_cpu_utilization,
@@ -38,4 +37,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.execute("DROP MATERIALIZED VIEW IF EXISTS kpi_metrics_geometric_mean;")
+    op.execute("DROP VIEW IF EXISTS kpi_metrics_geometric_mean;")
