@@ -56,7 +56,7 @@ async def fetch_latest_geometric_mean_kpis(
         else:
             query = (
                 select(KPIMetricsGeometricMean)
-                .order_by(KPIMetricsGeometricMean.last_seq_id.desc())
+                .order_by(KPIMetricsGeometricMean.last_seq_id.asc())
                 .offset(skip)
                 .limit(limit)
             )
