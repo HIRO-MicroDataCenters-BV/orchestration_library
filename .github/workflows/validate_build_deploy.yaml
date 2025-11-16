@@ -391,7 +391,13 @@ jobs:
           tuning_nats_js_subjects_set=${tuning_nats_js_subjects_set% }
           echo "tuning_nats_js_subjects=$tuning_nats_js_subjects_set" >> $GITHUB_OUTPUT
 
-      - name: Deploy Orchestration API Helm chart with its dependencies(Kubernetes Dashboard with reverse proxy)
+      - name: Ensure post-renderer script executable
+        run: |
+          ls -l ./charts/orchestration-api/add-common-labels.sh || exit 1
+          chmod +x ./charts/orchestration-api/add-common-labels.sh
+          yq --version || echo "yq not installed"
+
+      - name: Deploy Orchestration API Helm chart with its dependencies
         env:
           RELEASE_NAME: ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} # used in post-renderer script
         run: |
