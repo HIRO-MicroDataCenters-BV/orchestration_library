@@ -45,6 +45,10 @@ ALERTS_POPULATOR_ALERTS_API_URL="http://$ORCHRESTRATION_API_APP_NAME.$ORCHRESTRA
 ALERT_CRITICAL_THRESHOLD=5
 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=60
 
+KPI_METRICS_NATS_SERVER=nats://nats-server.aces-monitoring-observability.svc.cluster.local:4222
+KPI_METRICS_NATS_JS_STREAM="KPI_METRICS"
+KPI_METRICS_NATS_JS_SUBJECT="kpi.metrics.geometric_mean"
+
 TUNING_PARAMETERS_POPULATOR_IMAGE_NAME="tuning-parameters-populator"
 TUNING_PARAMETERS_POPULATOR_IMAGE_TAG="alpha1-$TIMESTAMP"
 TUNING_PARAMETERS_POPULATOR_NATS_SERVER=nats://nats-server.aces-monitoring-observability.svc.cluster.local:4222
@@ -198,6 +202,9 @@ helm_command="""helm upgrade --install $ORCHRESTRATION_API_RELEASE_NAME ./charts
   --set app.service.nodePort=$ORCHRESTRATION_API_NODE_PORT \
   --set app.env.ALERT_CRITICAL_THRESHOLD=$ALERT_CRITICAL_THRESHOLD \
   --set app.env.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=$ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS \
+  --set app.env.NATS_SERVER=$KPI_METRICS_NATS_SERVER \
+  --set app.env.NATS_KPI_JS_STREAM=$KPI_METRICS_NATS_JS_STREAM \
+  --set app.env.NATS_KPI_JS_SUBJECT=$KPI_METRICS_NATS_JS_SUBJECT \
   --set runMigration=true \
   --set workloadTimingWatcher.enabled=true \
   --set workloadTimingWatcher.image.repository=$WORKLOAD_TIMING_WATCHER_IMAGE_NAME \

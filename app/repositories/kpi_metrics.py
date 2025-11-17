@@ -3,6 +3,7 @@ Repository module for KPI metrics.
 This module contains functions to interact with the KPI metrics in the database.
 """
 
+import os
 from typing import List
 import logging
 from uuid import UUID
@@ -14,12 +15,18 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.metrics.helper import record_api_metrics
 from app.models.kpi_metrics import KPIMetrics
 from app.repositories.k8s.k8s_node import get_k8s_nodes
+from app.repositories.kpi_metrics_geometric_mean import fetch_latest_geometric_mean_kpis
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
 )
 from app.utils.exceptions import DatabaseConnectionException
+from app.utils.helper import publish_msg_to_nats_js
 
+
+NATS_KPI_SERVER = os.getenv("NATS_SERVER", "nats://nats:4222")
+NATS_KPI_JS_STREAM = os.getenv("NATS_KPI_JS_STREAM", "KPI_METRICS")
+NATS_KPI_JS_SUBJECT = os.getenv("NATS_KPI_JS_SUBJECT", "kpi.metrics.geometric_mean")
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -70,6 +77,25 @@ async def create_kpi_metrics(
             record_api_metrics(
                 metrics_details=metrics_details,
                 status_code=200,
+            )
+        logger.info("Get KPI metrics Geometric Mean Calculation to the request")
+        geometric_mean_kpis = await fetch_latest_geometric_mean_kpis(
+            db_session,
+            kpi_geometrics_request_args={
+                "request_decision_id": data.request_decision_id,
+            },
+            metrics_details=None,
+        )
+        logger.info("Send KPI metrics Geometric Mean Calculation to the NATS")
+        for gm_kpi in geometric_mean_kpis:
+            logger.info("KPI Geometric Mean: %s", gm_kpi.model_dump())
+            publish_msg_to_nats_js(
+                nats_server=NATS_KPI_SERVER,
+                stream=NATS_KPI_JS_STREAM,
+                subject=NATS_KPI_JS_SUBJECT,
+                message=gm_kpi.model_dump_json(),
+                timeout=5,
+                logger=logger,
             )
         return kpi_metrics
     except IntegrityError as e:
