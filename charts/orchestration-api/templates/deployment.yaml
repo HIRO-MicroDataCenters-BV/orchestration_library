@@ -39,3 +39,9 @@ spec:
             value: "{{ .Values.app.env.ALERT_CRITICAL_THRESHOLD }}"
           - name: ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS
             value: "{{ .Values.app.env.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS }}"
+          - name: NATS_SERVER
+            value: "{{ .Values.app.env.NATS_SERVER }}"
+          - name: NATS_JETSTREAM_STREAM
+            value: "{{ .Values.app.env.NATS_KPI_JS_STREAM }}"
+          - name: NATS_JETSTREAM_SUBJECT
+            value: "{{ .Values.app.env.NATS_KPI_JS_SUBJECT }}"

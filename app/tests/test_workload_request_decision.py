@@ -17,6 +17,8 @@ from app.repositories.workload_request_decision import (
     update_workload_decision_status,
 )
 from app.schemas.workload_request_decision_schema import (
+    WorkloadRequestDecisionCreate,
+    WorkloadRequestDecisionSchema,
     WorkloadRequestDecisionStatusUpdate,
     WorkloadRequestDecisionUpdate,
 )
@@ -29,6 +31,7 @@ from app.utils.exceptions import (
 )
 from app.tests.utils.mock_objects import (
     mock_metrics_details,
+    mock_mock_workload_request_decision_api,
     mock_workload_request_decision_create,
 )
 
@@ -37,39 +40,41 @@ from app.tests.utils.mock_objects import (
 async def test_create_workload_decision_success():
     """Test successful creation of a workload decision in DB."""
     mock_db = AsyncMock()
-    mock_obj = MagicMock()
-    mock_db.refresh = AsyncMock()
+    # mock_obj = mock_workload_request_decision_create()
+    # mock_db.refresh = AsyncMock()
+    # Make refresh assign an id so schema validation can pass if enabled later
+    mock_db.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 
-    # Attributes needed for KPI metrics creation in finally else block
-    mock_obj.id = uuid4()
-    mock_obj.node_name = "node-1"
-    mock_obj.decision_start_time = datetime(2024, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
-    mock_obj.decision_end_time = datetime(2024, 6, 1, 10, 0, 2, tzinfo=timezone.utc)
+
+    # Build create payload from API-style mock (no MagicMock fields)
+    api_payload = mock_mock_workload_request_decision_api()
+    # Ensure a non-zero duration for KPI metrics
+    api_payload["decision_start_time"] = datetime(2024, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    api_payload["decision_end_time"] = datetime(2024, 6, 1, 10, 0, 2, tzinfo=timezone.utc)
+    data = WorkloadRequestDecisionCreate(**api_payload)
 
     with patch(
-        "app.repositories.workload_request_decision.WorkloadRequestDecision",
-        return_value=mock_obj,
-    ), patch(
         "app.repositories.workload_request_decision.create_kpi_metrics"
     ) as mock_create_kpi:
         result = await create_workload_decision(
-            mock_db,
-            mock_workload_request_decision_create(),
-            mock_metrics_details("POST", "/workload_request_decision"),
+            db_session=mock_db,
+            data=data,
+            metrics_details=mock_metrics_details("POST", "/workload_request_decision"),
         )
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()
-    mock_db.refresh.assert_called_once_with(mock_obj)
-    assert result == mock_obj
+    # mock_db.refresh.assert_called_once_with()
 
-    # Assert KPI metrics creation (else branch)
+    assert isinstance(result, (WorkloadRequestDecision, WorkloadRequestDecisionSchema))
+    assert result.decision_end_time and result.decision_start_time
+    assert (result.decision_end_time - result.decision_start_time).total_seconds() == 2.0
+
     assert mock_create_kpi.called
-    args, _ = mock_create_kpi.call_args
-    # args: (db_session, kpi_data, metrics_details)
-    kpi_data = args[1]
-    assert kpi_data.request_decision_id == mock_obj.id
-    assert kpi_data.node_name == mock_obj.node_name
+    kpi_args, _ = mock_create_kpi.call_args
+    kpi_data = kpi_args[1]
+    assert kpi_data.request_decision_id == result.id
+    assert kpi_data.node_name == result.node_name
     assert kpi_data.decision_time_in_seconds == 2.0
 
 

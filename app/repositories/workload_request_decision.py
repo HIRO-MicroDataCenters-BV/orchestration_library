@@ -16,6 +16,7 @@ from app.models.workload_request_decision import WorkloadRequestDecision
 from app.repositories.kpi_metrics import create_kpi_metrics
 from app.schemas.kpi_metrics_schema import KPIMetricsCreate
 from app.schemas.workload_request_decision_schema import (
+    WorkloadRequestDecisionSchema,
     WorkloadRequestDecisionStatusUpdate,
     WorkloadRequestDecisionUpdate,
     WorkloadRequestDecisionCreate,
@@ -32,6 +33,27 @@ from app.utils.exceptions import (
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+
+async def record_kpi_metrics(
+    db_session: AsyncSession, wrd_obj: WorkloadRequestDecision
+) -> None:
+    """Record KPI metrics for a given WorkloadRequestDecision object."""
+    # Safely compute decision duration in seconds
+    logger.info("Recording KPI metrics for pod decision %s", wrd_obj.id)
+    duration_seconds = None
+    if getattr(wrd_obj, "decision_start_time", None) and getattr(
+        wrd_obj, "decision_end_time", None
+    ):
+        delta = wrd_obj.decision_end_time - wrd_obj.decision_start_time
+        duration_seconds = float(delta.total_seconds())
+    if duration_seconds is not None and getattr(wrd_obj, "node_name", None):
+        kpi_data = KPIMetricsCreate(
+            request_decision_id=wrd_obj.id,
+            node_name=wrd_obj.node_name,
+            decision_time_in_seconds=duration_seconds,
+        )
+        await create_kpi_metrics(db_session, kpi_data, metrics_details=None)
 
 
 async def create_workload_decision(
@@ -51,17 +73,24 @@ async def create_workload_decision(
         DBEntryCreationException: If creation fails due to integrity or DB errors.
     """
     exception = None
+    wrd_snapshot: Optional[WorkloadRequestDecisionSchema] = None
+    db_session.expire_on_commit = False
     try:
         wrd_obj = WorkloadRequestDecision(**data.model_dump())
         db_session.add(wrd_obj)
         await db_session.commit()
         await db_session.refresh(wrd_obj)
+        # Snapshot BEFORE more commits (KPI metrics) to avoid later expirations
+        wrd_snapshot = WorkloadRequestDecisionSchema.model_validate(
+            wrd_obj, from_attributes=True
+        )
         logger.info("successfully created pod decision with %s", data.pod_name)
         record_workload_request_decision_metrics(
             metrics_details=metrics_details,
             status_code=200,
         )
-        return wrd_obj
+        await record_kpi_metrics(db_session, wrd_obj)
+        return wrd_snapshot
     except IntegrityError as exc:
         exception = exc
         await handle_db_exception(
@@ -109,25 +138,6 @@ async def create_workload_decision(
             record_workload_request_decision_metrics(
                 metrics_details=metrics_details, status_code=400, exception=exception
             )
-        # Record KPI metrics if the workload decision was created successfully
-        if not exception and wrd_obj:
-            # Safely compute decision duration in seconds
-            logger.info("Recording KPI metrics for pod decision %s", wrd_obj.id)
-            duration_seconds = None
-            if getattr(wrd_obj, "decision_start_time", None) and getattr(
-                wrd_obj, "decision_end_time", None
-            ):
-                delta = wrd_obj.decision_end_time - wrd_obj.decision_start_time
-                duration_seconds = float(delta.total_seconds())
-            if duration_seconds is not None and getattr(wrd_obj, "node_name", None):
-                kpi_data = KPIMetricsCreate(
-                    request_decision_id=wrd_obj.id,
-                    node_name=wrd_obj.node_name,
-                    decision_time_in_seconds=duration_seconds,
-                )
-                await create_kpi_metrics(
-                    db_session, kpi_data, metrics_details=None
-                )
 
 
 async def get_workload_decision(
@@ -449,13 +459,13 @@ async def update_workload_decision_status(
         )
         raise DBEntryUpdateException(
             message=(
-            f"Failed to update pod decision status for {data.pod_name}: "
-            "Database connection error"
+                f"Failed to update pod decision status for {data.pod_name}: "
+                "Database connection error"
             ),
             details={
-            "error_type": "database_connection_error",
-            "error": str(exc),
-            "pod_name": str(data.pod_name),
+                "error_type": "database_connection_error",
+                "error": str(exc),
+                "pod_name": str(data.pod_name),
             },
         ) from exc
     except SQLAlchemyError as exc:

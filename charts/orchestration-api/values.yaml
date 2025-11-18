@@ -45,6 +45,9 @@ app:
   env:
     ALERT_CRITICAL_THRESHOLD: 5
     ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS: 60
+    NATS_SERVER: "nats://nats:4222"
+    NATS_KPI_JS_SUBJECT: "kpi.metrics.geometric_mean"
+    NATS_KPI_JS_STREAM: "KPI_METRICS"
 
 configmap:
   databaseURLConfig: orchestration-api-config
