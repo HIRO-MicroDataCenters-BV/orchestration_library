@@ -185,7 +185,8 @@ async def get_latest_geometric_mean_kpis_with_tuning_parameters(
     except SQLAlchemyError as e:
         excep = e
         logger.error(
-            "Database error while fetching latest geometric mean KPI metrics with tuning parameters: %s",
+            "Database error while fetching latest geometric mean KPI metrics "
+            "with tuning parameters: %s",
             str(e),
         )
         raise DatabaseConnectionException(
@@ -195,11 +196,13 @@ async def get_latest_geometric_mean_kpis_with_tuning_parameters(
     except Exception as e:
         excep = e
         logger.error(
-            "Unexpected error while fetching latest geometric mean KPI metrics with tuning parameters: %s",
+            "Unexpected error while fetching latest geometric mean KPI metrics "
+            "with tuning parameters: %s",
             str(e),
         )
         raise DatabaseConnectionException(
-            "An unexpected error occurred while fetching latest geometric mean KPI metrics with tuning parameters",
+            "An unexpected error occurred while fetching latest geometric mean KPI metrics "
+            "with tuning parameters",
             details={"error": str(e)},
         ) from e
     finally:

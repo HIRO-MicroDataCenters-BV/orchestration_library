@@ -6,7 +6,7 @@ from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
-from app.schemas.tuning_parameter_schema import TuningParameterBase, TuningParameterResponse
+from app.schemas.tuning_parameter_schema import TuningParameterBase
 
 
 class KPIMetricsGeometricMeanBase(BaseModel):
