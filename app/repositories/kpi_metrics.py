@@ -124,12 +124,15 @@ async def create_kpi_metrics(
                 metrics_details=metrics_details,
                 status_code=200,
             )
-        logger.info(
-            "Sending KPI Geometric Mean Calculation to NATS JetStream for "
-            "Request Decision ID: %s",
-            data.request_decision_id,
-        )
-        await send_kpi_geometric_mean_to_nats(db_session, data.request_decision_id)
+        #########################################################################
+        # #Commenting out NATS publishing for now
+        #########################################################################
+        # logger.info(
+        #     "Sending KPI Geometric Mean Calculation to NATS JetStream for "
+        #     "Request Decision ID: %s",
+        #     data.request_decision_id,
+        # )
+        # await send_kpi_geometric_mean_to_nats(db_session, data.request_decision_id)
         return kpi_metrics
     except IntegrityError as e:
         exception = e
