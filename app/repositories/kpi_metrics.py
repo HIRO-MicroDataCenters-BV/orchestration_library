@@ -9,6 +9,7 @@ from typing import List
 import logging
 from uuid import UUID
 
+from pydantic import ValidationError
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -58,15 +59,17 @@ async def send_kpi_geometric_mean_to_nats(
     for gm_kpi in geometric_mean_kpis:
         try:
             gm_kpi_item = KPIMetricsGeometricMeanItem.model_validate(gm_kpi)
-        except Exception as e:
+        except ValidationError as e:
             logger.warning("Skip invalid KPI Geometric Mean item: %s", e)
             continue
         logger.info("KPI Geometric Mean: %s", gm_kpi_item.model_dump())
         publish_tasks.append(
             publish_msg_to_nats_js(
-                nats_server=NATS_KPI_SERVER,
-                stream=NATS_KPI_JS_STREAM,
-                subject=NATS_KPI_JS_SUBJECT,
+                nats_details={
+                    "nats_server": NATS_KPI_SERVER,
+                    "stream": NATS_KPI_JS_STREAM,
+                    "subject": NATS_KPI_JS_SUBJECT,
+                },
                 message=gm_kpi_item,
                 timeout=5,
                 logger=logger,
