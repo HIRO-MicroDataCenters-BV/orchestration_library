@@ -1,10 +1,14 @@
 """
 Helper functions for the application.
 """
+
+import json
 import time
+from typing import Any
 from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 import asyncio
+
 
 def metrics(method: str, endpoint: str) -> dict:
     """
@@ -23,11 +27,12 @@ def metrics(method: str, endpoint: str) -> dict:
         "endpoint": endpoint,
     }
 
-def publish_msg_to_nats_js(
+
+async def publish_msg_to_nats_js(
     nats_server: str,
     stream: str,
     subject: str,
-    message: str,
+    message: Any,
     timeout: int = 5,
     logger=None,
 ) -> None:
@@ -38,13 +43,37 @@ def publish_msg_to_nats_js(
         nats_server (str): The NATS server URL.
         stream (str): The JetStream stream name.
         subject (str): The subject to publish the message to.
-        message (str): The message to publish.
+        message (Any): The message to publish.
         timeout (int): Timeout for publishing the message.
         logger: Logger for logging messages.
 
     Returns:
         None
     """
+    logger.info(
+        "Publishing message to NATS JetStream: server=%s, stream=%s, subject=%s",
+        nats_server,
+        stream,
+        subject,
+    )
+    # Normalize message to string
+    try:
+        if isinstance(message, str):
+            msg_str = message
+        elif hasattr(message, "model_dump_json"):
+            msg_str = message.model_dump_json()
+        elif hasattr(message, "model_dump"):
+            msg_str = json.dumps(message.model_dump())
+        elif isinstance(message, dict):
+            msg_str = json.dumps(message)
+        else:
+            # Fallback to repr
+            msg_str = json.dumps({"value": repr(message)})
+    except Exception as e:
+        if logger:
+            logger.warning(f"Failed to serialize message, using repr: {e}")
+        msg_str = repr(message)
+
     async def _publish():
         nc = NATS()
         await nc.connect(servers=[nats_server], reconnect_time_wait=2)
@@ -60,8 +89,7 @@ def publish_msg_to_nats_js(
             await js.add_stream(sc)
 
         # Publish the message
-        await js.publish(subject, message.encode())
-
+        await js.publish(subject, msg_str.encode())
         await nc.drain()
 
-    asyncio.run(asyncio.wait_for(_publish(), timeout=timeout))
+    await asyncio.wait_for(_publish(), timeout=timeout)

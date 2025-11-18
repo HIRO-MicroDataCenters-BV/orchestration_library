@@ -3,6 +3,7 @@ Repository module for KPI metrics.
 This module contains functions to interact with the KPI metrics in the database.
 """
 
+import asyncio
 import os
 from typing import List
 import logging
@@ -16,6 +17,7 @@ from app.metrics.helper import record_api_metrics
 from app.models.kpi_metrics import KPIMetrics
 from app.repositories.k8s.k8s_node import get_k8s_nodes
 from app.repositories.kpi_metrics_geometric_mean import fetch_latest_geometric_mean_kpis
+from app.schemas.kpi_metrics_geometric_mean_schema import KPIMetricsGeometricMeanItem
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
@@ -30,6 +32,49 @@ NATS_KPI_JS_SUBJECT = os.getenv("NATS_KPI_JS_SUBJECT", "kpi.metrics.geometric_me
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+
+async def send_kpi_geometric_mean_to_nats(
+    db_session: AsyncSession, request_decision_id: UUID
+):
+    """
+    Send KPI geometric mean metrics to NATS JetStream.
+    Args:
+        db_session (AsyncSession): The database session.
+        request_decision_id (UUID): The request decision ID to filter KPI metrics.
+    """
+    logger.info(
+        "Get KPI metrics Geometric Mean Calculation for the request: %s",
+        request_decision_id,
+    )
+    geometric_mean_kpis = await fetch_latest_geometric_mean_kpis(
+        db_session,
+        kpi_geometrics_request_args={
+            "request_decision_id": request_decision_id,
+        },
+        metrics_details=None,
+    )
+    publish_tasks = []
+    for gm_kpi in geometric_mean_kpis:
+        try:
+            gm_kpi_item = KPIMetricsGeometricMeanItem.model_validate(gm_kpi)
+        except Exception as e:
+            logger.warning("Skip invalid KPI Geometric Mean item: %s", e)
+            continue
+        logger.info("KPI Geometric Mean: %s", gm_kpi_item.model_dump())
+        publish_tasks.append(
+            publish_msg_to_nats_js(
+                nats_server=NATS_KPI_SERVER,
+                stream=NATS_KPI_JS_STREAM,
+                subject=NATS_KPI_JS_SUBJECT,
+                message=gm_kpi_item,
+                timeout=5,
+                logger=logger,
+            )
+        )
+    if publish_tasks:
+        results = await asyncio.gather(*publish_tasks)
+        logger.info("Published KPI Geometric Mean messages to NATS: %s", results)
 
 
 async def create_kpi_metrics(
@@ -51,7 +96,7 @@ async def create_kpi_metrics(
     exception = None
     try:
         simplified_nodes_details = []
-        logger.debug("Creating KPI metrics for Request Decision: %s", data.model_dump())
+        logger.info("Creating KPI metrics for Request Decision: %s", data.model_dump())
         simplified_nodes_details = get_k8s_nodes()
 
         kpi_metrics = []
@@ -70,33 +115,18 @@ async def create_kpi_metrics(
 
             await db_session.commit()
             await db_session.refresh(new_kpi_metric)
-            logger.info(
-                "Created new KPI metrics entry: %s", new_kpi_metric.model_dump()
-            )
+            logger.info("Created new KPI metrics entry: %s", new_kpi_metric.to_dict())
             kpi_metrics.append(new_kpi_metric)
             record_api_metrics(
                 metrics_details=metrics_details,
                 status_code=200,
             )
-        logger.info("Get KPI metrics Geometric Mean Calculation to the request")
-        geometric_mean_kpis = await fetch_latest_geometric_mean_kpis(
-            db_session,
-            kpi_geometrics_request_args={
-                "request_decision_id": data.request_decision_id,
-            },
-            metrics_details=None,
+        logger.info(
+            "Sending KPI Geometric Mean Calculation to NATS JetStream for "
+            "Request Decision ID: %s",
+            data.request_decision_id,
         )
-        logger.info("Send KPI metrics Geometric Mean Calculation to the NATS")
-        for gm_kpi in geometric_mean_kpis:
-            logger.info("KPI Geometric Mean: %s", gm_kpi.model_dump())
-            publish_msg_to_nats_js(
-                nats_server=NATS_KPI_SERVER,
-                stream=NATS_KPI_JS_STREAM,
-                subject=NATS_KPI_JS_SUBJECT,
-                message=gm_kpi.model_dump_json(),
-                timeout=5,
-                logger=logger,
-            )
+        await send_kpi_geometric_mean_to_nats(db_session, data.request_decision_id)
         return kpi_metrics
     except IntegrityError as e:
         exception = e
