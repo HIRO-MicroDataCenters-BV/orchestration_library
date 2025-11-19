@@ -5,8 +5,10 @@ Helper functions for the application.
 import asyncio
 import json
 import time
+from traceback import print_exception
 from typing import Any
 import aiohttp
+from fastapi import logger
 from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 from nats.js.errors import NotFoundError, Error as JetStreamError
@@ -128,9 +130,17 @@ async def send_http_request(
     Returns:
         Any: The response from the HTTP request.
     """
-    async with aiohttp.ClientSession() as session:
-        async with session.request(
-            method, url, params=params, data=data, headers=headers
-        ) as response:
-            response.raise_for_status()
-            return await response.json() or await response.text()
+    try:
+        async with aiohttp.ClientSession() as session:
+            logger.info(
+                f"Sending {method} request to {url} with params={params} and data={data}"
+            )
+            async with session.request(
+                method, url, params=params, data=data, headers=headers
+            ) as response:
+                response.raise_for_status()
+                return await response.json() or await response.text()
+    except aiohttp.ClientError as e:
+        if logger:
+            logger.error(f"HTTP request failed: {print_exception(e)}")
+        raise
