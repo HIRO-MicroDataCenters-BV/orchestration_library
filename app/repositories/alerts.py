@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
+from app.repositories.k8s.k8s_pod import get_k8s_pod_spec
 from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse
 from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
 
@@ -22,6 +23,7 @@ ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", "5"))
 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
     os.getenv("ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS", "60")
 )
+ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv("ALERT_ACTION_TRIGGER_SERVICE_URL", "")
 
 
 def is_alert_data_insufficient(alert_obj):
@@ -152,6 +154,27 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
+        if alert_model.alert_description.lower().contains("cpu hog") and (
+            alert_model.pod_id is not None or alert_model.pod_name is not None
+        ):
+            logger.warning(
+                "Alert ID %d is an Attack alert: %s",
+                alert_model.id,
+                alert_model.alert_description,
+            )
+            pass
+        elif alert_model.alert_description.lower().contains("failed") and (
+            alert_model.pod_id is not None or alert_model.pod_name is not None
+        ):
+            logger.warning(
+                "Alert ID %d is a Failed alert: %s",
+                alert_model.id,
+                alert_model.alert_description,
+            )
+            pod_spec = get_k8s_pod_spec(pod_id=alert_model.pod_id, pod_name=alert_model.pod_name)
+            
+
+        #########################################################################
         # # Trigger pod deletion if it's a Attack alert with a pod_id
         # if alert_model.alert_type == "Attack" and alert_model.pod_id is not None:
         #     logger.info(
@@ -160,6 +183,7 @@ async def create_alert(
         #     )
         #     # Call the delete function (synchronously, since it's not async)
         #     delete_k8s_user_pod(str(alert_model.pod_id), metrics_details=metrics_details)
+        #########################################################################
         return AlertResponse.model_validate(alert_model)
     except IntegrityError as e:
         exception = e

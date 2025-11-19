@@ -7,13 +7,16 @@ import json
 import logging
 import re
 import time
+import aiohttp
 from fastapi.responses import JSONResponse
 
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
+from requests import session
 
 from app.metrics.helper import record_k8s_pod_metrics
+from app.utils.helper import send_http_request
 from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
@@ -165,16 +168,21 @@ def delete_k8s_user_pod(pod_id, metrics_details=None) -> JSONResponse:
         )
 
 
-def get_k8s_pod_spec(pod_id):
+def get_k8s_pod_spec(pod_id=None, pod_name=None, namespace=None):
     """
-    Return full Kubernetes Pod spec (raw API object) using pod UID.
+    Return full Kubernetes Pod spec (raw API object) using pod UID or name.
     Kubernetes API does not support direct lookup by UID, so we iterate all pods.
     """
+    if pod_id is None and pod_name is None:
+        raise ValueError("Either pod_id or pod_name must be provided")
     core_v1 = get_k8s_core_v1_client()
     all_pods = core_v1.list_pod_for_all_namespaces(watch=False)
     for pod in all_pods.items:
-        if pod.metadata.uid == str(pod_id):
-            return pod
+        if (pod_id and pod.metadata.uid == str(pod_id)) or (
+            pod_name and pod.metadata.name == str(pod_name)
+        ):
+            if namespace is None or pod.metadata.namespace == str(namespace):
+                return pod
     return None
 
 
@@ -351,9 +359,7 @@ def resolve_controller(apps_v1, controller_owner, namespace):
             return replica_set.spec.replicas, "ReplicaSet", controller_owner.name
         for owner in rs_owners:
             if owner.kind == "Deployment":
-                deployment = apps_v1.read_namespaced_deployment(
-                    owner.name, namespace
-                )
+                deployment = apps_v1.read_namespaced_deployment(owner.name, namespace)
                 return deployment.spec.replicas, "Deployment", owner.name
     if controller_owner.kind == "StatefulSet":
         stateful_set = apps_v1.read_namespaced_stateful_set(
@@ -426,8 +432,12 @@ def scale_k8s_user_pod(
         current_replicas, controller_kind, controller_name = resolve_controller(
             apps_v1, controller_owner, namespace
         )
-        target_replicas = calculate_target_replicas(current_replicas, scale_type, scale_delta)
-        patch_scale(apps_v1, controller_kind, controller_name, namespace, target_replicas)
+        target_replicas = calculate_target_replicas(
+            current_replicas, scale_type, scale_delta
+        )
+        patch_scale(
+            apps_v1, controller_kind, controller_name, namespace, target_replicas
+        )
 
         record_k8s_pod_metrics(metrics_details=metrics_details, status_code=200)
         return JSONResponse(
@@ -456,3 +466,28 @@ def scale_k8s_user_pod(
         )
     except ValueError as e:
         handle_k8s_exceptions(e, context_msg="Value error while scaling pod controller")
+
+def delete_pod_via_alert_action_service(pod_name: str, namespace: str, node_name: str, service_url: str):
+    """
+    Trigger pod deletion via an external alert action service.
+    Args:
+        pod_name (str): The name of the pod to delete.
+        namespace (str): The namespace of the pod.
+        node_name (str): The name of the node where the pod is running.
+        service_url (str): The URL of the alert action service.
+    Returns:
+        bool: True if deletion was successful, False otherwise.
+    """
+
+    request_data = { "method": "action.Bind",
+                     "params": [ { "pod": { "namespace": namespace, "name": pod_name },
+                                   "node": { "name": node_name } } ],
+                     "id": "1"
+                   }
+
+    send_http_request(
+        method="POST",
+        url=f"{service_url}",
+        data=json.dumps(request_data),
+        headers={"Content-Type": "application/json"},
+    )

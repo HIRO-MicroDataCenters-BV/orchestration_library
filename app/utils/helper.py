@@ -6,6 +6,7 @@ import asyncio
 import json
 import time
 from typing import Any
+import aiohttp
 from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 from nats.js.errors import NotFoundError, Error as JetStreamError
@@ -109,3 +110,27 @@ async def publish_msg_to_nats_js(
         await nc.drain()
 
     await asyncio.wait_for(_publish(), timeout=timeout)
+
+
+async def send_http_request(
+    method: str, url: str, params=None, data=None, headers=None
+) -> Any:
+    """
+    Send an HTTP request using the provided session.
+
+    Args:
+        method (str): The HTTP method (e.g., 'GET', 'POST').
+        url (str): The URL to send the request to.
+        params (dict, optional): Query parameters for the request.
+        data (Any, optional): The request payload.
+        headers (dict, optional): Headers for the request.
+
+    Returns:
+        Any: The response from the HTTP request.
+    """
+    async with aiohttp.ClientSession() as session:
+        async with session.request(
+            method, url, params=params, data=data, headers=headers
+        ) as response:
+            response.raise_for_status()
+            return await response.json() or await response.text()
