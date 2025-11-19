@@ -3,13 +3,7 @@ SQLAlchemy models for tuning parameters.
 This module defines the database models used for storing and retrieving tuning parameters.
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    TIMESTAMP,
-    text,
-    Float
-)
+from sqlalchemy import Column, Integer, TIMESTAMP, text, Float
 
 from app.db.database import Base
 from app.models.base_dict_mixin import BaseDictMixin
@@ -19,6 +13,7 @@ class TuningParameter(Base, BaseDictMixin):
     """
     Model representing tuning parameters for the system.
     """
+
     __tablename__ = "tuning_parameters"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -28,7 +23,9 @@ class TuningParameter(Base, BaseDictMixin):
     alpha = Column(Float, nullable=False)
     beta = Column(Float, nullable=False)
     gamma = Column(Float, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP"), index=True
+    )
 
     def get_parameters(self):
         """
@@ -43,7 +40,7 @@ class TuningParameter(Base, BaseDictMixin):
             "output_3": self.output_3,
             "alpha": self.alpha,
             "beta": self.beta,
-            "gamma": self.gamma
+            "gamma": self.gamma,
         }
 
     def __repr__(self):

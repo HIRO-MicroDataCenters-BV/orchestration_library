@@ -11,8 +11,14 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_db
-from app.repositories.kpi_metrics_geometric_mean import fetch_latest_geometric_mean_kpis
-from app.schemas.kpi_metrics_geometric_mean_schema import KPIMetricsGeometricMeanItem
+from app.repositories.kpi_metrics_geometric_mean import (
+    fetch_latest_geometric_mean_kpis,
+    get_latest_geometric_mean_kpis_with_tuning_parameters,
+)
+from app.schemas.kpi_metrics_geometric_mean_schema import (
+    KPIMetricsGeometricMeanItem,
+    KPIMetricsGeometricMeanWithTuningParamsItem,
+)
 from app.schemas.kpi_metrics_schema import (
     KPIMetricsSchema,
     KPIMetricsCreate,
@@ -173,5 +179,29 @@ async def get_latest_geometric_mean_kpi_metrics_route(
             "skip": skip,
             "limit": limit,
         },
+        metrics_details=metrics("GET", metrics_path),
+    )
+
+
+@router.get(
+    path="/latest_geometric_mean_with_tuning_params",
+    response_model=List[KPIMetricsGeometricMeanWithTuningParamsItem],
+)
+async def get_latest_geometric_mean_kpi_metrics_for_tuning_params_route(
+    db_session: AsyncSession = Depends(get_async_db), limit: int = 1
+) -> List:
+    """
+    Retrieve the latest geometric mean KPI metrics entries for tuning parameters.
+
+    Args:
+        db_session (AsyncSession): Database session dependency.
+        limit (int): The number of latest entries to retrieve.
+    Returns:
+        List: List of latest geometric mean KPI metrics entries for tuning parameters.
+    """
+    metrics_path = f"/kpi_metrics/latest_geometric_mean_for_tuning_params?limit={limit}"
+    return await get_latest_geometric_mean_kpis_with_tuning_parameters(
+        db_session,
+        limit=limit,
         metrics_details=metrics("GET", metrics_path),
     )

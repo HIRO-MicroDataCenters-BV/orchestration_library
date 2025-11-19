@@ -28,4 +28,6 @@ class KPIMetrics(Base, BaseDictMixin):
     cpu_utilization = Column(Double)
     mem_utilization = Column(Double)
     decision_time_in_seconds = Column(Double)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=text("now()"), index=True
+    )
