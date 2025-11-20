@@ -415,6 +415,7 @@ jobs:
             ${{ steps.helm-app-access.outputs.orchestration_api_ingress_host }} \
             --set app.env.ALERT_CRITICAL_THRESHOLD=${{ vars.ALERT_CRITICAL_THRESHOLD }} \
             --set app.env.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS=${{ vars.ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS }} \
+            --set app.env.ALERT_ACTION_TRIGGER_SERVICE_URL=${{ vars.ALERT_ACTION_TRIGGER_SERVICE_URL }} \
             --set app.env.NATS_SERVER=${{ vars.ORCHESTRATION_API_NATS_SERVER }} \
             --set app.env.NATS_KPI_JS_STREAM=${{ vars.ORCHESTRATION_API_NATS_KPI_JS_STREAM }} \
             --set app.env.NATS_KPI_JS_SUBJECT=${{ vars.ORCHESTRATION_API_NATS_KPI_JS_SUBJECT }} \
