@@ -503,8 +503,16 @@ def delete_pod_via_alert_action_service(
         bool: True if deletion was successful, False otherwise.
     """
 
+    logger.info(
+        "Triggering pod deletion via alert action service: "
+        "pod_name=%s, namespace=%s, node_name=%s, service_url=%s",
+        pod_name,
+        namespace,
+        node_name,
+        service_url,
+    )
     request_data = {
-        "method": "action.Bind",
+        "method": "action.Delete",
         "params": [
             {
                 "pod": {"namespace": namespace, "name": pod_name},
@@ -514,18 +522,12 @@ def delete_pod_via_alert_action_service(
         "id": "1",
     }
 
-    try:
-        send_http_request(
-            method="POST",
-            url=f"{service_url}",
-            data=json.dumps(request_data),
-            headers={"Content-Type": "application/json"},
-        )
-    except aiohttp.ClientError as e:
-        logger.error(
-            "Error while calling alert action service for pod deletion: %s", str(e)
-        )
-        return False
+    send_http_request(
+        method="POST",
+        url=f"{service_url}",
+        data=json.dumps(request_data),
+        headers={"Content-Type": "application/json"},
+    )
 
 
 def get_updated_container_resources(

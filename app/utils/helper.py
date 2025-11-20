@@ -4,15 +4,19 @@ Helper functions for the application.
 
 import asyncio
 import json
+import logging
 import time
 from traceback import print_exception
 from typing import Any
 import aiohttp
-from fastapi import logger
+from httpx import request
 from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 from nats.js.errors import NotFoundError, Error as JetStreamError
 from nats.errors import Error as NATSError
+import requests
+
+logger = logging.getLogger(__name__)
 
 
 def metrics(method: str, endpoint: str) -> dict:
@@ -34,7 +38,7 @@ def metrics(method: str, endpoint: str) -> dict:
 
 
 async def publish_msg_to_nats_js(
-    nats_details: dict, message: Any, timeout: int = 5, logger=None
+    nats_details: dict, message: Any, timeout: int = 5
 ) -> None:
     """
     Publish a message to a NATS JetStream subject.
@@ -114,7 +118,7 @@ async def publish_msg_to_nats_js(
     await asyncio.wait_for(_publish(), timeout=timeout)
 
 
-async def send_http_request(
+def send_http_request(
     method: str, url: str, params=None, data=None, headers=None
 ) -> Any:
     """
@@ -126,21 +130,30 @@ async def send_http_request(
         params (dict, optional): Query parameters for the request.
         data (Any, optional): The request payload.
         headers (dict, optional): Headers for the request.
-
     Returns:
         Any: The response from the HTTP request.
     """
     try:
-        async with aiohttp.ClientSession() as session:
-            logger.info(
-                f"Sending {method} request to {url} with params={params} and data={data}"
-            )
-            async with session.request(
-                method, url, params=params, data=data, headers=headers
-            ) as response:
-                response.raise_for_status()
-                return await response.json() or await response.text()
-    except aiohttp.ClientError as e:
-        if logger:
-            logger.error(f"HTTP request failed: {print_exception(e)}")
+        logger.info(
+            "Sending %s request to %s with params=%s and data=%s",
+            method,
+            url,
+            params,
+            data,
+        )
+        response = requests.request(
+            method=method,
+            url=url,
+            params=params,
+            data=data,
+            headers=headers,
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json() or response.text
+    except requests.RequestException as e:
+        logger.error(f"HTTP request failed: {print_exception(e)}")
+        raise
+    except requests.Timeout:
+        logger.error(f"HTTP request to {url} timed out")
         raise

@@ -31,7 +31,9 @@ ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", "5"))
 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
     os.getenv("ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS", "60")
 )
-ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv("ALERT_ACTION_TRIGGER_SERVICE_URL", "")
+ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv(
+    "ALERT_ACTION_TRIGGER_SERVICE_URL", "http://wam-app:3030"
+)
 
 
 def handle_post_create_alert_actions(alert_model: Alert) -> None:
@@ -66,21 +68,19 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
                 apps_v1, controller_owner, namespace
             )
             containers_resources = get_k8s_pod_containrers_resources(pod)
-            for container in containers_resources:
-                update_pod_resources_via_alert_action_service(
-                    controller_details={
-                        "kind": controller_kind,
-                        "name": controller_name,
-                        "replicas": current_replicas,
-                    },
-                    pod_details={
-                        "name": pod.metadata.name,
-                        "namespace": pod.metadata.namespace,
-                        "container": container,
-                    },
-                    containers_resources=containers_resources,
-                    service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-                )
+            update_pod_resources_via_alert_action_service(
+                controller_details={
+                    "kind": controller_kind,
+                    "name": controller_name,
+                    "replicas": current_replicas,
+                },
+                pod_details={
+                    "name": pod.metadata.name,
+                    "namespace": pod.metadata.namespace,
+                },
+                containers_resources=containers_resources,
+                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+            )
         elif ("failed" in desc_lower) and (
             alert_model.pod_id is not None or alert_model.pod_name is not None
         ):
@@ -95,7 +95,7 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             if pod:
                 delete_pod_via_alert_action_service(
                     pod_name=pod.metadata.name,
-                    pod_namespace=pod.metadata.namespace,
+                    namespace=pod.metadata.namespace,
                     node_name=getattr(pod.spec, "nodeName", None),
                     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
                 )
