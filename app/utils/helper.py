@@ -8,8 +8,6 @@ import logging
 import time
 from traceback import print_exception
 from typing import Any
-import aiohttp
-from httpx import request
 from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 from nats.js.errors import NotFoundError, Error as JetStreamError
@@ -79,7 +77,7 @@ async def publish_msg_to_nats_js(
             msg_str = json.dumps({"value": repr(message)})
     except (TypeError, ValueError) as e:
         if logger:
-            logger.warning(f"Failed to serialize message, using repr: {e}")
+            logger.warning("Failed to serialize message, using repr: %s", e)
         msg_str = repr(message)
 
     async def _publish():
@@ -88,7 +86,7 @@ async def publish_msg_to_nats_js(
             await nc.connect(servers=[nats_server], reconnect_time_wait=2)
         except NATSError as e:
             if logger:
-                logger.error(f"Failed to connect to NATS server {nats_server}: {e}")
+                logger.error("Failed to connect to NATS server %s: %s", nats_server, e)
             return
         js = nc.jetstream()
 
@@ -97,13 +95,13 @@ async def publish_msg_to_nats_js(
             await js.stream_info(stream)
         except (JetStreamError, NotFoundError, NATSError) as e:
             if logger:
-                logger.info(f"Creating stream {stream} (reason: {e})")
+                logger.info("Creating stream %s (reason: %s)", stream, e)
             try:
                 sc = StreamConfig(name=stream, subjects=[subject])
                 await js.add_stream(sc)
             except (JetStreamError, NATSError) as err:
                 if logger:
-                    logger.error(f"Failed to create stream {stream}: {err}")
+                    logger.error("Failed to create stream %s: %s", stream, err)
                 await nc.drain()
                 return
 
@@ -112,7 +110,7 @@ async def publish_msg_to_nats_js(
             await js.publish(subject, msg_str.encode())
         except (JetStreamError, NATSError) as e:
             if logger:
-                logger.error(f"Failed to publish message to {subject}: {e}")
+                logger.error("Failed to publish message to %s: %s", subject, e)
         await nc.drain()
 
     await asyncio.wait_for(_publish(), timeout=timeout)
@@ -151,9 +149,9 @@ def send_http_request(
         )
         response.raise_for_status()
         return response.json() or response.text
-    except requests.RequestException as e:
-        logger.error(f"HTTP request failed: {print_exception(e)}")
-        raise
     except requests.Timeout:
-        logger.error(f"HTTP request to {url} timed out")
+        logger.error("HTTP request to %s timed out", url)
+        raise
+    except requests.RequestException as e:
+        logger.error("HTTP request failed: %s", print_exception(e))
         raise

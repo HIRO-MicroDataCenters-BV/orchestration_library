@@ -40,71 +40,64 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
     """
     Perform alert-based follow-up actions (logging, pod deletion).
     """
-    try:
-        desc_lower = (alert_model.alert_description or "").lower()
+    desc_lower = (alert_model.alert_description or "").lower()
 
-        if ("cpu hog" in desc_lower) and (
-            alert_model.pod_id is not None or alert_model.pod_name is not None
-        ):
-            logger.warning(
-                "Alert ID %d is an Attack alert: %s",
-                alert_model.id,
-                alert_model.alert_description,
+    if ("cpu hog" in desc_lower) and (
+        alert_model.pod_id is not None or alert_model.pod_name is not None
+    ):
+        logger.warning(
+            "Alert ID %d is an Attack alert: %s",
+            alert_model.id,
+            alert_model.alert_description,
+        )
+        pod, controller_owner = get_pod_and_controller(
+            pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
+        )
+        if not pod or not controller_owner:
+            logger.error(
+                "Could not find pod or controller for pod_id=%s, pod_name=%s",
+                alert_model.pod_id,
+                alert_model.pod_name,
             )
-            pod, controller_owner = get_pod_and_controller(
-                pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
-            )
-            if not pod or not controller_owner:
-                logger.error(
-                    "Could not find pod or controller for pod_id=%s, pod_name=%s",
-                    alert_model.pod_id,
-                    alert_model.pod_name,
-                )
-                return
-            namespace = pod.metadata.namespace
-            apps_v1 = get_k8s_apps_v1_client()
+            return
+        namespace = pod.metadata.namespace
+        apps_v1 = get_k8s_apps_v1_client()
 
-            current_replicas, controller_kind, controller_name = resolve_controller(
-                apps_v1, controller_owner, namespace
-            )
-            containers_resources = get_k8s_pod_containrers_resources(pod)
-            update_pod_resources_via_alert_action_service(
-                controller_details={
-                    "kind": controller_kind,
-                    "name": controller_name,
-                    "replicas": current_replicas,
-                },
-                pod_details={
-                    "name": pod.metadata.name,
-                    "namespace": pod.metadata.namespace,
-                },
-                containers_resources=containers_resources,
+        current_replicas, controller_kind, controller_name = resolve_controller(
+            apps_v1, controller_owner, namespace
+        )
+        containers_resources = get_k8s_pod_containrers_resources(pod)
+        update_pod_resources_via_alert_action_service(
+            controller_details={
+                "kind": controller_kind,
+                "name": controller_name,
+                "replicas": current_replicas,
+            },
+            pod_details={
+                "name": pod.metadata.name,
+                "namespace": pod.metadata.namespace,
+            },
+            containers_resources=containers_resources,
+            service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+        )
+    elif ("failed" in desc_lower) and (
+        alert_model.pod_id is not None or alert_model.pod_name is not None
+    ):
+        logger.warning(
+            "Alert ID %d is a Failed alert: %s",
+            alert_model.id,
+            alert_model.alert_description,
+        )
+        pod = get_k8s_pod_obj(
+            pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
+        )
+        if pod:
+            delete_pod_via_alert_action_service(
+                pod_name=pod.metadata.name,
+                namespace=pod.metadata.namespace,
+                node_name=getattr(pod.spec, "nodeName", None),
                 service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
             )
-        elif ("failed" in desc_lower) and (
-            alert_model.pod_id is not None or alert_model.pod_name is not None
-        ):
-            logger.warning(
-                "Alert ID %d is a Failed alert: %s",
-                alert_model.id,
-                alert_model.alert_description,
-            )
-            pod = get_k8s_pod_obj(
-                pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
-            )
-            if pod:
-                delete_pod_via_alert_action_service(
-                    pod_name=pod.metadata.name,
-                    namespace=pod.metadata.namespace,
-                    node_name=getattr(pod.spec, "nodeName", None),
-                    service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-                )
-    except Exception as e:
-        logger.error(
-            "Error while handling post-create alert actions for alert %d: %s",
-            getattr(alert_model, "id", None),
-            e,
-        )
 
 
 def is_alert_data_insufficient(alert_obj):
@@ -273,11 +266,12 @@ async def create_alert(
         exception = e
         logger.error("Unexpected error while creating alert: %s", str(e))
         await db.rollback()
-        raise e
+        raise
     finally:
-        record_alerts_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_alerts_metrics(
+                metrics_details=metrics_details, status_code=400, exception=exception
+            )
 
 
 async def get_alerts(
