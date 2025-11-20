@@ -12,8 +12,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
+from app.repositories.k8s.k8s_common import get_k8s_apps_v1_client
+from app.repositories.k8s.k8s_pod import (
+    delete_pod_via_alert_action_service,
+    get_k8s_pod_containrers_resources,
+    get_k8s_pod_obj,
+    get_pod_and_controller,
+    resolve_controller,
+    update_pod_resources_via_alert_action_service,
+)
 from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse
-from app.utils.exceptions import DBEntryCreationException, OrchestrationBaseException
+from app.utils.constants import AlertDescriptionEnum
+from app.utils.exceptions import (
+    DBEntryCreationException,
+    OrchestrationBaseException,
+    PostCreateAlertActionException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +36,89 @@ ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", "5"))
 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
     os.getenv("ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS", "60")
 )
+ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv(
+    "ALERT_ACTION_TRIGGER_SERVICE_URL", "http://wam-app:3030"
+)
+
+
+def handle_post_create_alert_actions(alert_model: Alert) -> None:
+    """
+    Perform alert-based follow-up actions (logging, pod deletion).
+    """
+    try:
+        desc_lower = (alert_model.alert_description or "").lower()
+
+        if (AlertDescriptionEnum.CPU_HOG.value.lower() in desc_lower) and (
+            alert_model.pod_id is not None or alert_model.pod_name is not None
+        ):
+            logger.warning(
+                "Alert ID %d is an Attack alert: %s",
+                alert_model.id,
+                alert_model.alert_description,
+            )
+            pod, controller_owner = get_pod_and_controller(
+                pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
+            )
+            if not pod or not controller_owner:
+                logger.error(
+                    "Could not find pod or controller for pod_id=%s, pod_name=%s",
+                    alert_model.pod_id,
+                    alert_model.pod_name,
+                )
+                return
+            namespace = pod.metadata.namespace
+            apps_v1 = get_k8s_apps_v1_client()
+
+            current_replicas, controller_kind, controller_name = resolve_controller(
+                apps_v1, controller_owner, namespace
+            )
+            containers_resources = get_k8s_pod_containrers_resources(pod)
+            update_pod_resources_via_alert_action_service(
+                controller_details={
+                    "kind": controller_kind,
+                    "name": controller_name,
+                    "replicas": current_replicas,
+                },
+                pod_details={
+                    "name": pod.metadata.name,
+                    "namespace": pod.metadata.namespace,
+                },
+                containers_resources=containers_resources,
+                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+            )
+        elif (AlertDescriptionEnum.POD_FAILED.value.lower() in desc_lower) and (
+            alert_model.pod_id is not None or alert_model.pod_name is not None
+        ):
+            logger.warning(
+                "Alert ID %d is a Failed alert: %s",
+                alert_model.id,
+                alert_model.alert_description,
+            )
+            pod = get_k8s_pod_obj(
+                pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
+            )
+            if pod:
+                delete_pod_via_alert_action_service(
+                    pod_name=pod.metadata.name,
+                    namespace=pod.metadata.namespace,
+                    node_name=getattr(pod.spec, "nodeName", None),
+                    service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+                )
+    except PostCreateAlertActionException:
+        raise
+    except Exception as e:
+        logger.error(
+            "Error handling post-create alert actions for alert ID %d: %s",
+            alert_model.id,
+            str(e),
+        )
+        raise PostCreateAlertActionException(
+            "Failed to handle post-create alert actions",
+            details={
+                "error": str(e),
+                "alert_id": getattr(alert_model, "id", None),
+            },
+        ) from e
 
 
 def is_alert_data_insufficient(alert_obj):
@@ -152,6 +249,9 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
+        handle_post_create_alert_actions(alert_model)
+
+        #########################################################################
         # # Trigger pod deletion if it's a Attack alert with a pod_id
         # if alert_model.alert_type == "Attack" and alert_model.pod_id is not None:
         #     logger.info(
@@ -160,6 +260,7 @@ async def create_alert(
         #     )
         #     # Call the delete function (synchronously, since it's not async)
         #     delete_k8s_user_pod(str(alert_model.pod_id), metrics_details=metrics_details)
+        #########################################################################
         return AlertResponse.model_validate(alert_model)
     except IntegrityError as e:
         exception = e
@@ -186,11 +287,12 @@ async def create_alert(
         exception = e
         logger.error("Unexpected error while creating alert: %s", str(e))
         await db.rollback()
-        raise e
+        raise
     finally:
-        record_alerts_metrics(
-            metrics_details=metrics_details, status_code=400, exception=exception
-        )
+        if exception:
+            record_alerts_metrics(
+                metrics_details=metrics_details, status_code=400, exception=exception
+            )
 
 
 async def get_alerts(

@@ -404,27 +404,27 @@ def test_get_k8s_user_pod_info_not_found(mock_list_user_pods):
 
 
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
-def test_get_k8s_pod_spec_found(mock_get_client):
+def test_get_k8s_pod_obj_found(mock_get_client):
     """Test retrieving pod spec when pod is found."""
     pod_obj = MagicMock()
     pod_obj.metadata.uid = "u-123"
     core = MagicMock()
     core.list_pod_for_all_namespaces.return_value.items = [pod_obj]
     mock_get_client.return_value = core
-    assert k8s_pod.get_k8s_pod_spec("u-123") is pod_obj
+    assert k8s_pod.get_k8s_pod_obj("u-123") is pod_obj
 
 
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
-def test_get_k8s_pod_spec_not_found(mock_get_client):
+def test_get_k8s_pod_obj_not_found(mock_get_client):
     """Test retrieving pod spec when pod is not found."""
     core = MagicMock()
     core.list_pod_for_all_namespaces.return_value.items = []
     mock_get_client.return_value = core
-    assert k8s_pod.get_k8s_pod_spec("nope") is None
+    assert k8s_pod.get_k8s_pod_obj("nope") is None
 
 
 @patch("app.repositories.k8s.k8s_pod.get_managed_controller")
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_recreate_pod_controller_managed(
     mock_get_client, mock_get_spec, _mock_get_ctrl
@@ -447,7 +447,7 @@ def test_recreate_pod_controller_managed(
     core.create_namespaced_pod.assert_not_called()
 
 
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_recreate_pod_naked_success(mock_get_client, mock_get_spec):
     """Naked pod: deletion + implicit wait succeeds (read returns 404 immediately)."""
@@ -472,7 +472,7 @@ def test_recreate_pod_naked_success(mock_get_client, mock_get_spec):
 
 @patch("app.repositories.k8s.k8s_pod.wait_for_pod_deletion", return_value=False)
 @patch("app.repositories.k8s.k8s_pod.get_managed_controller", return_value=None)
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_recreate_pod_naked_timeout(
     mock_get_client, mock_get_spec, _mock_get_ctrl, _mock_wait
@@ -492,7 +492,7 @@ def test_recreate_pod_naked_timeout(
     core.create_namespaced_pod.assert_not_called()
 
 
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec", return_value=None)
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj", return_value=None)
 def test_recreate_pod_not_found(mock_get_spec):
     """Test recreating a pod that does not exist returns 404."""
     resp = k8s_pod.recreate_k8s_user_pod("missing")
@@ -501,7 +501,7 @@ def test_recreate_pod_not_found(mock_get_spec):
 
 
 @patch("app.repositories.k8s.k8s_pod.handle_k8s_exceptions")
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 @patch("app.repositories.k8s.k8s_pod.get_k8s_core_v1_client")
 def test_recreate_pod_api_exception_delete(mock_get_client, mock_get_spec, mock_handle):
     """Test recreating a pod when deletion raises an API exception."""
@@ -631,7 +631,7 @@ def test_resolve_controller_unsupported():
 @patch("app.repositories.k8s.k8s_pod.patch_scale")
 @patch("app.repositories.k8s.k8s_pod.resolve_controller")
 @patch("app.repositories.k8s.k8s_pod.get_managed_controller")
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 def test_scale_k8s_user_pod_up_success(
     mock_get_spec, mock_get_ctrl, mock_resolve, mock_patch, mock_get_apps
 ):
@@ -655,7 +655,7 @@ def test_scale_k8s_user_pod_up_success(
 @patch("app.repositories.k8s.k8s_pod.patch_scale")
 @patch("app.repositories.k8s.k8s_pod.resolve_controller")
 @patch("app.repositories.k8s.k8s_pod.get_managed_controller")
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 def test_scale_k8s_user_pod_down_floor_zero(
     mock_get_spec, mock_get_ctrl, mock_resolve, mock_patch, mock_get_apps
 ):
@@ -675,7 +675,7 @@ def test_scale_k8s_user_pod_down_floor_zero(
     assert args[4] == 0
 
 
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 def test_scale_k8s_user_pod_not_found(mock_get_spec):
     """Test scaling a user pod that does not exist returns 404."""
     mock_get_spec.return_value = None
@@ -684,7 +684,7 @@ def test_scale_k8s_user_pod_not_found(mock_get_spec):
 
 
 @patch("app.repositories.k8s.k8s_pod.get_managed_controller")
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 def test_scale_k8s_user_pod_no_controller(mock_get_spec, mock_get_ctrl):
     """Test scaling a user pod with no managing controller returns 400."""
     pod = MagicMock()
@@ -703,7 +703,7 @@ def test_scale_k8s_user_pod_no_controller(mock_get_spec, mock_get_ctrl):
     return_value=(3, "Deployment", "dep-a"),
 )
 @patch("app.repositories.k8s.k8s_pod.get_managed_controller")
-@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_spec")
+@patch("app.repositories.k8s.k8s_pod.get_k8s_pod_obj")
 def test_scale_k8s_user_pod_api_exception(
     mock_get_spec, mock_get_ctrl, _mock_resolve, _mock_patch, mock_handle
 ):

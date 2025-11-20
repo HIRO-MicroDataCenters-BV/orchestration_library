@@ -1,6 +1,7 @@
 """
 Constants used across the application.
 """
+
 from enum import Enum
 
 
@@ -17,18 +18,16 @@ POD_PARENT_TYPE_ENUM = (
     "replicaset",
     "job",
     "daemonset",
-    "cronjob"
+    "cronjob",
 )
-WORKLOAD_REQUEST_DECISION_STATUS_ENUM = (
-    "pending",
-    "succeeded",
-    "failed"
-)
+WORKLOAD_REQUEST_DECISION_STATUS_ENUM = ("pending", "succeeded", "failed")
+
 
 class WorkloadActionTypeEnum(str, Enum):
     """
     Enum for workload action types.
     """
+
     BIND = "bind"
     CREATE = "create"
     DELETE = "delete"
@@ -36,17 +35,20 @@ class WorkloadActionTypeEnum(str, Enum):
     SWAP_X = "swap_x"
     SWAP_Y = "swap_y"
 
+
 class WorkloadActionStatusEnum(str, Enum):
     """
     Enum for action statuses.
     """
+
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
 
+
 class PodParentTypeEnum(str, Enum):
-    """Enum for pod parent types.
-    """
+    """Enum for pod parent types."""
+
     DEPLOYMENT = "deployment"
     STATEFULSET = "statefulset"
     REPLICASET = "replicaset"
@@ -54,17 +56,31 @@ class PodParentTypeEnum(str, Enum):
     DAEMONSET = "daemonset"
     CRONJOB = "cronjob"
 
+
 class WorkloadRequestDecisionStatusEnum(str, Enum):
     """
     Enum for workload request decision statuses.
     """
+
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
 
 class WorkloadTimingSchedulerEnum(str, Enum):
     """
     Enum for workload timing schedulers.
     """
+
     SCHEDULER_DEFAULT = "default-scheduler"
     SCHEDULER_RMS = "resource-management-service"
+
+
+class AlertDescriptionEnum(str, Enum):
+    """
+    Enum for alert descriptions.
+    """
+
+    CPU_HOG = "CPU HOG"
+    MEMORY_HOG = "MEMORY HOG"
+    POD_FAILED = "FAILED"

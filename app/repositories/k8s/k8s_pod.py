@@ -12,8 +12,10 @@ from fastapi.responses import JSONResponse
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
+from kubernetes.client import V1Pod
 
 from app.metrics.helper import record_k8s_pod_metrics
+from app.utils.helper import send_http_request
 from app.utils.k8s import get_pod_details, handle_k8s_exceptions
 from app.repositories.k8s.k8s_common import (
     get_k8s_apps_v1_client,
@@ -165,22 +167,48 @@ def delete_k8s_user_pod(pod_id, metrics_details=None) -> JSONResponse:
         )
 
 
-def get_k8s_pod_spec(pod_id):
+def get_k8s_pod_obj(pod_id=None, pod_name=None, namespace=None) -> V1Pod:
     """
-    Return full Kubernetes Pod spec (raw API object) using pod UID.
+    Return full Kubernetes Pod spec (raw API object) using pod UID or name.
     Kubernetes API does not support direct lookup by UID, so we iterate all pods.
     """
+    if pod_id is None and pod_name is None:
+        raise ValueError("Either pod_id or pod_name must be provided")
     core_v1 = get_k8s_core_v1_client()
     all_pods = core_v1.list_pod_for_all_namespaces(watch=False)
     for pod in all_pods.items:
-        if pod.metadata.uid == str(pod_id):
-            return pod
+        if (pod_id and pod.metadata.uid == str(pod_id)) or (
+            pod_name and pod.metadata.name == str(pod_name)
+        ):
+            if namespace is None or pod.metadata.namespace == str(namespace):
+                return pod
     return None
+
+
+def get_k8s_pod_containrers_resources(pod: V1Pod):
+    """
+    Extract resource requests and limits for all containers in the pod.
+    Returns a list of dicts with container name, requests, and limits.
+    """
+    containers_info = []
+    for container in pod.spec.containers:
+        resources = container.resources
+        requests = resources.requests if resources and resources.requests else {}
+        limits = resources.limits if resources and resources.limits else {}
+        containers_info.append(
+            {
+                "name": container.name,
+                "requests": requests,
+                "limits": limits,
+            }
+        )
+    return containers_info
 
 
 def get_managed_controller(pod):
     """
-    Check if the pod is owned by a higher-level controller (ReplicaSet, StatefulSet, etc.).
+    Check if the pod is owned by a higher-level controller
+    (ReplicaSet, StatefulSet, etc.).
     """
     owners = getattr(pod.metadata, "owner_references", None)
     if not owners:
@@ -192,11 +220,11 @@ def get_managed_controller(pod):
     return None
 
 
-def get_pod_and_controller(pod_id):
+def get_pod_and_controller(pod_id=None, pod_name=None, namespace=None):
     """
     Fetch pod spec and its managing controller owner (if any).
     """
-    pod_spec = get_k8s_pod_spec(pod_id)
+    pod_spec = get_k8s_pod_obj(pod_id, pod_name, namespace)
     if not pod_spec:
         return None, None
     controller_owner = get_managed_controller(pod_spec)
@@ -351,9 +379,7 @@ def resolve_controller(apps_v1, controller_owner, namespace):
             return replica_set.spec.replicas, "ReplicaSet", controller_owner.name
         for owner in rs_owners:
             if owner.kind == "Deployment":
-                deployment = apps_v1.read_namespaced_deployment(
-                    owner.name, namespace
-                )
+                deployment = apps_v1.read_namespaced_deployment(owner.name, namespace)
                 return deployment.spec.replicas, "Deployment", owner.name
     if controller_owner.kind == "StatefulSet":
         stateful_set = apps_v1.read_namespaced_stateful_set(
@@ -426,8 +452,12 @@ def scale_k8s_user_pod(
         current_replicas, controller_kind, controller_name = resolve_controller(
             apps_v1, controller_owner, namespace
         )
-        target_replicas = calculate_target_replicas(current_replicas, scale_type, scale_delta)
-        patch_scale(apps_v1, controller_kind, controller_name, namespace, target_replicas)
+        target_replicas = calculate_target_replicas(
+            current_replicas, scale_type, scale_delta
+        )
+        patch_scale(
+            apps_v1, controller_kind, controller_name, namespace, target_replicas
+        )
 
         record_k8s_pod_metrics(metrics_details=metrics_details, status_code=200)
         return JSONResponse(
@@ -456,3 +486,155 @@ def scale_k8s_user_pod(
         )
     except ValueError as e:
         handle_k8s_exceptions(e, context_msg="Value error while scaling pod controller")
+
+
+def delete_pod_via_alert_action_service(
+    pod_name: str, namespace: str, node_name: str, service_url: str
+):
+    """
+    Trigger pod deletion via an external alert action service.
+    Args:
+        pod_name (str): The name of the pod to delete.
+        namespace (str): The namespace of the pod.
+        node_name (str): The name of the node where the pod is running.
+        service_url (str): The URL of the alert action service.
+    Returns:
+        bool: True if deletion was successful, False otherwise.
+    """
+
+    logger.info(
+        "Triggering pod deletion via alert action service: "
+        "pod_name=%s, namespace=%s, node_name=%s, service_url=%s",
+        pod_name,
+        namespace,
+        node_name,
+        service_url,
+    )
+    request_data = {
+        "method": "action.Delete",
+        "params": [
+            {
+                "pod": {"namespace": namespace, "name": pod_name},
+                "node": {"name": node_name},
+            }
+        ],
+        "id": "1",
+    }
+
+    send_http_request(
+        method="POST",
+        url=f"{service_url}",
+        data=json.dumps(request_data),
+        headers={"Content-Type": "application/json"},
+    )
+
+
+def get_updated_container_resources(
+    container: dict, update_resource_type: str, percent_increase: float = 0.2
+):
+    """
+    Calculate updated resource requests and limits for a container.
+    Args:
+        container (dict): Container resource specifications.
+            container_name (str): Name of the container.
+            requests (dict): Current resource requests for the container.
+            limits (dict): Current resource limits for the container.
+        update_resource_type (str): Type of resource to update ("cpu" or "memory").
+        percent_increase (float): Percentage increase to apply to the resource.
+    Returns:
+        dict: Updated requests and limits for the container.
+    """
+    current_requests = container.get("requests", {})
+    current_limits = container.get("limits", {})
+    new_requests = current_requests.copy()
+    new_limits = current_limits.copy()
+
+    if update_resource_type == "cpu":
+        current_cpu_request = current_requests.get("cpu")
+        current_cpu_limit = current_limits.get("cpu")
+        if current_cpu_request:
+            if current_cpu_request.endswith("m"):
+                cpu_millicores = int(current_cpu_request[:-1])
+                new_cpu_millicores = int(cpu_millicores * (1.0 + percent_increase))
+                new_requests["cpu"] = f"{new_cpu_millicores}m"
+            else:
+                cpu_cores = float(current_cpu_request)
+                new_cpu_cores = round(cpu_cores * (1.0 + percent_increase), 2)
+                new_requests["cpu"] = str(new_cpu_cores)
+        if current_cpu_limit:
+            if current_cpu_limit.endswith("m"):
+                cpu_millicores = int(current_cpu_limit[:-1])
+                new_cpu_millicores = int(cpu_millicores * (1.0 + percent_increase))
+                new_limits["cpu"] = f"{new_cpu_millicores}m"
+            else:
+                cpu_cores = float(current_cpu_limit)
+                new_cpu_cores = round(cpu_cores * (1.0 + percent_increase), 2)
+                new_limits["cpu"] = str(new_cpu_cores)
+
+    return {"requests": new_requests, "limits": new_limits}
+
+
+def update_pod_resources_via_alert_action_service(
+    controller_details: dict,
+    pod_details: dict,
+    containers_resources: list,
+    service_url: str,
+    update_resource_type: str = "cpu",
+):
+    """
+    Trigger pod resource update via an external alert action service.
+    Args:
+        controller_details (dict): Details of the managing controller.
+            kind (str): Kind of the controller (e.g., Deployment, StatefulSet).
+            name (str): Name of the controller.
+            replicas (int): Number of replicas managed by the controller.
+        pod_details (dict): Details of the pod.
+            namespace (str): Namespace of the pod.
+            name (str): Name of the pod.
+        containers_resources (list): List of container resource specifications.
+            container_name (str): Name of the container.
+            requests (dict): Resource requests for the container.
+            limits (dict): Resource limits for the container.
+        service_url (str): The URL of the alert action service.
+        update_resource_type (str): Type of resource to update ("cpu" or "memory").
+    Returns:
+        bool: True if update was successful, False otherwise.
+    """
+
+    for container in containers_resources:
+        if container.get("requests") is None and container.get("limits") is None:
+            logger.error(
+                "Container %s is missing requests and limits; cannot update resources.",
+                container.get("name"),
+            )
+            continue
+        updated_resources = get_updated_container_resources(
+            container, update_resource_type
+        )
+        request_data = {
+            "method": "action.UpdateResources",
+            "params": [
+                {
+                    "workload": {
+                        "namespace": pod_details.get("namespace"),
+                        "kind": controller_details.get("kind"),
+                        "name": controller_details.get("name"),
+                    },
+                    "resources": {
+                        "container_name": container.get("name"),
+                        "cpu_request": updated_resources["requests"].get("cpu"),
+                        "cpu_limit": updated_resources["limits"].get("cpu"),
+                        "memory_request": updated_resources["requests"].get("memory"),
+                        "memory_limit": updated_resources["limits"].get("memory"),
+                    },
+                }
+            ],
+            "id": "1",
+        }
+
+        send_http_request(
+            method="POST",
+            url=f"{service_url}",
+            data=json.dumps(request_data),
+            headers={"Content-Type": "application/json"},
+        )

@@ -72,7 +72,6 @@ async def send_kpi_geometric_mean_to_nats(
                 },
                 message=gm_kpi_item,
                 timeout=5,
-                logger=logger,
             )
         )
     if publish_tasks:
