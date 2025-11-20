@@ -12,16 +12,16 @@ from starlette import status
 class OrchestrationBaseException(Exception):
     """
     Base exception class for database-related errors.
-    
+
     This class serves as the base for all database-related exceptions in the application.
     It provides a consistent interface for error messages, status codes, and additional details.
     """
 
     def __init__(
-            self,
-            message: str,
-            status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        details: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the database exception.
@@ -40,7 +40,7 @@ class OrchestrationBaseException(Exception):
 class DBEntryNotFoundException(OrchestrationBaseException):
     """
     Exception raised when a database entry is not found.
-    
+
     This exception is used when attempting to retrieve, update, or delete
     a database entry that does not exist.
     """
@@ -54,16 +54,14 @@ class DBEntryNotFoundException(OrchestrationBaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message,
-            status_code=status.HTTP_404_NOT_FOUND,
-            details=details
+            message=message, status_code=status.HTTP_404_NOT_FOUND, details=details
         )
 
 
 class DBEntryCreationException(OrchestrationBaseException):
     """
     Exception raised when there's an error creating a database entry.
-    
+
     This exception is used when attempting to create a new database entry
     fails due to validation errors, constraint violations, or other issues.
     """
@@ -77,16 +75,14 @@ class DBEntryCreationException(OrchestrationBaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message,
-            status_code=status.HTTP_400_BAD_REQUEST,
-            details=details
+            message=message, status_code=status.HTTP_400_BAD_REQUEST, details=details
         )
 
 
 class DBEntryUpdateException(OrchestrationBaseException):
     """
     Exception raised when there's an error updating a database entry.
-    
+
     This exception is used when attempting to update an existing database entry
     fails due to validation errors, constraint violations, or other issues.
     """
@@ -100,16 +96,14 @@ class DBEntryUpdateException(OrchestrationBaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message,
-            status_code=status.HTTP_400_BAD_REQUEST,
-            details=details
+            message=message, status_code=status.HTTP_400_BAD_REQUEST, details=details
         )
 
 
 class DBEntryDeletionException(OrchestrationBaseException):
     """
     Exception raised when there's an error deleting a database entry.
-    
+
     This exception is used when attempting to delete a database entry
     fails due to foreign key constraints, permission issues, or other problems.
     """
@@ -123,16 +117,14 @@ class DBEntryDeletionException(OrchestrationBaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message,
-            status_code=status.HTTP_400_BAD_REQUEST,
-            details=details
+            message=message, status_code=status.HTTP_400_BAD_REQUEST, details=details
         )
 
 
 class DatabaseConnectionException(OrchestrationBaseException):
     """
     Exception raised when there's a database connection error.
-    
+
     This exception is used when there are issues connecting to the database
     or when the database is temporarily unavailable.
     """
@@ -148,8 +140,9 @@ class DatabaseConnectionException(OrchestrationBaseException):
         super().__init__(
             message=message,
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            details=details
+            details=details,
         )
+
 
 class K8sAPIException(OrchestrationBaseException):
     """Exception raised for errors in Kubernetes API operations.
@@ -170,8 +163,9 @@ class K8sAPIException(OrchestrationBaseException):
         super().__init__(
             message=message,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            details=details
+            details=details,
         )
+
 
 class K8sValueError(OrchestrationBaseException):
     """Exception raised for value errors in Kubernetes operations.
@@ -191,8 +185,9 @@ class K8sValueError(OrchestrationBaseException):
         super().__init__(
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            details=details
+            details=details,
         )
+
 
 class K8sTypeError(OrchestrationBaseException):
     """Exception raised for type errors in Kubernetes operations.
@@ -212,8 +207,9 @@ class K8sTypeError(OrchestrationBaseException):
         super().__init__(
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            details=details
+            details=details,
         )
+
 
 class K8sConfigException(OrchestrationBaseException):
     """Exception raised for errors in Kubernetes configuration.
@@ -231,7 +227,11 @@ class K8sConfigException(OrchestrationBaseException):
             details (Optional[Dict[str, Any]]): Additional error details. Defaults to None.
         """
         super().__init__(
-            message=message,
-            status_code=status.HTTP_403_FORBIDDEN,
-            details=details
+            message=message, status_code=status.HTTP_403_FORBIDDEN, details=details
         )
+
+
+class PostCreateAlertActionException(OrchestrationBaseException):
+    """
+    Raised when post-create alert actions (pod delete / resource update) fail.
+    """

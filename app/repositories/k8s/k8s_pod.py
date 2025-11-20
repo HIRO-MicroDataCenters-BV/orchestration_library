@@ -7,7 +7,6 @@ import json
 import logging
 import re
 import time
-import aiohttp
 from fastapi.responses import JSONResponse
 
 from kubernetes import client as k8s_client
@@ -633,16 +632,9 @@ def update_pod_resources_via_alert_action_service(
             "id": "1",
         }
 
-        try:
-            send_http_request(
-                method="POST",
-                url=f"{service_url}",
-                data=json.dumps(request_data),
-                headers={"Content-Type": "application/json"},
-            )
-        except aiohttp.ClientError as e:
-            logger.error(
-                "Error while calling alert action service for pod resource update: %s",
-                str(e),
-            )
-            return False
+        send_http_request(
+            method="POST",
+            url=f"{service_url}",
+            data=json.dumps(request_data),
+            headers={"Content-Type": "application/json"},
+        )
