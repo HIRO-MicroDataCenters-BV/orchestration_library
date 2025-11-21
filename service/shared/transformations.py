@@ -48,7 +48,7 @@ def transform_event(data: str, alert_type: str) -> list[dict]:
     """
     parsed, err = safe_json_loads(data)
     if err:
-        logger.error("Error parsing JSON (%s): %s", alert_type, err)
+        logger.error("Error parsing JSON(%s) of Alert type (%s): %s", data, alert_type, err)
         return []
 
     root = parsed or {}
@@ -122,7 +122,7 @@ def default_transform_func(data: str) -> json:
 def transform_tuning_params(data: str):
     parsed, err = safe_json_loads(data)
     if err:
-        logger.error("Error parsing JSON: %s", err)
+        logger.error("Error parsing JSON(%s): %s", data, err)
         return []
     metrics = parsed.get("metrics", {})
     coeff = parsed.get("coefficients", {})

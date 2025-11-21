@@ -231,7 +231,7 @@ class K8sConfigException(OrchestrationBaseException):
         )
 
 
-class PostCreateAlertActionException(OrchestrationBaseException):
+class AlertActionException(OrchestrationBaseException):
     """
     Raised when post-create alert actions (pod delete / resource update) fail.
     """

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import logging
 import os
 from typing import Sequence
-from sqlalchemy import select
+from sqlalchemy import Boolean, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +26,7 @@ from app.utils.constants import AlertDescriptionEnum
 from app.utils.exceptions import (
     DBEntryCreationException,
     OrchestrationBaseException,
-    PostCreateAlertActionException,
+    AlertActionException,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
                     node_name=getattr(pod.spec, "nodeName", None),
                     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
                 )
-    except PostCreateAlertActionException:
+    except AlertActionException:
         raise
     except Exception as e:
         logger.error(
@@ -112,7 +112,7 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             alert_model.id,
             str(e),
         )
-        raise PostCreateAlertActionException(
+        raise AlertActionException(
             "Failed to handle post-create alert actions",
             details={
                 "error": str(e),
@@ -203,6 +203,7 @@ async def create_alert(
         DataBaseException: If there's a database error
     """
     exception = None
+    post_actions_exception = None
     try:
 
         if is_alert_data_insufficient(alert):
@@ -249,7 +250,21 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
-        handle_post_create_alert_actions(alert_model)
+        # Post-create actions: do NOT raise if they fail (alert already persisted)
+        try:
+            handle_post_create_alert_actions(alert_model)
+        except AlertActionException as act_exc:
+            post_actions_exception = act_exc
+            logger.error(
+                "Post-create alert actions failed for alert ID %d: %s",
+                alert_model.id,
+                str(act_exc),
+            )
+        record_alerts_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+            exception=post_actions_exception if post_actions_exception else None,
+        )
 
         #########################################################################
         # # Trigger pod deletion if it's a Attack alert with a pod_id
@@ -340,3 +355,57 @@ async def get_alerts(
             record_alerts_metrics(
                 metrics_details=metrics_details, status_code=500, exception=exception
             )
+
+
+async def perform_action_on_alert(
+    db: AsyncSession, action_id: int, metrics_details: dict = None
+) -> Boolean:
+    """
+    Perform an action on an alert (e.g., acknowledge, resolve).
+
+    Args:
+        db (AsyncSession): Database session
+        action_id (int): The ID of the alert to perform action on
+        metrics_details (dict): Metrics details for recording
+
+    Returns:
+        Boolean: True if the action was performed successfully, False otherwise
+
+    Raises:
+        DataBaseException: If there's a database error
+    """
+    exception = None
+    try:
+        logger.debug("Performing action on alert with ID=%d", action_id)
+        query = select(Alert).where(Alert.id == action_id)
+        result = await db.execute(query)
+        alert = result.scalars().first()
+        if not alert:
+            logger.error("Alert with ID=%d not found", action_id)
+            raise AlertActionException(
+                f"Alert with ID {action_id} not found",
+                details={"alert_id": action_id},
+            )
+        handle_post_create_alert_actions(alert)
+        record_alerts_metrics(metrics_details=metrics_details, status_code=200)
+        logger.info("Performed action on alert with ID=%d", alert.id)
+        return True
+    except SQLAlchemyError as e:
+        exception = e
+        logger.error("Database error while performing action on alert: %s", str(e))
+        raise AlertActionException(
+            "Failed to perform action on alert", details={"error": str(e)}
+        ) from e
+    except Exception as e:
+        exception = e
+        logger.error("Unexpected error while performing action on alert: %s", str(e))
+        raise AlertActionException(
+            "An unexpected error occurred while performing action on alert",
+            details={"error": str(e)},
+        ) from e
+    finally:
+        if exception:
+            record_alerts_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
+            return False
