@@ -185,6 +185,78 @@ async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> 
     return len(result.scalars().all())
 
 
+async def validate_alert_data(alert: AlertCreateRequest):
+    """
+    Validate the alert data before creation.
+    Args:
+        alert (AlertCreateRequest): The alert data to validate
+    Raises:
+        DBEntryCreationException: If the alert data is insufficient
+    """
+    if is_alert_data_insufficient(alert):
+        logger.error("Ignoring alert with insufficient data: %s", alert)
+        raise DBEntryCreationException(
+            "Insufficient data to create alert",
+            details={"alert_data": alert.model_dump() if alert else None},
+        )
+    logger.info("Creating alert with data: %s", alert.model_dump())
+
+
+async def get_recent_count(db: AsyncSession, alert: AlertCreateRequest):
+    """
+    Get the count of recent similar alerts within the critical threshold window.
+    Args:
+        db (AsyncSession): Database session
+        alert (AlertCreateRequest): The alert data to check against
+    """
+    return await count_recent_similar_alerts(
+        db,
+        alert_details={
+            "alert_type": alert.alert_type,
+            "alert_model": alert.alert_model,
+            "pod_id": alert.pod_id,
+            "node_id": alert.node_id,
+            "pod_name": alert.pod_name,
+            "node_name": alert.node_name,
+            "source_ip": alert.source_ip,
+            "destination_ip": alert.destination_ip,
+            "source_port": alert.source_port,
+            "destination_port": alert.destination_port,
+            "window_seconds": ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
+        },
+    )
+
+
+async def persist_alert(db: AsyncSession, alert_model: Alert):
+    """
+    Persist the alert model to the database.
+
+    Args:
+        db (AsyncSession): Database session
+        alert_model (Alert): The alert model to persist
+    """
+    db.add(alert_model)
+    await db.commit()
+    await db.refresh(alert_model)
+    logger.info("Successfully created alert with ID: %d", alert_model.id)
+
+
+def set_alert_level(alert_model: Alert, recent_count: int):
+    """
+    Set the alert level based on the recent count of similar alerts.
+
+    Args:
+        alert_model (Alert): The alert model to update
+        recent_count (int): The count of recent similar alerts
+
+    Returns:
+        bool: True if the alert is critical, False otherwise
+    """
+    is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
+    alert_model.alert_level = AlertLevel.CRITICAL if is_critical else AlertLevel.WARNING
+    return is_critical
+
+
 async def create_alert(
     db: AsyncSession, alert: AlertCreateRequest, metrics_details: dict = None
 ) -> AlertResponse:
@@ -205,42 +277,11 @@ async def create_alert(
     exception = None
     post_actions_exception = None
     try:
-
-        if is_alert_data_insufficient(alert):
-            logger.error("Ignoring alert with insufficient data: %s", alert)
-            raise DBEntryCreationException(
-                "Insufficient data to create alert",
-                details={"alert_data": alert.model_dump() if alert else None},
-            )
-        logger.info("Creating alert with data: %s", alert.model_dump())
-
-        recent_count = await count_recent_similar_alerts(
-            db,
-            alert_details={
-                "alert_type": alert.alert_type,
-                "alert_model": alert.alert_model,
-                "pod_id": alert.pod_id,
-                "node_id": alert.node_id,
-                "pod_name": alert.pod_name,
-                "node_name": alert.node_name,
-                "source_ip": alert.source_ip,
-                "destination_ip": alert.destination_ip,
-                "source_port": alert.source_port,
-                "destination_port": alert.destination_port,
-                "window_seconds": ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
-            },
-        )
-
+        await validate_alert_data(alert)
+        recent_count = await get_recent_count(db, alert)
         alert_model = Alert(**alert.model_dump())
-        is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
-        if is_critical:
-            alert_model.alert_level = AlertLevel.CRITICAL
-        else:
-            alert_model.alert_level = AlertLevel.WARNING
-        db.add(alert_model)
-        await db.commit()
-        await db.refresh(alert_model)
-        logger.info("Successfully created alert with ID: %d", alert_model.id)
+        is_critical = set_alert_level(alert_model, recent_count)
+        await persist_alert(db, alert_model)
         record_alerts_metrics(metrics_details=metrics_details, status_code=200)
 
         if is_critical:
@@ -265,17 +306,6 @@ async def create_alert(
             status_code=200,
             exception=post_actions_exception if post_actions_exception else None,
         )
-
-        #########################################################################
-        # # Trigger pod deletion if it's a Attack alert with a pod_id
-        # if alert_model.alert_type == "Attack" and alert_model.pod_id is not None:
-        #     logger.info(
-        #         "Attack alert detected for pod_id %s, triggering pod deletion.",
-        #         alert_model.pod_id,
-        #     )
-        #     # Call the delete function (synchronously, since it's not async)
-        #     delete_k8s_user_pod(str(alert_model.pod_id), metrics_details=metrics_details)
-        #########################################################################
         return AlertResponse.model_validate(alert_model)
     except IntegrityError as e:
         exception = e
@@ -408,4 +438,3 @@ async def perform_action_on_alert(
             record_alerts_metrics(
                 metrics_details=metrics_details, status_code=500, exception=exception
             )
-            return False
