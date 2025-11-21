@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import logging
 import os
 from typing import Sequence
-from sqlalchemy import select
+from sqlalchemy import Boolean, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +26,7 @@ from app.utils.constants import AlertDescriptionEnum
 from app.utils.exceptions import (
     DBEntryCreationException,
     OrchestrationBaseException,
-    PostCreateAlertActionException,
+    AlertActionException,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
                     node_name=getattr(pod.spec, "nodeName", None),
                     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
                 )
-    except PostCreateAlertActionException:
+    except AlertActionException:
         raise
     except Exception as e:
         logger.error(
@@ -112,7 +112,7 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             alert_model.id,
             str(e),
         )
-        raise PostCreateAlertActionException(
+        raise AlertActionException(
             "Failed to handle post-create alert actions",
             details={
                 "error": str(e),
@@ -185,6 +185,78 @@ async def count_recent_similar_alerts(db: AsyncSession, alert_details: dict) -> 
     return len(result.scalars().all())
 
 
+async def validate_alert_data(alert: AlertCreateRequest):
+    """
+    Validate the alert data before creation.
+    Args:
+        alert (AlertCreateRequest): The alert data to validate
+    Raises:
+        DBEntryCreationException: If the alert data is insufficient
+    """
+    if is_alert_data_insufficient(alert):
+        logger.error("Ignoring alert with insufficient data: %s", alert)
+        raise DBEntryCreationException(
+            "Insufficient data to create alert",
+            details={"alert_data": alert.model_dump() if alert else None},
+        )
+    logger.info("Creating alert with data: %s", alert.model_dump())
+
+
+async def get_recent_count(db: AsyncSession, alert: AlertCreateRequest):
+    """
+    Get the count of recent similar alerts within the critical threshold window.
+    Args:
+        db (AsyncSession): Database session
+        alert (AlertCreateRequest): The alert data to check against
+    """
+    return await count_recent_similar_alerts(
+        db,
+        alert_details={
+            "alert_type": alert.alert_type,
+            "alert_model": alert.alert_model,
+            "pod_id": alert.pod_id,
+            "node_id": alert.node_id,
+            "pod_name": alert.pod_name,
+            "node_name": alert.node_name,
+            "source_ip": alert.source_ip,
+            "destination_ip": alert.destination_ip,
+            "source_port": alert.source_port,
+            "destination_port": alert.destination_port,
+            "window_seconds": ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
+        },
+    )
+
+
+async def persist_alert(db: AsyncSession, alert_model: Alert):
+    """
+    Persist the alert model to the database.
+
+    Args:
+        db (AsyncSession): Database session
+        alert_model (Alert): The alert model to persist
+    """
+    db.add(alert_model)
+    await db.commit()
+    await db.refresh(alert_model)
+    logger.info("Successfully created alert with ID: %d", alert_model.id)
+
+
+def set_alert_level(alert_model: Alert, recent_count: int):
+    """
+    Set the alert level based on the recent count of similar alerts.
+
+    Args:
+        alert_model (Alert): The alert model to update
+        recent_count (int): The count of recent similar alerts
+
+    Returns:
+        bool: True if the alert is critical, False otherwise
+    """
+    is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
+    alert_model.alert_level = AlertLevel.CRITICAL if is_critical else AlertLevel.WARNING
+    return is_critical
+
+
 async def create_alert(
     db: AsyncSession, alert: AlertCreateRequest, metrics_details: dict = None
 ) -> AlertResponse:
@@ -203,43 +275,13 @@ async def create_alert(
         DataBaseException: If there's a database error
     """
     exception = None
+    post_actions_exception = None
     try:
-
-        if is_alert_data_insufficient(alert):
-            logger.error("Ignoring alert with insufficient data: %s", alert)
-            raise DBEntryCreationException(
-                "Insufficient data to create alert",
-                details={"alert_data": alert.model_dump() if alert else None},
-            )
-        logger.info("Creating alert with data: %s", alert.model_dump())
-
-        recent_count = await count_recent_similar_alerts(
-            db,
-            alert_details={
-                "alert_type": alert.alert_type,
-                "alert_model": alert.alert_model,
-                "pod_id": alert.pod_id,
-                "node_id": alert.node_id,
-                "pod_name": alert.pod_name,
-                "node_name": alert.node_name,
-                "source_ip": alert.source_ip,
-                "destination_ip": alert.destination_ip,
-                "source_port": alert.source_port,
-                "destination_port": alert.destination_port,
-                "window_seconds": ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
-            },
-        )
-
+        await validate_alert_data(alert)
+        recent_count = await get_recent_count(db, alert)
         alert_model = Alert(**alert.model_dump())
-        is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
-        if is_critical:
-            alert_model.alert_level = AlertLevel.CRITICAL
-        else:
-            alert_model.alert_level = AlertLevel.WARNING
-        db.add(alert_model)
-        await db.commit()
-        await db.refresh(alert_model)
-        logger.info("Successfully created alert with ID: %d", alert_model.id)
+        is_critical = set_alert_level(alert_model, recent_count)
+        await persist_alert(db, alert_model)
         record_alerts_metrics(metrics_details=metrics_details, status_code=200)
 
         if is_critical:
@@ -249,18 +291,21 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
-        handle_post_create_alert_actions(alert_model)
-
-        #########################################################################
-        # # Trigger pod deletion if it's a Attack alert with a pod_id
-        # if alert_model.alert_type == "Attack" and alert_model.pod_id is not None:
-        #     logger.info(
-        #         "Attack alert detected for pod_id %s, triggering pod deletion.",
-        #         alert_model.pod_id,
-        #     )
-        #     # Call the delete function (synchronously, since it's not async)
-        #     delete_k8s_user_pod(str(alert_model.pod_id), metrics_details=metrics_details)
-        #########################################################################
+        # Post-create actions: do NOT raise if they fail (alert already persisted)
+        try:
+            handle_post_create_alert_actions(alert_model)
+        except AlertActionException as act_exc:
+            post_actions_exception = act_exc
+            logger.error(
+                "Post-create alert actions failed for alert ID %d: %s",
+                alert_model.id,
+                str(act_exc),
+            )
+        record_alerts_metrics(
+            metrics_details=metrics_details,
+            status_code=200,
+            exception=post_actions_exception if post_actions_exception else None,
+        )
         return AlertResponse.model_validate(alert_model)
     except IntegrityError as e:
         exception = e
@@ -333,6 +378,59 @@ async def get_alerts(
         logger.error("Unexpected error while retrieving alerts: %s", str(e))
         raise OrchestrationBaseException(
             "An unexpected error occurred while retrieving alerts",
+            details={"error": str(e)},
+        ) from e
+    finally:
+        if exception:
+            record_alerts_metrics(
+                metrics_details=metrics_details, status_code=500, exception=exception
+            )
+
+
+async def perform_action_on_alert(
+    db: AsyncSession, action_id: int, metrics_details: dict = None
+) -> Boolean:
+    """
+    Perform an action on an alert (e.g., acknowledge, resolve).
+
+    Args:
+        db (AsyncSession): Database session
+        action_id (int): The ID of the alert to perform action on
+        metrics_details (dict): Metrics details for recording
+
+    Returns:
+        Boolean: True if the action was performed successfully, False otherwise
+
+    Raises:
+        DataBaseException: If there's a database error
+    """
+    exception = None
+    try:
+        logger.debug("Performing action on alert with ID=%d", action_id)
+        query = select(Alert).where(Alert.id == action_id)
+        result = await db.execute(query)
+        alert = result.scalars().first()
+        if not alert:
+            logger.error("Alert with ID=%d not found", action_id)
+            raise AlertActionException(
+                f"Alert with ID {action_id} not found",
+                details={"alert_id": action_id},
+            )
+        handle_post_create_alert_actions(alert)
+        record_alerts_metrics(metrics_details=metrics_details, status_code=200)
+        logger.info("Performed action on alert with ID=%d", alert.id)
+        return True
+    except SQLAlchemyError as e:
+        exception = e
+        logger.error("Database error while performing action on alert: %s", str(e))
+        raise AlertActionException(
+            "Failed to perform action on alert", details={"error": str(e)}
+        ) from e
+    except Exception as e:
+        exception = e
+        logger.error("Unexpected error while performing action on alert: %s", str(e))
+        raise AlertActionException(
+            "An unexpected error occurred while performing action on alert",
             details={"error": str(e)},
         ) from e
     finally:

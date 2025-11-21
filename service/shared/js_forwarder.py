@@ -37,10 +37,15 @@ def make_post_api_handler(post_api_url: str, stream: str):
         async with httpx.AsyncClient(follow_redirects=True) as client:
             all_ok = True
             for p in payloads:
-                if "alert_type" not in p:
-                    p["alert_type"] = "Other"
-                ok, status_code, response_text = await post_json(client, post_api_url, p)
-                logger.info("Posted payload to %s: status=%s response=%s", post_api_url, status_code, response_text)
+                ok, status_code, response_text = await post_json(
+                    client, post_api_url, p
+                )
+                logger.info(
+                    "Posted payload to %s: status=%s response=%s",
+                    post_api_url,
+                    status_code,
+                    response_text,
+                )
                 all_ok = all_ok and ok
             return all_ok
 
@@ -99,33 +104,41 @@ class JetStreamForwarder:
             """Subscribe to a JetStream subject."""
             durable = f"{self.durable_prefix}-{subject.replace('.', '_')}"
             attempt = 0
+            created = False
             while True:
                 attempt += 1
                 try:
-                    sub = await js.subscribe(
-                        subject,
-                        stream=self.stream,
-                        durable=durable,
-                        manual_ack=True,
-                        cb=js_callback,
-                        deliver_policy="all",
-                    )
-                    logger.info(
-                        "Subscribed stream=%s subject=%s durable=%s",
-                        self.stream,
-                        subject,
-                        durable,
-                    )
+                    sub_params = {
+                        "subject": subject,
+                        "stream": self.stream,
+                        "durable": durable,
+                        "manual_ack": True,
+                        "cb": js_callback,
+                    }
+                    if not created:
+                        sub_params["deliver_policy"] = "new"
+                        created = True
+                    sub = await js.subscribe(**sub_params)
+                    if not created:
+                        logger.info(
+                            "Created and subscribed stream=%s subject=%s durable=%s",
+                            self.stream,
+                            subject,
+                            durable,
+                        )
+                    else:
+                        logger.info(
+                            "Attached the existing stream=%s subject=%s durable=%s",
+                            self.stream,
+                            subject,
+                            durable,
+                        )
                     return sub
                 except Exception as e:
                     msg = str(e)
                     if "consumer is already bound" in msg.lower():
-                        try:
-                            await js.delete_consumer(self.stream, durable)
-                            logger.info("Deleted stale durable=%s", durable)
-                        except Exception as de:
-                            logger.warning("Failed delete durable=%s: %s", durable, de)
-                        await asyncio.sleep(1)
+                        await asyncio.sleep(5)
+                        created = True
                         continue
                     logger.error(
                         "Subscribe error subject=%s attempt=%s: %s",

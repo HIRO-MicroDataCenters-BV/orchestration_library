@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_async_db
 from app.schemas.alerts_request import AlertCreateRequest, AlertResponse
 from app.repositories import alerts as alerts_repo
+from app.utils.helper import metrics
 
 router = APIRouter(prefix="/alerts")
 
@@ -25,9 +26,7 @@ router = APIRouter(prefix="/alerts")
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal Server Error"},
     },
 )
-async def create(
-        data: AlertCreateRequest, db: AsyncSession = Depends(get_async_db)
-):
+async def create(data: AlertCreateRequest, db: AsyncSession = Depends(get_async_db)):
     """
     Create a new alert.
 
@@ -58,9 +57,9 @@ async def create(
     },
 )
 async def read_alerts(
-        skip: int = 0,
-        limit: int = 100,
-        db: AsyncSession = Depends(get_async_db),
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Get a list of alerts with pagination.
@@ -81,4 +80,35 @@ async def read_alerts(
         "method": "GET",
         "endpoint": "/alerts",
     }
-    return await alerts_repo.get_alerts(db, skip=skip, limit=limit, metrics_details=metrics_details)
+    return await alerts_repo.get_alerts(
+        db, skip=skip, limit=limit, metrics_details=metrics_details
+    )
+
+
+@router.get(
+    "/action",
+    response_model=bool,
+    responses={
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal Server Error"},
+    },
+)
+async def perform_action_on_alert(
+    alert_id: int,
+    db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Perform an action on a specific alert.
+
+    Args:
+        alert_id (int): The ID of the alert to perform the action on
+        db (AsyncSession): Database session dependency
+
+    Returns:
+        AlertResponse: The updated alert after performing the action
+
+    Raises:
+        DataBaseException: If there's a database error
+    """
+    return await alerts_repo.perform_action_on_alert(
+        db, alert_id, metrics_details=metrics("GET", "/alerts/action")
+    )
