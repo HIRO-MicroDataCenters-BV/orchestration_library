@@ -16,8 +16,8 @@ NATS_JS_SUBJECTS = [
     s.strip() for s in os.getenv("NATS_JS_SUBJECTS", "tuning.raw").split(",")
 ]
 NATS_JS_DURABLE = os.getenv("NATS_JS_DURABLE", "tuning-params-populator")
-TUNING_PARAMS_API_URL = os.getenv(
-    "TUNING_PARAMS_API_URL",
+TUNING_PARAMETERS_API_URL = os.getenv(
+    "TUNING_PARAMETERS_API_URL",
     "http://api-service.default.svc.cluster.local:8080/tuning_parameters",
 )
 
@@ -32,7 +32,7 @@ async def main():
     logger.info(f"NATS_JS_STREAM: {NATS_JS_STREAM}")
     logger.info(f"NATS_JS_SUBJECT: {NATS_JS_SUBJECTS}")
     logger.info(f"NATS_JS_DURABLE: {NATS_JS_DURABLE}")
-    logger.info(f"TUNING_PARAMS_API_URL: {TUNING_PARAMS_API_URL}")
+    logger.info(f"TUNING_PARAMS_API_URL: {TUNING_PARAMETERS_API_URL}")
     logger.info(f"MAX_REDELIVERIES: {MAX_REDELIVERIES}")
     logger.info(f"INIT_RECONNECT_DELAY: {INIT_RECONNECT_DELAY}")
     logger.info(f"MAX_RECONNECT_DELAY: {MAX_RECONNECT_DELAY}")
@@ -45,7 +45,7 @@ async def main():
         max_redeliveries=MAX_REDELIVERIES,
         init_reconnect_delay=INIT_RECONNECT_DELAY,
         max_reconnect_delay=MAX_RECONNECT_DELAY,
-        handler=make_post_api_handler(TUNING_PARAMS_API_URL, NATS_JS_STREAM),
+        handler=make_post_api_handler(TUNING_PARAMETERS_API_URL, NATS_JS_STREAM),
     )
     await forwarder.run()
 

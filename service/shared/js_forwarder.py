@@ -37,8 +37,6 @@ def make_post_api_handler(post_api_url: str, stream: str):
         async with httpx.AsyncClient(follow_redirects=True) as client:
             all_ok = True
             for p in payloads:
-                if "alert_type" not in p:
-                    p["alert_type"] = "Other"
                 ok, status_code, response_text = await post_json(
                     client, post_api_url, p
                 )

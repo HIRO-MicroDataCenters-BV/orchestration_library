@@ -31,7 +31,7 @@ spec:
               value: "{{ include "tuning-parameters-populator.natsJSSubjects" . }}"
             - name: NATS_JS_DURABLE
               value: {{ .Values.env.NATS_JS_DURABLE | quote }}
-            - name: ALERTS_API_URL
+            - name: TUNING_PARAMETERS_API_URL
               value: {{ .Values.env.TUNING_PARAMETERS_API_URL | quote }}
           command: ["python", "tuning-parameters-populator/async_nats_listener.py"]
 
