@@ -84,3 +84,6 @@ class AlertDescriptionEnum(str, Enum):
     CPU_HOG = "CPU HOG"
     MEMORY_HOG = "MEMORY HOG"
     POD_FAILED = "FAILED"
+    POD_LOG4SHELL = "LOG4SHELL"
+    POD_HTTPSMUGGING = "HTTPSMUGGING"
+    POD_REDIS_RCE = "REDIS RCE"

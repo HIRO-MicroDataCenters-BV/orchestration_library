@@ -86,9 +86,12 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
                 containers_resources=containers_resources,
                 service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
             )
-        elif (AlertDescriptionEnum.POD_FAILED.value.lower() in desc_lower) and (
-            alert_model.pod_id is not None or alert_model.pod_name is not None
-        ):
+        elif (
+            AlertDescriptionEnum.POD_FAILED.value.lower() in desc_lower
+            or AlertDescriptionEnum.POD_LOG4SHELL.value.lower() in desc_lower
+            or AlertDescriptionEnum.POD_HTTPSMUGGING.value.lower() in desc_lower
+            or AlertDescriptionEnum.POD_REDIS_RCE.value.lower() in desc_lower
+        ) and (alert_model.pod_id is not None or alert_model.pod_name is not None):
             logger.warning(
                 "Alert ID %d is a Failed alert: %s",
                 alert_model.id,
