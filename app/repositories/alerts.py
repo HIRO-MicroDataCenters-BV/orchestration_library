@@ -48,14 +48,14 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
     try:
         desc_lower = (alert_model.alert_description or "").lower()
 
+        logger.warning(
+            "Alert ID %d is an %s alert",
+            alert_model.id,
+            alert_model.alert_description,
+        )
         if (AlertDescriptionEnum.CPU_HOG.value.lower() in desc_lower) and (
             alert_model.pod_id is not None or alert_model.pod_name is not None
         ):
-            logger.warning(
-                "Alert ID %d is an Attack alert: %s",
-                alert_model.id,
-                alert_model.alert_description,
-            )
             pod, controller_owner = get_pod_and_controller(
                 pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
             )
@@ -92,11 +92,6 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             or AlertDescriptionEnum.POD_HTTPSMUGGING.value.lower() in desc_lower
             or AlertDescriptionEnum.POD_REDIS_RCE.value.lower() in desc_lower
         ) and (alert_model.pod_id is not None or alert_model.pod_name is not None):
-            logger.warning(
-                "Alert ID %d is a Failed alert: %s",
-                alert_model.id,
-                alert_model.alert_description,
-            )
             pod = get_k8s_pod_obj(
                 pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
             )
