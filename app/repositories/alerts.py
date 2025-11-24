@@ -22,7 +22,10 @@ from app.repositories.k8s.k8s_pod import (
     update_pod_resources_via_alert_action_service,
 )
 from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse
-from app.utils.constants import AlertDescriptionEnum
+from app.utils.constants import (
+    CPU_RESOURCE_UPDATE_ALERTS,
+    POD_DELETE_ALERTS,
+)
 from app.utils.exceptions import (
     DBEntryCreationException,
     OrchestrationBaseException,
@@ -41,81 +44,126 @@ ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv(
 )
 
 
+def normalize_description(alert_model: Alert):
+    """Return (description, desc_lower, alert_id)."""
+    description = (alert_model.alert_description or "").strip()
+    return description, description.lower(), getattr(alert_model, "id", None)
+
+
+def handle_cpu_update(alert_model: Alert) -> bool:
+    """Perform CPU resource update action; return True if executed."""
+    pod, controller_owner = get_pod_and_controller(
+        pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
+    )
+    if not pod or not controller_owner:
+        logger.error(
+            "CPU update aborted: pod/controller not found (alert ID %s, pod_id=%s, pod_name=%s)",
+            getattr(alert_model, "id", None),
+            alert_model.pod_id,
+            alert_model.pod_name,
+        )
+        return False
+    namespace = pod.metadata.namespace
+    apps_v1 = get_k8s_apps_v1_client()
+    replicas, kind, name = resolve_controller(apps_v1, controller_owner, namespace)
+    containers_resources = get_k8s_pod_containrers_resources(pod)
+    update_pod_resources_via_alert_action_service(
+        controller_details={"kind": kind, "name": name, "replicas": replicas},
+        pod_details={"name": pod.metadata.name, "namespace": namespace},
+        containers_resources=containers_resources,
+        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+    )
+    logger.info(
+        "CPU resource update action sent (alert ID %s, controller=%s/%s)",
+        getattr(alert_model, "id", None),
+        kind,
+        name,
+    )
+    return True
+
+
+def handle_pod_delete(alert_model: Alert) -> bool:
+    """Perform pod delete action; return True if executed."""
+    pod = get_k8s_pod_obj(pod_id=alert_model.pod_id, pod_name=alert_model.pod_name)
+    if not pod:
+        logger.error(
+            "Pod delete aborted: pod not found (alert ID %s, pod_id=%s, pod_name=%s)",
+            getattr(alert_model, "id", None),
+            alert_model.pod_id,
+            alert_model.pod_name,
+        )
+        return False
+    delete_pod_via_alert_action_service(
+        pod_name=pod.metadata.name,
+        namespace=pod.metadata.namespace,
+        node_name=getattr(pod.spec, "nodeName", None),
+        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+    )
+    logger.info(
+        "Pod delete action sent (alert ID %s, pod=%s)",
+        getattr(alert_model, "id", None),
+        pod.metadata.name,
+    )
+    return True
+
+
 def handle_post_create_alert_actions(alert_model: Alert) -> None:
     """
-    Perform alert-based follow-up actions (logging, pod deletion).
+    Execute post-create actions based on alert description.
+    Silent if prerequisites missing. Raises AlertActionException for unexpected failures.
     """
     try:
-        desc_lower = (alert_model.alert_description or "").lower()
+        description, desc_lower, alert_id = normalize_description(alert_model)
+        performed_action = False
 
-        logger.warning(
-            "Alert ID %d is an %s alert",
-            alert_model.id,
-            alert_model.alert_description,
-        )
-        if (AlertDescriptionEnum.CPU_HOG.value.lower() in desc_lower) and (
-            alert_model.pod_id is not None or alert_model.pod_name is not None
-        ):
-            pod, controller_owner = get_pod_and_controller(
-                pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
+        if not description:
+            logger.debug(
+                "Skipping post-create actions: empty description (alert ID %s)",
+                alert_id,
             )
-            if not pod or not controller_owner:
+        else:
+            logger.warning(
+                "Alert ID %s triggered post-create actions: %s",
+                alert_id,
+                description,
+            )
+
+            is_cpu = desc_lower in CPU_RESOURCE_UPDATE_ALERTS
+            is_delete = desc_lower in POD_DELETE_ALERTS
+
+            if not (is_cpu or is_delete):
+                logger.debug(
+                    "No mapped post-create action (alert ID %s, description=%s)",
+                    alert_id,
+                    description,
+                )
+            elif not (alert_model.pod_id or alert_model.pod_name):
                 logger.error(
-                    "Could not find pod or controller for pod_id=%s, pod_name=%s",
-                    alert_model.pod_id,
-                    alert_model.pod_name,
+                    "Action requires pod reference; missing pod_id/pod_name (alert ID %s)",
+                    alert_id,
                 )
-                return
-            namespace = pod.metadata.namespace
-            apps_v1 = get_k8s_apps_v1_client()
+            else:
+                if is_cpu:
+                    performed_action |= handle_cpu_update(alert_model)
+                if is_delete:
+                    performed_action |= handle_pod_delete(alert_model)
 
-            current_replicas, controller_kind, controller_name = resolve_controller(
-                apps_v1, controller_owner, namespace
-            )
-            containers_resources = get_k8s_pod_containrers_resources(pod)
-            update_pod_resources_via_alert_action_service(
-                controller_details={
-                    "kind": controller_kind,
-                    "name": controller_name,
-                    "replicas": current_replicas,
-                },
-                pod_details={
-                    "name": pod.metadata.name,
-                    "namespace": pod.metadata.namespace,
-                },
-                containers_resources=containers_resources,
-                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-            )
-        elif (
-            AlertDescriptionEnum.POD_FAILED.value.lower() in desc_lower
-            or AlertDescriptionEnum.POD_LOG4SHELL.value.lower() in desc_lower
-            or AlertDescriptionEnum.POD_HTTPSMUGGING.value.lower() in desc_lower
-            or AlertDescriptionEnum.POD_REDIS_RCE.value.lower() in desc_lower
-        ) and (alert_model.pod_id is not None or alert_model.pod_name is not None):
-            pod = get_k8s_pod_obj(
-                pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
-            )
-            if pod:
-                delete_pod_via_alert_action_service(
-                    pod_name=pod.metadata.name,
-                    namespace=pod.metadata.namespace,
-                    node_name=getattr(pod.spec, "nodeName", None),
-                    service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-                )
+        if not performed_action:
+            logger.debug("No post-create action executed (alert ID %s)", alert_id)
+
     except AlertActionException:
+        # Propagate explicit action failures
         raise
     except Exception as e:
+        alert_id = getattr(alert_model, "id", None)
         logger.error(
-            "Error handling post-create alert actions for alert ID %d: %s",
-            alert_model.id,
-            str(e),
+            "Unexpected error in post-create actions for alert ID %s: %s",
+            alert_id,
+            e,
         )
         raise AlertActionException(
             "Failed to handle post-create alert actions",
-            details={
-                "error": str(e),
-                "alert_id": getattr(alert_model, "id", None),
-            },
+            details={"error": str(e), "alert_id": alert_id},
         ) from e
 
 
