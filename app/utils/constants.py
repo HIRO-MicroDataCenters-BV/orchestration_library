@@ -84,3 +84,18 @@ class AlertDescriptionEnum(str, Enum):
     CPU_HOG = "CPU HOG"
     MEMORY_HOG = "MEMORY HOG"
     POD_FAILED = "FAILED"
+    POD_LOG4SHELL = "LOG4SHELL"
+    POD_HTTPSMUGGING = "HTTPSMUGGING"
+    POD_REDIS_RCE = "REDIS RCE"
+
+
+CPU_RESOURCE_UPDATE_ALERTS = {
+    AlertDescriptionEnum.CPU_HOG.value.lower(),
+}
+
+POD_DELETE_ALERTS = {
+    AlertDescriptionEnum.POD_FAILED.value.lower(),
+    AlertDescriptionEnum.POD_LOG4SHELL.value.lower(),
+    AlertDescriptionEnum.POD_HTTPSMUGGING.value.lower(),
+    AlertDescriptionEnum.POD_REDIS_RCE.value.lower(),
+}
