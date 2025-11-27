@@ -156,4 +156,4 @@ tuningParametersPopulator:
     NATS_JS_STREAM: "TUNING"
     # this values is orchestration-api's API for tuning parameters DB. 
     # Use same values as app.name:app.service.port.
-    TUNING_PARAMETERS_API_URL: "http://aces-orchestration-api/tuning-parameters"
+    TUNING_PARAMETERS_API_URL: "http://aces-orchestration-api/tuning_parameters"
