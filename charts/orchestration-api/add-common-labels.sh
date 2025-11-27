@@ -1,7 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# helm:post-renderer
+
+
+set -eo pipefail
+
 RELEASE_NAME="${RELEASE_NAME:-aces-orchestration-api}"
-yq eval "
-  (select(.kind == \"Deployment\" or .kind == \"StatefulSet\" or .kind == \"DaemonSet\" or .kind == \"Job\" or .kind == \"CronJob\")
+
+# Read all rendered manifests from Helm via stdin
+input=$(cat)
+
+# Process using yq and output to stdout
+echo "$input" | yq eval "
+  (select(.kind == \"Deployment\" 
+       or .kind == \"StatefulSet\" 
+       or .kind == \"DaemonSet\" 
+       or .kind == \"Job\" 
+       or .kind == \"CronJob\")
     .spec.template.metadata.labels) |= (
       (. // {}) * {
         \"app.kubernetes.io/name\": (.\"app.kubernetes.io/name\" // \"$RELEASE_NAME\"),
