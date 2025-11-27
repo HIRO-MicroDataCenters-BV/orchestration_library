@@ -129,7 +129,7 @@ def transform_hp3_predictions_params(data: str):
         "output_3": parsed.get("o3", 0.0),
         "alpha": parsed.get("alpha", 0.0),
         "beta": parsed.get("beta", 0.0),
-        "gamma": parsed.get("gamma", 0.0),
+        "gamma": parsed.get("gamma", 0.2),
     }
     timestamp = parsed.get("timestamp", None)
     if timestamp:
