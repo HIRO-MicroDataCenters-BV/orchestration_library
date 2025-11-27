@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# helm:postrenderer:v1
+
 set -eo pipefail
 
 RELEASE_NAME="${RELEASE_NAME:-aces-orchestration-api}"
