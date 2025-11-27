@@ -397,12 +397,38 @@ jobs:
           chmod +x ./charts/orchestration-api/add-common-labels.sh
           yq --version || echo "yq not installed"
 
+      - name: Install shc compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shc
+
+      - name: Compile post-renderer Bash script
+        id: compile-post-renderer
+        run: |
+          echo "Compiling add-common-labels.sh to binary..."
+          shc -f charts/orchestration-api/add-common-labels.sh \
+              -o charts/orchestration-api/add-common-labels-bin
+          
+          chmod +x charts/orchestration-api/add-common-labels-bin
+          
+          echo "Compiled binary:"
+          ls -l charts/orchestration-api/add-common-labels-bin
+
+          echo "add_common_labels_bin=charts/orchestration-api/add-common-labels-bin" >> $GITHUB_OUTPUT
+
+      - name: Test binary with Helm template
+        run: |
+          helm template ./charts/orchestration-api \
+            | ./charts/orchestration-api/add-common-labels-bin \
+            > /dev/null
+          echo "Binary post-renderer executed successfully."
+
       - name: Deploy Orchestration API Helm chart with its dependencies
         env:
           RELEASE_NAME: ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} # used in post-renderer script
         run: |
           helm upgrade --install ${{ vars.ORCHRESTRATION_API_RELEASE_NAME }} ./charts/orchestration-api \
-            --post-renderer ./charts/orchestration-api/add-common-labels.sh \
+            --post-renderer "$(pwd)/charts/orchestration-api/add-common-labels-bin" \
             --kubeconfig ~/.kube/${{ matrix.kubeconfig_secret_name }} \
             --namespace ${{ vars.ORCHESTRATION_API_NAMESPACE }} \
             --create-namespace \
