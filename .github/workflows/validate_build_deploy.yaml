@@ -406,15 +406,15 @@ jobs:
         id: compile-post-renderer
         run: |
           echo "Compiling add-common-labels.sh to binary..."
-          shc -f charts/orchestration-api/add-common-labels.sh \
-              -o charts/orchestration-api/add-common-labels-bin
+          shc -f ./charts/orchestration-api/add-common-labels.sh \
+              -o ./charts/orchestration-api/add-common-labels-bin
           
-          chmod +x charts/orchestration-api/add-common-labels-bin
+          chmod +x ./charts/orchestration-api/add-common-labels-bin
           
           echo "Compiled binary:"
-          ls -l charts/orchestration-api/add-common-labels-bin
+          ls -l ./charts/orchestration-api/add-common-labels-bin
 
-          echo "add_common_labels_bin=charts/orchestration-api/add-common-labels-bin" >> $GITHUB_OUTPUT
+          echo "add_common_labels_bin=./charts/orchestration-api/add-common-labels-bin" >> $GITHUB_OUTPUT
 
       - name: Test binary with Helm template
         run: |

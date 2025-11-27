@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# helm:postrenderer:v1
 
 set -eo pipefail
 
