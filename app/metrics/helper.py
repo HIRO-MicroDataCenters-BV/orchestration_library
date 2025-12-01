@@ -72,7 +72,7 @@ def record_api_metrics(
     )
 
     metrics_details["status_code"] = status_code
-    metrics_details["exception"] = str(exception) if exception else None
+    metrics_details["exception"] = str(exception.__class__.__name__) if exception else None
     metrics_details["latency"] = time.time() - metrics_details["start_time"]
 
     counter_metrics = set((counter_metrics or []) + DEFAULT_COUNTER_METRICS)
