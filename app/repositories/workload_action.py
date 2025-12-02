@@ -74,7 +74,7 @@ async def create_workload_action(
         db.add(db_workload_action)
         await db.commit()
         await db.refresh(db_workload_action)
-        logger.info("Added workload action to session with ID: %d", db_workload_action.id)
+        logger.info("Added workload action to session with ID: %s", str(db_workload_action.id))
         record_workload_action_metrics(
             metrics_details=metrics_details,
             status_code=200,
