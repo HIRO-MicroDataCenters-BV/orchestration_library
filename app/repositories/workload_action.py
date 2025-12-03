@@ -74,7 +74,7 @@ async def create_workload_action(
         db.add(db_workload_action)
         await db.commit()
         await db.refresh(db_workload_action)
-        logger.debug("Added workload action to session")
+        logger.info("Added workload action to session with ID: %s", str(db_workload_action.id))
         record_workload_action_metrics(
             metrics_details=metrics_details,
             status_code=200,
@@ -106,7 +106,7 @@ async def create_workload_action(
         if exception:
             record_workload_action_metrics(
                 metrics_details=metrics_details,
-                status_code=400,  # All above exceptions are thrown with 400 status code
+                status_code=500,  # All above exceptions are thrown with 500 status code
                 exception=exception,
             )
 

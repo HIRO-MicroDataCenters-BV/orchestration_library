@@ -47,6 +47,8 @@ async def create_workload_action_route(
 
 
 @router.get("/{action_id}", response_model=WorkloadAction)
+
+
 async def get_workload_action_route(
     action_id: UUID, db_session: AsyncSession = Depends(get_async_db)
 ):

@@ -5,6 +5,7 @@ This module provides utility functions to simplify the process of recording
 metrics for API requests and other events.
 """
 
+import logging
 import time
 from typing import Any, Dict, Optional, List
 from app.metrics.custom_metrics import (
@@ -37,6 +38,7 @@ from app.metrics.custom_metrics import (
 DEFAULT_COUNTER_METRICS = [api_requests_total]
 DEFAULT_HISTOGRAM_METRICS = [api_requests_latency_seconds]
 
+logger = logging.getLogger(__name__)
 
 def record_api_metrics(
     metrics_details: Dict[str, Any],
@@ -62,9 +64,15 @@ def record_api_metrics(
         or "start_time" not in metrics_details
     ):
         return
+    logger.info(
+        "Recording metrics for method: %s , endpoint: %s and status: %s",
+        metrics_details.get("method"),
+        metrics_details.get("endpoint"),
+        status_code,
+    )
 
     metrics_details["status_code"] = status_code
-    metrics_details["exception"] = str(exception) if exception else None
+    metrics_details["exception"] = str(exception.__class__.__name__) if exception else None
     metrics_details["latency"] = time.time() - metrics_details["start_time"]
 
     counter_metrics = set((counter_metrics or []) + DEFAULT_COUNTER_METRICS)
