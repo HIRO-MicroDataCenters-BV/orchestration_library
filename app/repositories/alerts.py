@@ -19,12 +19,13 @@ from app.repositories.k8s.k8s_pod import (
     get_k8s_pod_obj,
     get_pod_and_controller,
     resolve_controller,
+    scaleup_pod_via_alert_action_service,
     update_pod_resources_via_alert_action_service,
 )
 from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse
 from app.utils.constants import (
     CPU_RESOURCE_UPDATE_ALERTS,
-    POD_DELETE_ALERTS,
+    POD_REDEPLOY_ALERTS,
 )
 from app.utils.exceptions import (
     DBEntryCreationException,
@@ -82,7 +83,7 @@ def handle_cpu_update(alert_model: Alert) -> bool:
     return True
 
 
-def handle_pod_delete(alert_model: Alert) -> bool:
+def handle_pod_redeploy(alert_model: Alert) -> bool:
     """Perform pod delete action; return True if executed."""
     pod = get_k8s_pod_obj(pod_id=alert_model.pod_id, pod_name=alert_model.pod_name)
     if not pod:
@@ -93,6 +94,17 @@ def handle_pod_delete(alert_model: Alert) -> bool:
             alert_model.pod_name,
         )
         return False
+    scaleup_pod_via_alert_action_service(
+        pod_name=pod.metadata.name,
+        namespace=pod.metadata.namespace,
+        node_name=getattr(pod.spec, "node_name", None),
+        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+    )
+    logger.info(
+        "Pod scale-up action sent (alert ID %s, pod=%s)",
+        getattr(alert_model, "id", None),
+        pod.metadata.name,
+    )
     delete_pod_via_alert_action_service(
         pod_name=pod.metadata.name,
         namespace=pod.metadata.namespace,
@@ -104,6 +116,7 @@ def handle_pod_delete(alert_model: Alert) -> bool:
         getattr(alert_model, "id", None),
         pod.metadata.name,
     )
+
     return True
 
 
@@ -129,9 +142,9 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             )
 
             is_cpu = desc_lower in CPU_RESOURCE_UPDATE_ALERTS
-            is_delete = desc_lower in POD_DELETE_ALERTS
+            is_redeploy = desc_lower in POD_REDEPLOY_ALERTS
 
-            if not (is_cpu or is_delete):
+            if not (is_cpu or is_redeploy):
                 logger.debug(
                     "No mapped post-create action (alert ID %s, description=%s)",
                     alert_id,
@@ -145,8 +158,8 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             else:
                 if is_cpu:
                     performed_action |= handle_cpu_update(alert_model)
-                if is_delete:
-                    performed_action |= handle_pod_delete(alert_model)
+                if is_redeploy:
+                    performed_action |= handle_pod_redeploy(alert_model)
 
         if not performed_action:
             logger.debug("No post-create action executed (alert ID %s)", alert_id)

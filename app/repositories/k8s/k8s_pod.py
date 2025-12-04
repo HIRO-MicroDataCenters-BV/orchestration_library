@@ -529,6 +529,86 @@ def delete_pod_via_alert_action_service(
     )
 
 
+def scaleup_pod_via_alert_action_service(
+    pod_name: str, namespace: str, node_name: str, service_url: str
+):
+    """
+    Trigger pod scale-up via an external alert action service.
+    Args:
+        pod_name (str): The name of the pod to scale up.
+        namespace (str): The namespace of the pod.
+        node_name (str): The name of the node where the pod is running.
+        service_url (str): The URL of the alert action service.
+    Returns:
+        bool: True if scale-up was successful, False otherwise.
+    """
+
+    logger.info(
+        "Triggering pod scale-up via alert action service: "
+        "pod_name=%s, namespace=%s, node_name=%s, service_url=%s",
+        pod_name,
+        namespace,
+        node_name,
+        service_url,
+    )
+    pod_spec, controller_owner = get_pod_and_controller(
+        pod_name=pod_name, namespace=namespace
+    )
+    if not pod_spec:
+        logger.error("Pod %s in namespace %s not found.", pod_name, namespace)
+        return False
+    if not controller_owner:
+        logger.error(
+            "Pod %s in namespace %s is not controller-owned; cannot scale up.",
+            pod_name,
+            namespace,
+        )
+        return False
+    apps_v1 = get_k8s_apps_v1_client()
+    current_replicas, controller_kind, controller_name = resolve_controller(
+        apps_v1, controller_owner, namespace
+    )
+    # This will scale the deployment to 1.
+    # Example:
+    # curl -X POST \
+    #   -H "Content-Type: application/json" \
+    #   -d '{
+    #         "method": "action.Scale",
+    #         "params": [
+    #             {
+    #                 "workload": {
+    #                     "namespace": "ul",
+    #                     "kind": "Deployment",
+    #                     "name": "pending-test"
+    #                 },
+    #                 "replicas": 1
+    #             }
+    #         ],
+    #         "id": "1"
+    #       }'
+    request_data = {
+        "method": "action.Scale",
+        "params": [
+            {
+                "workload": {
+                    "namespace": namespace,
+                    "name": controller_name,
+                    "kind": controller_kind,
+                },
+                "replicas": current_replicas + 1,
+            }
+        ],
+        "id": "1",
+    }
+
+    send_http_request(
+        method="POST",
+        url=f"{service_url}",
+        data=json.dumps(request_data),
+        headers={"Content-Type": "application/json"},
+    )
+
+
 def get_updated_container_resources(
     container: dict, update_resource_type: str, percent_increase: float = 0.2
 ):

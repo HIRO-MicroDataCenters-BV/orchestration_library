@@ -93,7 +93,7 @@ CPU_RESOURCE_UPDATE_ALERTS = {
     AlertDescriptionEnum.CPU_HOG.value.lower(),
 }
 
-POD_DELETE_ALERTS = {
+POD_REDEPLOY_ALERTS = {
     AlertDescriptionEnum.POD_FAILED.value.lower(),
     AlertDescriptionEnum.POD_LOG4SHELL.value.lower(),
     AlertDescriptionEnum.POD_HTTPSMUGGING.value.lower(),
