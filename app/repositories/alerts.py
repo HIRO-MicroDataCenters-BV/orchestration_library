@@ -93,7 +93,6 @@ def handle_pod_delete(alert_model: Alert) -> bool:
             alert_model.pod_name,
         )
         return False
-    logger.info(str(pod))
     delete_pod_via_alert_action_service(
         pod_name=pod.metadata.name,
         namespace=pod.metadata.namespace,
