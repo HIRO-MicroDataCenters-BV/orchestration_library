@@ -93,6 +93,7 @@ def handle_pod_delete(alert_model: Alert) -> bool:
             alert_model.pod_name,
         )
         return False
+    logger.info(str(pod))
     delete_pod_via_alert_action_service(
         pod_name=pod.metadata.name,
         namespace=pod.metadata.namespace,
@@ -339,6 +340,9 @@ async def create_alert(
             )
         # Post-create actions: do NOT raise if they fail (alert already persisted)
         try:
+            logger.info(
+                "Executing post-create actions for alert ID %d", alert_model.id
+            )
             handle_post_create_alert_actions(alert_model)
         except AlertActionException as act_exc:
             post_actions_exception = act_exc
