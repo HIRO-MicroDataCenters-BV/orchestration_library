@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
-from kubernetes.client import V1Pod
+from kubernetes.client import V1Pod, V1PodSpec
 
 from app.metrics.helper import record_k8s_pod_metrics
 from app.utils.helper import send_http_request

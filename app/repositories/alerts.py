@@ -97,7 +97,7 @@ def handle_pod_delete(alert_model: Alert) -> bool:
     delete_pod_via_alert_action_service(
         pod_name=pod.metadata.name,
         namespace=pod.metadata.namespace,
-        node_name=getattr(pod.spec, "nodeName", None),
+        node_name=getattr(pod.spec, "node_name", None),
         service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
     )
     logger.info(
