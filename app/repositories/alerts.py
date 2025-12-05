@@ -3,8 +3,10 @@ CRUD operations for managing alerts in the database.
 """
 
 from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
 import logging
 import os
+import time
 from typing import Sequence
 from sqlalchemy import Boolean, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError
@@ -19,12 +21,14 @@ from app.repositories.k8s.k8s_pod import (
     get_k8s_pod_obj,
     get_pod_and_controller,
     resolve_controller,
+    scaleup_pod_via_alert_action_service,
     update_pod_resources_via_alert_action_service,
 )
 from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse
 from app.utils.constants import (
     CPU_RESOURCE_UPDATE_ALERTS,
-    POD_DELETE_ALERTS,
+    MEMORY_RESOURCE_UPDATE_ALERTS,
+    POD_REDEPLOY_ALERTS,
 )
 from app.utils.exceptions import (
     DBEntryCreationException,
@@ -50,31 +54,48 @@ def normalize_description(alert_model: Alert):
     return description, description.lower(), getattr(alert_model, "id", None)
 
 
-def handle_cpu_update(alert_model: Alert) -> bool:
-    """Perform CPU resource update action; return True if executed."""
+def handle_resource_update(alert_model: Alert, resource_type: str) -> bool:
+    """
+    Perform resource update action (cpu or memory); return True if executed.
+    resource_type: "cpu" or "memory"
+    """
+    if resource_type not in {"cpu", "memory"}:
+        logger.error(
+            "Unsupported resource_type '%s' (alert ID %s)",
+            resource_type,
+            getattr(alert_model, "id", None),
+        )
+        return False
+
     pod, controller_owner = get_pod_and_controller(
         pod_id=alert_model.pod_id, pod_name=alert_model.pod_name
     )
     if not pod or not controller_owner:
         logger.error(
-            "CPU update aborted: pod/controller not found (alert ID %s, pod_id=%s, pod_name=%s)",
+            "%s update aborted: pod/controller not found (alert ID %s, pod_id=%s, pod_name=%s)",
+            resource_type.upper(),
             getattr(alert_model, "id", None),
             alert_model.pod_id,
             alert_model.pod_name,
         )
         return False
+
     namespace = pod.metadata.namespace
     apps_v1 = get_k8s_apps_v1_client()
     replicas, kind, name = resolve_controller(apps_v1, controller_owner, namespace)
     containers_resources = get_k8s_pod_containrers_resources(pod)
+
     update_pod_resources_via_alert_action_service(
         controller_details={"kind": kind, "name": name, "replicas": replicas},
         pod_details={"name": pod.metadata.name, "namespace": namespace},
         containers_resources=containers_resources,
         service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+        update_resource_type=resource_type,
     )
+
     logger.info(
-        "CPU resource update action sent (alert ID %s, controller=%s/%s)",
+        "%s resource update action sent (alert ID %s, controller=%s/%s)",
+        resource_type.upper(),
         getattr(alert_model, "id", None),
         kind,
         name,
@@ -82,22 +103,55 @@ def handle_cpu_update(alert_model: Alert) -> bool:
     return True
 
 
-def handle_pod_delete(alert_model: Alert) -> bool:
+def handle_cpu_update(alert_model: Alert) -> bool:
+    """Perform CPU resource update action; return True if executed."""
+    return handle_resource_update(alert_model, resource_type="cpu")
+
+
+def handle_memory_update(alert_model: Alert) -> bool:
+    """Perform Memory resource update action; return True if executed."""
+    return handle_resource_update(alert_model, resource_type="memory")
+
+
+def handle_pod_redeploy(alert_model: Alert) -> bool:
     """Perform pod delete action; return True if executed."""
     pod = get_k8s_pod_obj(pod_id=alert_model.pod_id, pod_name=alert_model.pod_name)
     if not pod:
         logger.error(
-            "Pod delete aborted: pod not found (alert ID %s, pod_id=%s, pod_name=%s)",
+            "Pod redeploy aborted: pod not found (alert ID %s, pod_id=%s, pod_name=%s)",
             getattr(alert_model, "id", None),
             alert_model.pod_id,
             alert_model.pod_name,
         )
         return False
-    logger.info(str(pod))
-    delete_pod_via_alert_action_service(
-        pod_name=pod.metadata.name,
-        namespace=pod.metadata.namespace,
-        node_name=getattr(pod.spec, "node_name", None),
+    pod_name = pod.metadata.name
+    namespace = pod.metadata.namespace
+    node_name = getattr(pod.spec, "node_name", None)
+    action_response = scaleup_pod_via_alert_action_service(
+        pod_name=pod_name,
+        namespace=namespace,
+        node_name=node_name,
+        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+    )
+    logger.info(
+        "Pod scale-up action sent (alert ID %s, pod=%s)",
+        getattr(alert_model, "id", None),
+        pod.metadata.name,
+    )
+    if action_response.status_code != HTTPStatus.OK:
+        logger.error(
+            "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
+            getattr(alert_model, "id", None),
+            pod.metadata.name,
+            action_response,
+        )
+        return False
+    logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
+    time.sleep(3)
+    action_response = delete_pod_via_alert_action_service(
+        pod_name=pod_name,
+        namespace=namespace,
+        node_name=node_name,
         service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
     )
     logger.info(
@@ -105,6 +159,15 @@ def handle_pod_delete(alert_model: Alert) -> bool:
         getattr(alert_model, "id", None),
         pod.metadata.name,
     )
+    if action_response.status_code != HTTPStatus.OK:
+        logger.error(
+            "Pod delete action failed (alert ID %s, pod=%s, response=%s)",
+            getattr(alert_model, "id", None),
+            pod.metadata.name,
+            action_response,
+        )
+        return False
+
     return True
 
 
@@ -130,9 +193,10 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             )
 
             is_cpu = desc_lower in CPU_RESOURCE_UPDATE_ALERTS
-            is_delete = desc_lower in POD_DELETE_ALERTS
+            is_memory = desc_lower in MEMORY_RESOURCE_UPDATE_ALERTS
+            is_redeploy = desc_lower in POD_REDEPLOY_ALERTS
 
-            if not (is_cpu or is_delete):
+            if not (is_cpu or is_memory or is_redeploy):
                 logger.debug(
                     "No mapped post-create action (alert ID %s, description=%s)",
                     alert_id,
@@ -146,8 +210,10 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             else:
                 if is_cpu:
                     performed_action |= handle_cpu_update(alert_model)
-                if is_delete:
-                    performed_action |= handle_pod_delete(alert_model)
+                if is_memory:
+                    performed_action |= handle_memory_update(alert_model)
+                if is_redeploy:
+                    performed_action |= handle_pod_redeploy(alert_model)
 
         if not performed_action:
             logger.debug("No post-create action executed (alert ID %s)", alert_id)
@@ -340,9 +406,7 @@ async def create_alert(
             )
         # Post-create actions: do NOT raise if they fail (alert already persisted)
         try:
-            logger.info(
-                "Executing post-create actions for alert ID %d", alert_model.id
-            )
+            logger.info("Executing post-create actions for alert ID %d", alert_model.id)
             handle_post_create_alert_actions(alert_model)
         except AlertActionException as act_exc:
             post_actions_exception = act_exc
