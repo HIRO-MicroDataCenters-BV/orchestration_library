@@ -37,6 +37,7 @@ class AlertLevel(str, Enum):
         """
         return self.value
 
+
 class AlertType(str, Enum):
     """
     Enum for alert types.
@@ -177,9 +178,13 @@ class AlertResponse(BaseModel):
     alert_model: str = Field(..., description="Model used for the alert")
     alert_description: str = Field(..., description="Description of the alert")
     pod_id: Optional[UUID] = Field(..., description="ID of the pod")
+    pod_name: Optional[str] = Field(..., description="Name of the pod")
     node_id: Optional[UUID] = Field(..., description="ID of the node")
+    node_name: Optional[str] = Field(..., description="Name of the node")
     source_ip: Optional[str] = Field(None, description="Source IP address")
-    source_port: Optional[int] = Field(None, description="Source port number", ge=1, le=65535)
+    source_port: Optional[int] = Field(
+        None, description="Source port number", ge=1, le=65535
+    )
     destination_ip: Optional[str] = Field(None, description="Destination IP address")
     destination_port: Optional[int] = Field(
         None, description="Destination port number", ge=1, le=65535
@@ -195,7 +200,7 @@ class AlertResponse(BaseModel):
         ..., description="Timestamp when the alert was created"
     )
 
-    model_config = {'from_attributes': True}
+    model_config = {"from_attributes": True}
 
     def __repr__(self) -> str:
         """
@@ -206,7 +211,8 @@ class AlertResponse(BaseModel):
         """
         return (
             f"<AlertResponse(id={self.id}, type={self.alert_type}, model={self.alert_model}, "
-            f"pod={self.pod_id}, node={self.node_id}, "
+            f"pod={self.pod_id}, pod_name={self.pod_name}, "
+            f"node={self.node_id}, node_name={self.node_name}, "
             f"created_at={self.created_at})>"
         )
 
@@ -218,6 +224,8 @@ class AlertResponse(BaseModel):
             str: Human-readable string representation
         """
         return (
-            f"AlertResponse {self.id}: {self.alert_type} on pod {self.pod_id} "
-            f"node {self.node_id} at {self.created_at} by model {self.alert_model}"
+            f"AlertResponse {self.id}: {self.alert_type} on "
+            f"pod {self.pod_id} of name {self.pod_name} "
+            f"node {self.node_id} of name {self.node_name} "
+            f"at {self.created_at} by model {self.alert_model}"
         )
