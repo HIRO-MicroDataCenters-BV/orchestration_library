@@ -93,6 +93,10 @@ CPU_RESOURCE_UPDATE_ALERTS = {
     AlertDescriptionEnum.CPU_HOG.value.lower(),
 }
 
+MEMORY_RESOURCE_UPDATE_ALERTS = {
+    AlertDescriptionEnum.MEMORY_HOG.value.lower(),
+}
+
 POD_REDEPLOY_ALERTS = {
     AlertDescriptionEnum.POD_FAILED.value.lower(),
     AlertDescriptionEnum.POD_LOG4SHELL.value.lower(),

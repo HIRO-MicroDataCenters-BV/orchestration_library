@@ -8,6 +8,7 @@ import logging
 import time
 from traceback import print_exception
 from typing import Any
+from httpx import Response
 from nats.aio.client import Client as NATS
 from nats.js.api import StreamConfig
 from nats.js.errors import NotFoundError, Error as JetStreamError
@@ -118,7 +119,7 @@ async def publish_msg_to_nats_js(
 
 def send_http_request(
     method: str, url: str, params=None, data=None, headers=None
-) -> Any:
+) -> Response:
     """
     Send an HTTP request using the provided session.
 
@@ -129,7 +130,7 @@ def send_http_request(
         data (Any, optional): The request payload.
         headers (dict, optional): Headers for the request.
     Returns:
-        Any: The response from the HTTP request.
+        Response: The response from the HTTP request.
     """
     try:
         logger.info(
@@ -148,7 +149,7 @@ def send_http_request(
             timeout=10,
         )
         response.raise_for_status()
-        return response.json() or response.text
+        return response
     except requests.Timeout:
         logger.error("HTTP request to %s timed out", url)
         raise

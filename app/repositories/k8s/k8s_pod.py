@@ -9,6 +9,7 @@ import re
 import time
 from fastapi.responses import JSONResponse
 
+from httpx import Response
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 from kubernetes.config import ConfigException
@@ -490,7 +491,7 @@ def scale_k8s_user_pod(
 
 def delete_pod_via_alert_action_service(
     pod_name: str, namespace: str, node_name: str, service_url: str
-):
+) -> Response:
     """
     Trigger pod deletion via an external alert action service.
     Args:
@@ -499,7 +500,7 @@ def delete_pod_via_alert_action_service(
         node_name (str): The name of the node where the pod is running.
         service_url (str): The URL of the alert action service.
     Returns:
-        bool: True if deletion was successful, False otherwise.
+        Response: The HTTP response from the alert action service.
     """
 
     logger.info(
@@ -521,7 +522,7 @@ def delete_pod_via_alert_action_service(
         "id": "1",
     }
 
-    send_http_request(
+    return send_http_request(
         method="POST",
         url=f"{service_url}",
         data=json.dumps(request_data),
@@ -531,7 +532,7 @@ def delete_pod_via_alert_action_service(
 
 def scaleup_pod_via_alert_action_service(
     pod_name: str, namespace: str, node_name: str, service_url: str
-):
+) -> Response:
     """
     Trigger pod scale-up via an external alert action service.
     Args:
@@ -540,7 +541,7 @@ def scaleup_pod_via_alert_action_service(
         node_name (str): The name of the node where the pod is running.
         service_url (str): The URL of the alert action service.
     Returns:
-        bool: True if scale-up was successful, False otherwise.
+        Response: The HTTP response from the alert action service.
     """
 
     logger.info(
@@ -556,14 +557,14 @@ def scaleup_pod_via_alert_action_service(
     )
     if not pod_spec:
         logger.error("Pod %s in namespace %s not found.", pod_name, namespace)
-        return False
+        return None
     if not controller_owner:
         logger.error(
             "Pod %s in namespace %s is not controller-owned; cannot scale up.",
             pod_name,
             namespace,
         )
-        return False
+        return None
     apps_v1 = get_k8s_apps_v1_client()
     current_replicas, controller_kind, controller_name = resolve_controller(
         apps_v1, controller_owner, namespace
@@ -601,7 +602,7 @@ def scaleup_pod_via_alert_action_service(
         "id": "1",
     }
 
-    send_http_request(
+    return send_http_request(
         method="POST",
         url=f"{service_url}",
         data=json.dumps(request_data),
