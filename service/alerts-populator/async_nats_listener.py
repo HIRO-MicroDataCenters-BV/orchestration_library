@@ -9,6 +9,8 @@ from shared.js_forwarder import JetStreamForwarder, make_post_api_handler
 MAX_REDELIVERIES = int(os.getenv("MAX_REDELIVERIES", "5"))
 INIT_RECONNECT_DELAY = int(os.getenv("INIT_RECONNECT_DELAY", "2"))
 MAX_RECONNECT_DELAY = int(os.getenv("MAX_RECONNECT_DELAY", "30"))
+MAX_CONCURRENT_MSGS = int(os.getenv("MAX_CONCURRENT_MSGS", "20"))
+MAX_ACK_WAIT_SECONDS = int(os.getenv("MAX_ACK_WAIT_SECONDS", "30"))
 NATS_SERVER = os.getenv("NATS_SERVER", "nats://nats:4222")
 NATS_JS_STREAM = os.getenv("NATS_JS_STREAM", "PREDICTIONS")
 NATS_JS_SUBJECTS = [
@@ -34,6 +36,8 @@ async def main():
     logger.info(f"MAX_REDELIVERIES: {MAX_REDELIVERIES}")
     logger.info(f"INIT_RECONNECT_DELAY: {INIT_RECONNECT_DELAY}")
     logger.info(f"MAX_RECONNECT_DELAY: {MAX_RECONNECT_DELAY}")
+    logger.info(f"MAX_CONCURRENT_MSGS: {MAX_CONCURRENT_MSGS}")
+    logger.info(f"MAX_ACK_WAIT_SECONDS: {MAX_ACK_WAIT_SECONDS}")
 
     forwarder = JetStreamForwarder(
         nats_server=NATS_SERVER,
@@ -43,6 +47,8 @@ async def main():
         max_redeliveries=MAX_REDELIVERIES,
         init_reconnect_delay=INIT_RECONNECT_DELAY,
         max_reconnect_delay=MAX_RECONNECT_DELAY,
+        max_concurrent_msgs=MAX_CONCURRENT_MSGS,
+        max_ack_wait_seconds=MAX_ACK_WAIT_SECONDS,
         handler=make_post_api_handler(ALERTS_API_URL, NATS_JS_STREAM),
     )
     await forwarder.run()
