@@ -61,10 +61,14 @@ class JetStreamForwarder:
         stream: str,
         subjects: list[str],
         durable_prefix: str,
-        max_redeliveries: int,
-        init_reconnect_delay: int,
-        max_reconnect_delay: int,
         handler,  # async function (subject, data_bytes, attempt) -> bool
+        max_redeliveries: int = 5,
+        init_reconnect_delay: int = 2,
+        max_reconnect_delay: int = 30,
+        max_ack_wait_seconds: int = 30,
+        max_concurrent_msgs: int = 20,
+        max_ack_pending: int = None,
+        max_queue_size: int = None,
     ):
         self.nats_server = nats_server
         self.stream = stream
@@ -73,32 +77,77 @@ class JetStreamForwarder:
         self.max_redeliveries = max_redeliveries
         self.init_reconnect_delay = init_reconnect_delay
         self.max_reconnect_delay = max_reconnect_delay
+        self.max_concurrent_msgs = max_concurrent_msgs
+        self.max_ack_wait_seconds = max_ack_wait_seconds
+        self.max_ack_pending = (
+            max_ack_pending
+            if max_ack_pending is not None
+            else self.max_concurrent_msgs * 2
+        )
+        self.max_queue_size = (
+            max_queue_size if max_queue_size is not None else self.max_ack_pending
+        )
         self.handler = handler
 
     async def consume(self, nc: NATS):
         """Consume messages from JetStream subjects."""
         js = nc.jetstream()
+        msg_queue: asyncio.Queue = asyncio.Queue(maxsize=self.max_queue_size)
+
+        async def worker(worker_id: int):
+            """Worker to process messages from the queue."""
+            while True:
+                msg = await msg_queue.get()
+                attempts = getattr(getattr(msg, "metadata", None), "num_delivered", 1)
+                try:
+                    ok = await self.handler(msg.subject, msg.data, attempts)
+                    if ok:
+                        await msg.ack()
+                        logger.debug(
+                            "[worker-%d] Acked message on %s (attempt %s)",
+                            worker_id,
+                            msg.subject,
+                            attempts,
+                        )
+                    else:
+                        if attempts < self.max_redeliveries:
+                            await msg.nak()
+                            logger.warning(
+                                "[worker-%d] NAK message on %s (attempt %s)",
+                                worker_id,
+                                msg.subject,
+                                attempts,
+                            )
+                        else:
+                            await msg.term()
+                            logger.error(
+                                "[worker-%d] Terminated message on %s after %s attempts",
+                                worker_id,
+                                msg.subject,
+                                attempts,
+                            )
+                except Exception as e:
+                    try:
+                        if attempts < self.max_redeliveries:
+                            await msg.nak()
+                    except Exception:
+                        logger.error(
+                            "[worker-%d] Exception processing message on %s (attempt %s): %s",
+                            worker_id,
+                            msg.subject,
+                            attempts,
+                            str(e),
+                        )
+                finally:
+                    msg_queue.task_done()
+
+        workers = [
+            asyncio.create_task(worker(i)) for i in range(self.max_concurrent_msgs)
+        ]
 
         async def js_callback(msg):
-            """Callback for JetStream messages."""
-            attempts = getattr(getattr(msg, "metadata", None), "num_delivered", 1)
-            ok = await self.handler(msg.subject, msg.data, attempts)
-            if ok:
-                await msg.ack()
-                logger.debug("Acked message on %s (attempt %s)", msg.subject, attempts)
-            else:
-                if attempts < self.max_redeliveries:
-                    await msg.nak()
-                    logger.warning(
-                        "NAK message on %s (attempt %s)", msg.subject, attempts
-                    )
-                else:
-                    await msg.term()
-                    logger.error(
-                        "Terminated message on %s after %s attempts",
-                        msg.subject,
-                        attempts,
-                    )
+            """JetStream message callback with queueing."""
+            await msg_queue.put(msg)
 
         async def subscribe(subject: str):
             """Subscribe to a JetStream subject."""
@@ -114,6 +163,12 @@ class JetStreamForwarder:
                         "durable": durable,
                         "manual_ack": True,
                         "cb": js_callback,
+                        "config": {
+                            "ack_policy": "explicit",
+                            "ack_wait": self.max_ack_wait_seconds,
+                            "max_ack_pending": self.max_ack_pending,
+                            "max_deliver": self.max_redeliveries,
+                        },
                     }
                     if not created:
                         sub_params["deliver_policy"] = "new"
@@ -121,17 +176,25 @@ class JetStreamForwarder:
                     sub = await js.subscribe(**sub_params)
                     if not created:
                         logger.info(
-                            "Created and subscribed stream=%s subject=%s durable=%s",
+                            "Created and subscribed "
+                            "stream=%s subject=%s durable=%s "
+                            "max_concurrent_msgs=%s max_ack_wait_seconds=%s",
                             self.stream,
                             subject,
                             durable,
+                            self.max_concurrent_msgs,
+                            self.max_ack_wait_seconds,
                         )
                     else:
                         logger.info(
-                            "Attached the existing stream=%s subject=%s durable=%s",
+                            "Attached the existing "
+                            "stream=%s subject=%s durable=%s "
+                            "max_concurrent_msgs=%s max_ack_wait_seconds=%s",
                             self.stream,
                             subject,
                             durable,
+                            self.max_concurrent_msgs,
+                            self.max_ack_wait_seconds,
                         )
                     return sub
                 except Exception as e:
@@ -152,8 +215,12 @@ class JetStreamForwarder:
         for subject in self.subjects:
             await subscribe(subject)
         await nc.flush()
-        while True:
-            await asyncio.sleep(1)
+        try:
+            while True:
+                await asyncio.sleep(1)
+        finally:
+            for w in workers:
+                w.cancel()
 
     async def run(self):
         """Run the JetStream forwarder with reconnection logic."""
