@@ -64,10 +64,16 @@ def transform_event(data: str, alert_type: str) -> list[dict]:
     pod_id = get_pod_id_by_name(pod_name) if pod_name else None
     node_id = get_node_id_by_name(node_name) if node_name else None
 
+    prediction = data_section.get("prediction", pod_name)
+    if str(prediction) == "1":
+        description = "ATTACK DETECTED"
+    else:
+        description = str(prediction)
+
     payload = {
         "alert_type": alert_type,
         "alert_model": root.get("model_name", pod_name),
-        "alert_description": data_section.get("prediction", pod_name),
+        "alert_description": description,
         "pod_name": pod_name,
         "pod_id": pod_id,
         "node_id": node_id,
@@ -91,7 +97,7 @@ def transform_attack(data: str) -> list[dict]:
     #     "pod": "submariner-lighthouse-coredns-765db7f584-nsk89",
     #     "instance": "master",
     #     "timestamp": "2025-10-15T23:51:01.031000",
-    #     "prediction": "CPU HOG"
+    #     "prediction": "FAILED" or "1"
     #   },
     #   "model_name": "tis"
     # }

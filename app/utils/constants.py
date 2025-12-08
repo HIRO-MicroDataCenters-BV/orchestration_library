@@ -87,6 +87,7 @@ class AlertDescriptionEnum(str, Enum):
     POD_LOG4SHELL = "LOG4SHELL"
     POD_HTTPSMUGGING = "HTTPSMUGGING"
     POD_REDIS_RCE = "REDIS RCE"
+    POD_ATTACK_DETECTED = "ATTACK DETECTED"
 
 
 CPU_RESOURCE_UPDATE_ALERTS = {
@@ -102,4 +103,5 @@ POD_REDEPLOY_ALERTS = {
     AlertDescriptionEnum.POD_LOG4SHELL.value.lower(),
     AlertDescriptionEnum.POD_HTTPSMUGGING.value.lower(),
     AlertDescriptionEnum.POD_REDIS_RCE.value.lower(),
+    AlertDescriptionEnum.POD_ATTACK_DETECTED.value.lower(),
 }
