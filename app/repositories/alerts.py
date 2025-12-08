@@ -404,17 +404,27 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
-        # Post-create actions: do NOT raise if they fail (alert already persisted)
-        try:
-            logger.info("Executing post-create actions for alert ID %d", alert_model.id)
-            handle_post_create_alert_actions(alert_model)
-        except AlertActionException as act_exc:
-            post_actions_exception = act_exc
-            logger.error(
-                "Post-create alert actions failed for alert ID %d: %s",
-                alert_model.id,
-                str(act_exc),
+        if recent_count > 0:
+            logger.info(
+                "Post-create alert action already executed for the first occurrence; "
+                "this is occurrence #%d. Skipping post-create alert action.",
+                recent_count + 1,
             )
+        else:
+            # Post-create actions: do NOT raise if they fail (alert already persisted)
+            try:
+                logger.info(
+                    "Executing post-create alert actions for alert ID %d",
+                    alert_model.id,
+                )
+                handle_post_create_alert_actions(alert_model)
+            except AlertActionException as act_exc:
+                post_actions_exception = act_exc
+                logger.error(
+                    "Post-create alert actions failed for alert ID %d: %s",
+                    alert_model.id,
+                    str(act_exc),
+                )
         record_alerts_metrics(
             metrics_details=metrics_details,
             status_code=200,
