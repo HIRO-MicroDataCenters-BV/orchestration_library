@@ -53,10 +53,10 @@ class WorkloadRequestDecision(Base, BaseDictMixin):
             name="workload_request_decision_status_enum"
         ), nullable=False
     )
-    pod_parent_id = Column(UUID(as_uuid=True), nullable=False)
-    pod_parent_name = Column(String(255), nullable=False)
+    pod_parent_id = Column(UUID(as_uuid=True), nullable=True)
+    pod_parent_name = Column(String(255), nullable=True)
     pod_parent_kind = Column(
-        SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"), nullable=False
+        SAEnum(*POD_PARENT_TYPE_ENUM, name="pod_parent_type_enum"), nullable=True
     )
     decision_start_time = Column(TIMESTAMP(timezone=True), nullable=False)
     decision_end_time = Column(TIMESTAMP(timezone=True), nullable=False)
