@@ -10,7 +10,17 @@ K8S_IN_USE_NAMESPACE_REGEX = "^kube-.*$|^default$"
 PLACEMENT_DECISION_STATUS_OK = "OK"
 PLACEMENT_DECISION_STATUS_FAILURE = "FAILURE"
 
-WORKLOAD_ACTION_TYPE_ENUM = ("bind", "create", "delete", "move", "swap_x", "swap_y", "scale", "update_resources", "redeploy")
+WORKLOAD_ACTION_TYPE_ENUM = (
+    "bind",
+    "create",
+    "delete",
+    "move",
+    "swap_x",
+    "swap_y",
+    "scale",
+    "update_resources",
+    "redeploy",
+)
 WORKLOAD_ACTION_STATUS_ENUM = ("pending", "succeeded", "failed")
 POD_PARENT_TYPE_ENUM = (
     "deployment",
@@ -37,7 +47,6 @@ class WorkloadActionTypeEnum(str, Enum):
     SCALE = "scale"
     UPDATE_RESOURCES = "update_resources"
     REDEPLOY = "redeploy"
-
 
 
 class WorkloadActionStatusEnum(str, Enum):
