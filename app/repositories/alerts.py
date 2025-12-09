@@ -66,6 +66,7 @@ def get_pod_lock(namespace: str, pod_name: str) -> threading.Lock:
 
 
 def cleanup_locks():
+    logger.info("POD_ACTION_LOCK before cleanup: %s", POD_ACTION_LOCK)
     now = time.time()
     for key, lock_data in list(POD_ACTION_LOCK.items()):
         if (
@@ -73,6 +74,7 @@ def cleanup_locks():
             and not lock_data["lock"].locked()
         ):
             del POD_ACTION_LOCK[key]
+    logger.info("POD_ACTION_LOCK after cleanup: %s", POD_ACTION_LOCK)
 
 
 def normalize_description(alert_model: Alert):
