@@ -41,9 +41,9 @@ class WorkloadRequestDecisionSchema(DemandFields, BaseModel):
     node_name: str
     action_type: WorkloadActionTypeEnum
     decision_status: WorkloadRequestDecisionStatusEnum
-    pod_parent_id: UUID
-    pod_parent_name: str
-    pod_parent_kind: PodParentTypeEnum
+    pod_parent_id: Optional[UUID] = None
+    pod_parent_name: Optional[str] = None
+    pod_parent_kind: Optional[PodParentTypeEnum] = None
     decision_start_time: Optional[datetime] = None
     decision_end_time: Optional[datetime] = None
     created_at: Optional[datetime] = None
@@ -216,9 +216,9 @@ class WorkloadRequestDecisionCreate(DemandFields, BaseModel):
     node_name: str
     action_type: WorkloadActionTypeEnum
     decision_status: WorkloadRequestDecisionStatusEnum
-    pod_parent_id: UUID
-    pod_parent_name: str
-    pod_parent_kind: PodParentTypeEnum
+    pod_parent_id: Optional[UUID] = None
+    pod_parent_name: Optional[str] = None
+    pod_parent_kind: Optional[PodParentTypeEnum] = None
     decision_start_time: Optional[datetime] = None
     decision_end_time: Optional[datetime] = None
     created_at: Optional[datetime] = datetime.now(timezone.utc)
