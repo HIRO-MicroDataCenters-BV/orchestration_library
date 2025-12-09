@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import os
+import threading
 import time
 from typing import Sequence
 from sqlalchemy import Boolean, select
@@ -46,6 +47,32 @@ ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
 ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv(
     "ALERT_ACTION_TRIGGER_SERVICE_URL", "http://wam-app:3030"
 )
+POD_ACTION_LOCK = {}
+LOCK_EXPIRY_SECONDS = 30
+
+
+def get_pod_lock(namespace: str, pod_name: str) -> threading.Lock:
+    """Return unique lock key for the pod."""
+    key = f"{namespace}/{pod_name}"
+    lock_data = POD_ACTION_LOCK.get(key)
+
+    if lock_data:
+        lock_data = time.time()
+        return lock_data["lock"]
+
+    lock = threading.Lock()
+    POD_ACTION_LOCK[key] = {"lock": lock, "timestamp": time.time()}
+    return lock
+
+
+def cleanup_locks():
+    now = time.time()
+    for key, lock_data in list(POD_ACTION_LOCK.items()):
+        if (
+            now - lock_data["timestamp"] > LOCK_EXPIRY_SECONDS
+            and not lock_data["lock"].locked()
+        ):
+            del POD_ACTION_LOCK[key]
 
 
 def normalize_description(alert_model: Alert):
@@ -127,48 +154,62 @@ def handle_pod_redeploy(alert_model: Alert) -> bool:
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
     node_name = getattr(pod.spec, "node_name", None)
-    action_response = scaleup_pod_via_alert_action_service(
-        pod_name=pod_name,
-        namespace=namespace,
-        node_name=node_name,
-        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-    )
-    logger.info(
-        "Pod scale-up action sent (alert ID %s, pod=%s)",
-        getattr(alert_model, "id", None),
-        pod.metadata.name,
-    )
-    if action_response.status_code != HTTPStatus.OK:
-        logger.error(
-            "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
-            getattr(alert_model, "id", None),
-            pod.metadata.name,
-            action_response,
-        )
-        return False
-    logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
-    time.sleep(3)
-    action_response = delete_pod_via_alert_action_service(
-        pod_name=pod_name,
-        namespace=namespace,
-        node_name=node_name,
-        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-    )
-    logger.info(
-        "Pod delete action sent (alert ID %s, pod=%s)",
-        getattr(alert_model, "id", None),
-        pod.metadata.name,
-    )
-    if action_response.status_code != HTTPStatus.OK:
-        logger.error(
-            "Pod delete action failed (alert ID %s, pod=%s, response=%s)",
-            getattr(alert_model, "id", None),
-            pod.metadata.name,
-            action_response,
-        )
-        return False
 
-    return True
+    try:
+        pod_lock = get_pod_lock(namespace=namespace, pod_name=pod_name)
+        if pod_lock.locked():
+            logger.warning(
+                "Pod redeploy action already in progress; skipping (alert ID %s, pod=%s)",
+                getattr(alert_model, "id", None),
+                pod.metadata.name,
+            )
+            return False
+
+        with pod_lock:
+            action_response = scaleup_pod_via_alert_action_service(
+                pod_name=pod_name,
+                namespace=namespace,
+                node_name=node_name,
+                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+            )
+            logger.info(
+                "Pod scale-up action sent (alert ID %s, pod=%s)",
+                getattr(alert_model, "id", None),
+                pod.metadata.name,
+            )
+            if action_response.status_code != HTTPStatus.OK:
+                logger.error(
+                    "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
+                    getattr(alert_model, "id", None),
+                    pod.metadata.name,
+                    action_response,
+                )
+                return False
+            logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
+            time.sleep(3)
+            action_response = delete_pod_via_alert_action_service(
+                pod_name=pod_name,
+                namespace=namespace,
+                node_name=node_name,
+                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+            )
+            logger.info(
+                "Pod delete action sent (alert ID %s, pod=%s)",
+                getattr(alert_model, "id", None),
+                pod.metadata.name,
+            )
+            if action_response.status_code != HTTPStatus.OK:
+                logger.error(
+                    "Pod delete action failed (alert ID %s, pod=%s, response=%s)",
+                    getattr(alert_model, "id", None),
+                    pod.metadata.name,
+                    action_response,
+                )
+                return False
+
+            return True
+    finally:
+        cleanup_locks()
 
 
 def handle_post_create_alert_actions(alert_model: Alert) -> None:
