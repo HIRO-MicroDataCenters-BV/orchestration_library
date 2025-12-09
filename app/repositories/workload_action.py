@@ -74,7 +74,9 @@ async def create_workload_action(
         db.add(db_workload_action)
         await db.commit()
         await db.refresh(db_workload_action)
-        logger.info("Added workload action to session with ID: %s", str(db_workload_action.id))
+        logger.info(
+            "Added workload action to session with ID: %s", str(db_workload_action.id)
+        )
         record_workload_action_metrics(
             metrics_details=metrics_details,
             status_code=200,
@@ -131,7 +133,9 @@ async def get_workload_action_by_id(
     try:
         logger.debug("Retrieving workload action with ID: %d", action_id)
         result = await db.execute(
-            select(WorkloadAction).where(WorkloadAction.id == action_id)
+            select(WorkloadAction)
+            .where(WorkloadAction.id == action_id)
+            .order_by(WorkloadAction.created_at.desc())
         )
         workload_action = result.scalar_one_or_none()
         if not workload_action:
@@ -275,7 +279,7 @@ async def delete_workload_action(
             record_workload_action_metrics(
                 metrics_details=metrics_details,
                 status_code=404,  # Not found
-                exception=exception
+                exception=exception,
             )
             raise exception
 

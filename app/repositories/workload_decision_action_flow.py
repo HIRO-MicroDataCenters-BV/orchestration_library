@@ -155,9 +155,15 @@ async def get_workload_decision_action_flow(
                 .where(*pod_flow_filters)
                 .offset(skip)
                 .limit(limit)
+                .order_by(WorkloadDecisionActionFlowView.decision_created_at.desc())
             )
         else:
-            stmt = select(WorkloadDecisionActionFlowView).offset(skip).limit(limit)
+            stmt = (
+                select(WorkloadDecisionActionFlowView)
+                .offset(skip)
+                .limit(limit)
+                .order_by(WorkloadDecisionActionFlowView.decision_created_at.desc())
+            )
         result = await db.execute(stmt)
         record_workload_decision_action_flow_metrics(
             metrics_details=metrics_details,

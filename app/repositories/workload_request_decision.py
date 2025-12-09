@@ -160,9 +160,9 @@ async def get_workload_decision(
     exception = None
     try:
         result = await db_session.execute(
-            select(WorkloadRequestDecision).where(
-                WorkloadRequestDecision.id == decision_id
-            )
+            select(WorkloadRequestDecision)
+            .where(WorkloadRequestDecision.id == decision_id)
+            .order_by(WorkloadRequestDecision.created_at.desc())
         )
         workload_decision = result.scalar_one_or_none()
 
@@ -226,7 +226,12 @@ async def get_all_workload_decisions(
     """
     exception = None
     try:
-        query = select(WorkloadRequestDecision).offset(skip).limit(limit)
+        query = (
+            select(WorkloadRequestDecision)
+            .offset(skip)
+            .limit(limit)
+            .order_by(WorkloadRequestDecision.created_at.desc())
+        )
         filter_clauses = []
 
         if filters:
