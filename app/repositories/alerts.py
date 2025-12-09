@@ -66,6 +66,7 @@ def get_pod_lock(namespace: str, pod_name: str) -> threading.Lock:
 
 
 def cleanup_locks():
+    """Cleanup expired locks from POD_ACTION_LOCK."""
     logger.info("POD_ACTION_LOCK before cleanup: %s", POD_ACTION_LOCK)
     now = time.time()
     for key, lock_data in list(POD_ACTION_LOCK.items()):
