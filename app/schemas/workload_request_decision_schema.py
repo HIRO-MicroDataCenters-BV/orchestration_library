@@ -4,7 +4,7 @@ Schemas for the API requests and responses.
 
 from uuid import UUID
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 from pydantic import BaseModel
 
 from app.utils.constants import (
@@ -221,7 +221,7 @@ class WorkloadRequestDecisionCreate(DemandFields, BaseModel):
     pod_parent_kind: Optional[PodParentTypeEnum] = None
     decision_start_time: Optional[datetime] = None
     decision_end_time: Optional[datetime] = None
-    created_at: Optional[datetime] = datetime.now(timezone.utc)
+    created_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
 
     class Config:

@@ -71,12 +71,8 @@ class WorkloadActionCreate(PodActionPhaseFields, BaseModel):
     pod_parent_type: Optional[PodParentTypeEnum] = PodParentTypeEnum.DEPLOYMENT
     pod_parent_uid: Optional[UUID] = None
 
-    created_at: Optional[datetime] = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-    updated_at: Optional[datetime] = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class WorkloadActionUpdate(PodActionPhaseFields, BaseModel):
@@ -94,7 +90,7 @@ class WorkloadActionUpdate(PodActionPhaseFields, BaseModel):
     pod_parent_type: Optional[PodParentTypeEnum] = None
     pod_parent_uid: Optional[UUID] = None
 
-    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
 
 
 class WorkloadActionFilters(PodActionPhaseFields, BaseModel):
