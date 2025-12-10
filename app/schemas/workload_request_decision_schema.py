@@ -221,7 +221,7 @@ class WorkloadRequestDecisionCreate(DemandFields, BaseModel):
     pod_parent_kind: Optional[PodParentTypeEnum] = None
     decision_start_time: Optional[datetime] = None
     decision_end_time: Optional[datetime] = None
-    created_at: Optional[datetime] = datetime.now(timezone.utc)
+    created_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
 
     class Config:
