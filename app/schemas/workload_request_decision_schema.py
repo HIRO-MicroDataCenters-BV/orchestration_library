@@ -4,7 +4,7 @@ Schemas for the API requests and responses.
 
 from uuid import UUID
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 from pydantic import BaseModel
 
 from app.utils.constants import (
