@@ -40,7 +40,7 @@ from app.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", "5"))
+ALERT_CRITICAL_THRESHOLD = int(os.getenv("ALERT_CRITICAL_THRESHOLD", "3"))
 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS = int(
     os.getenv("ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS", "60")
 )
@@ -145,6 +145,12 @@ def handle_memory_update(alert_model: Alert) -> bool:
 
 def handle_pod_redeploy(alert_model: Alert) -> bool:
     """Perform pod delete action; return True if executed."""
+    if alert_model.alert_level != AlertLevel.CRITICAL:
+        logger.info(
+            "Pod redeploy action skipped: alert level is not Critical (alert ID %s)",
+            getattr(alert_model, "id", None),
+        )
+        return False
     pod = get_k8s_pod_obj(pod_id=alert_model.pod_id, pod_name=alert_model.pod_name)
     if not pod:
         logger.error(
