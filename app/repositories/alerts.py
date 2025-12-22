@@ -21,6 +21,7 @@ from app.repositories.k8s.k8s_pod import (
     get_k8s_pod_containrers_resources,
     get_k8s_pod_obj,
     get_pod_and_controller,
+    redeploy_pod_via_alert_action_service,
     resolve_controller,
     scaleup_pod_via_alert_action_service,
     update_pod_resources_via_alert_action_service,
@@ -162,56 +163,62 @@ def handle_pod_redeploy(alert_model: Alert) -> bool:
         return False
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
-    node_name = getattr(pod.spec, "node_name", None)
+    # node_name = getattr(pod.spec, "node_name", None)
+    alert_id = getattr(alert_model, "id", None)
 
     try:
         pod_lock = get_pod_lock(namespace=namespace, pod_name=pod_name)
         if pod_lock.locked():
             logger.warning(
                 "Pod redeploy action already in progress; skipping (alert ID %s, pod=%s)",
-                getattr(alert_model, "id", None),
-                pod.metadata.name,
+                alert_id,
+                pod_name,
             )
             return False
 
         with pod_lock:
-            action_response = scaleup_pod_via_alert_action_service(
+            # action_response = scaleup_pod_via_alert_action_service(
+            #     pod_name=pod_name,
+            #     namespace=namespace,
+            #     node_name=node_name,
+            #     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+            # )
+            # logger.info(
+            #     "Pod scale-up action sent (alert ID %s, pod=%s)",
+            #     alert_id,
+            #     pod_name,
+            # )
+            # if action_response.status_code != HTTPStatus.OK:
+            #     logger.error(
+            #         "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
+            #         alert_id,
+            #         pod_name,
+            #         action_response,
+            #     )
+            #     return False
+            # logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
+            # time.sleep(3)
+            # action_response = delete_pod_via_alert_action_service(
+            #     pod_name=pod_name,
+            #     namespace=namespace,
+            #     node_name=node_name,
+            #     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+            # )
+            # logger.info(
+            #     "Pod delete action sent (alert ID %s, pod=%s)",
+            #     alert_id,
+            #     pod_name,
+            # )
+            action_response = redeploy_pod_via_alert_action_service(
                 pod_name=pod_name,
                 namespace=namespace,
-                node_name=node_name,
                 service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-            )
-            logger.info(
-                "Pod scale-up action sent (alert ID %s, pod=%s)",
-                getattr(alert_model, "id", None),
-                pod.metadata.name,
             )
             if action_response.status_code != HTTPStatus.OK:
                 logger.error(
-                    "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
-                    getattr(alert_model, "id", None),
-                    pod.metadata.name,
-                    action_response,
-                )
-                return False
-            logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
-            time.sleep(3)
-            action_response = delete_pod_via_alert_action_service(
-                pod_name=pod_name,
-                namespace=namespace,
-                node_name=node_name,
-                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-            )
-            logger.info(
-                "Pod delete action sent (alert ID %s, pod=%s)",
-                getattr(alert_model, "id", None),
-                pod.metadata.name,
-            )
-            if action_response.status_code != HTTPStatus.OK:
-                logger.error(
-                    "Pod delete action failed (alert ID %s, pod=%s, response=%s)",
-                    getattr(alert_model, "id", None),
-                    pod.metadata.name,
+                    "Pod redeploy action failed (alert ID %s, pod=%s, response=%s)",
+                    alert_id,
+                    pod_name,
                     action_response,
                 )
                 return False
