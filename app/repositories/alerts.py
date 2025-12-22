@@ -17,13 +17,11 @@ from app.metrics.helper import record_alerts_metrics
 from app.models.alerts import Alert
 from app.repositories.k8s.k8s_common import get_k8s_apps_v1_client
 from app.repositories.k8s.k8s_pod import (
-    delete_pod_via_alert_action_service,
     get_k8s_pod_containrers_resources,
     get_k8s_pod_obj,
     get_pod_and_controller,
     redeploy_pod_via_alert_action_service,
     resolve_controller,
-    scaleup_pod_via_alert_action_service,
     update_pod_resources_via_alert_action_service,
 )
 from app.schemas.alerts_request import AlertCreateRequest, AlertLevel, AlertResponse

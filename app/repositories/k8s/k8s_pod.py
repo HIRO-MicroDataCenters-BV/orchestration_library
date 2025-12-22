@@ -511,17 +511,9 @@ def redeploy_pod_via_alert_action_service(
     )
     request_data = {
         "method": "action.Redeploy",
-        "params": [
-            {
-                "pod": {"namespace": namespace, "name": pod_name}
-            }
-        ],
+        "params": [{"pod": {"namespace": namespace, "name": pod_name}}],
         "id": "1",
     }
-
-    # curl -X POST -H "Content-Type: application/json" \
-#   -d "{\"method\":\"action.Redeploy\",\"params\":[{\"pod\": {\"namespace\": \"ul\", \"name\": \"$pod_to_redeploy\"}}], \"id\":\"1\"}" \
-#   http://localhost:3030/rpc
 
     return send_http_request(
         method="POST",
