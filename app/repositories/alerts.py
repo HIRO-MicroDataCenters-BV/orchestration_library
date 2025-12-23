@@ -56,7 +56,7 @@ def get_pod_lock(namespace: str, pod_name: str) -> threading.Lock:
     lock_data = POD_ACTION_LOCK.get(key)
 
     if lock_data:
-        lock_data = time.time()
+        lock_data["timestamp"] = time.time()
         return lock_data["lock"]
 
     lock = threading.Lock()
@@ -242,7 +242,7 @@ def handle_post_create_alert_actions(alert_model: Alert) -> None:
             )
         else:
             logger.warning(
-                "Alert ID %s triggered post-create actions: %s",
+                "Alert ID %s triggered post-create actions of description: %s",
                 alert_id,
                 description,
             )
@@ -409,19 +409,19 @@ async def persist_alert(db: AsyncSession, alert_model: Alert):
     logger.info("Successfully created alert with ID: %d", alert_model.id)
 
 
-def set_alert_level(alert_model: Alert, recent_count: int):
+def set_alert_level(alert_payload: dict, recent_count: int):
     """
     Set the alert level based on the recent count of similar alerts.
 
     Args:
-        alert_model (Alert): The alert model to update
+        alert_payload (dict): The alert payload to update
         recent_count (int): The count of recent similar alerts
 
     Returns:
         bool: True if the alert is critical, False otherwise
     """
     is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
-    alert_model.alert_level = AlertLevel.CRITICAL if is_critical else AlertLevel.WARNING
+    alert_payload["alert_level"] = AlertLevel.CRITICAL if is_critical else AlertLevel.WARNING
     return is_critical
 
 
@@ -446,10 +446,23 @@ async def create_alert(
     post_actions_exception = None
     try:
         await validate_alert_data(alert)
-        recent_count = await get_recent_count(db, alert)
-        alert_model = Alert(**alert.model_dump())
-        is_critical = set_alert_level(alert_model, recent_count)
+
+        # # Persist first so concurrent requests see this row
+        # alert_model = Alert(**alert.model_dump())
+        # await persist_alert(db, alert_model)
+
+        # # Re-count including the newly persisted alert and set level
+        # recent_count = await get_recent_count(db, alert)
+        # is_critical = set_alert_level(alert_model, recent_count)
+        # await db.commit()
+        # await db.refresh(alert_model)
+
+        alert_payload = alert.model_dump()
+        recent_count = await get_recent_count(db, alert) + 1  # Include this alert
+        is_critical = set_alert_level(alert_payload, recent_count)
+        alert_model = Alert(**alert_payload)
         await persist_alert(db, alert_model)
+
         record_alerts_metrics(metrics_details=metrics_details, status_code=200)
 
         if is_critical:
@@ -459,13 +472,7 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
-        if recent_count > 0:
-            logger.info(
-                "Post-create alert action already executed for the first occurrence; "
-                "this is occurrence #%d. Skipping post-create alert action.",
-                recent_count + 1,
-            )
-        else:
+        if is_critical and recent_count == ALERT_CRITICAL_THRESHOLD:
             # Post-create actions: do NOT raise if they fail (alert already persisted)
             try:
                 logger.info(
@@ -480,6 +487,13 @@ async def create_alert(
                     alert_model.id,
                     str(act_exc),
                 )
+        else:
+            logger.info(
+                "Post-create alert action will be executed on the #%d occurrence; "
+                "this is occurrence #%d. Skipping post-create alert action.",
+                ALERT_CRITICAL_THRESHOLD,
+                recent_count,
+            )
         record_alerts_metrics(
             metrics_details=metrics_details,
             status_code=200,
