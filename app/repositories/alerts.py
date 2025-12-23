@@ -472,8 +472,6 @@ async def create_alert(
                 recent_count,
                 ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
             )
-        if is_critical and recent_count == ALERT_CRITICAL_THRESHOLD:
-            # Post-create actions: do NOT raise if they fail (alert already persisted)
             try:
                 logger.info(
                     "Executing post-create alert actions for alert ID %d",
