@@ -489,6 +489,40 @@ def scale_k8s_user_pod(
         handle_k8s_exceptions(e, context_msg="Value error while scaling pod controller")
 
 
+def redeploy_pod_via_alert_action_service(
+    pod_name: str, namespace: str, service_url: str
+) -> Response:
+    """
+    Trigger pod redeploy via an external alert action service.
+    Args:
+        pod_name (str): The name of the pod to redeploy.
+        namespace (str): The namespace of the pod.
+        service_url (str): The URL of the alert action service.
+    Returns:
+        Response: The HTTP response from the alert action service.
+    """
+
+    logger.info(
+        "Triggering pod redeploy via alert action service: "
+        "pod_name=%s, namespace=%s, service_url=%s",
+        pod_name,
+        namespace,
+        service_url,
+    )
+    request_data = {
+        "method": "action.Redeploy",
+        "params": [{"pod": {"namespace": namespace, "name": pod_name}}],
+        "id": "1",
+    }
+
+    return send_http_request(
+        method="POST",
+        url=f"{service_url}",
+        data=json.dumps(request_data),
+        headers={"Content-Type": "application/json"},
+    )
+
+
 def delete_pod_via_alert_action_service(
     pod_name: str, namespace: str, node_name: str, service_url: str
 ) -> Response:
