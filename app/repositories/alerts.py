@@ -47,34 +47,79 @@ ALERT_ACTION_TRIGGER_SERVICE_URL = os.getenv(
     "ALERT_ACTION_TRIGGER_SERVICE_URL", "http://wam-app:3030"
 )
 POD_ACTION_LOCK = {}
+ALERT_ACTION_LOCK = {}
+ALERT_ACTION_EXECUTED = {}
 LOCK_EXPIRY_SECONDS = 30
 
 
-def get_pod_lock(namespace: str, pod_name: str) -> threading.Lock:
-    """Return unique lock key for the pod."""
-    key = f"{namespace}/{pod_name}"
-    lock_data = POD_ACTION_LOCK.get(key)
-
-    if lock_data:
-        lock_data["timestamp"] = time.time()
-        return lock_data["lock"]
-
-    lock = threading.Lock()
-    POD_ACTION_LOCK[key] = {"lock": lock, "timestamp": time.time()}
-    return lock
+def build_alert_action_key(
+    alert_type: str,
+    alert_description: str,
+    pod_name: str,
+    node_name: str,
+) -> str:
+    return f"{alert_type}:{alert_description}:{node_name}:{pod_name}"
 
 
-def cleanup_locks():
-    """Cleanup expired locks from POD_ACTION_LOCK."""
-    logger.info("POD_ACTION_LOCK before cleanup: %s", POD_ACTION_LOCK)
+def try_acquire_alert_action(key: str) -> bool:
+    """
+    Atomically decide whether THIS caller should execute the alert action.
+
+    Returns:
+        True  -> caller must execute (exactly one caller)
+        False -> skip execution
+    """
     now = time.time()
-    for key, lock_data in list(POD_ACTION_LOCK.items()):
+    entry = ALERT_ACTION_LOCK.get(key)
+
+    if entry:
+        if entry["executed"]:
+            return False
+        if entry["lock"].locked():
+            return False
+        return True
+
+    ALERT_ACTION_LOCK[key] = {
+        "lock": threading.Lock(),
+        "executed": False,
+        "timestamp": now,
+    }
+    return True
+
+
+def mark_alert_action_executing(key: str) -> bool:
+    """
+    Marks the alert action as executed in a thread-safe way.
+    Returns True if this caller won the execution right.
+    """
+    entry = ALERT_ACTION_LOCK.get(key)
+    if not entry:
+        return False
+
+    with entry["lock"]:
+        if entry["executed"]:
+            return False
+        entry["executed"] = True
+        entry["timestamp"] = time.time()
+        return True
+
+
+def cleanup_locks(lock_dict: dict):
+    """Cleanup expired locks from lock_dict."""
+    now = time.time()
+    for key, lock_data in list(lock_dict.items()):
         if (
             now - lock_data["timestamp"] > LOCK_EXPIRY_SECONDS
             and not lock_data["lock"].locked()
         ):
-            del POD_ACTION_LOCK[key]
-    logger.info("POD_ACTION_LOCK after cleanup: %s", POD_ACTION_LOCK)
+            del lock_dict[key]
+
+
+def cleanup_alert_action_locks():
+    """Cleanup expired locks from ALERT_ACTION_LOCK."""
+    logger.info("ALERT_ACTION_LOCK before cleanup: %s", ALERT_ACTION_LOCK)
+    cleanup_locks(ALERT_ACTION_LOCK)
+    logger.info("ALERT_ACTION_LOCK after cleanup: %s", ALERT_ACTION_LOCK)
 
 
 def normalize_description(alert_model: Alert):
@@ -164,66 +209,21 @@ def handle_pod_redeploy(alert_model: Alert) -> bool:
     # node_name = getattr(pod.spec, "node_name", None)
     alert_id = getattr(alert_model, "id", None)
 
-    try:
-        pod_lock = get_pod_lock(namespace=namespace, pod_name=pod_name)
-        if pod_lock.locked():
-            logger.warning(
-                "Pod redeploy action already in progress; skipping (alert ID %s, pod=%s)",
-                alert_id,
-                pod_name,
-            )
-            return False
+    action_response = redeploy_pod_via_alert_action_service(
+        pod_name=pod_name,
+        namespace=namespace,
+        service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
+    )
+    if action_response.status_code != HTTPStatus.OK:
+        logger.error(
+            "Pod redeploy action failed (alert ID %s, pod=%s, response=%s)",
+            alert_id,
+            pod_name,
+            action_response,
+        )
+        return False
 
-        with pod_lock:
-            # action_response = scaleup_pod_via_alert_action_service(
-            #     pod_name=pod_name,
-            #     namespace=namespace,
-            #     node_name=node_name,
-            #     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-            # )
-            # logger.info(
-            #     "Pod scale-up action sent (alert ID %s, pod=%s)",
-            #     alert_id,
-            #     pod_name,
-            # )
-            # if action_response.status_code != HTTPStatus.OK:
-            #     logger.error(
-            #         "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
-            #         alert_id,
-            #         pod_name,
-            #         action_response,
-            #     )
-            #     return False
-            # logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
-            # time.sleep(3)
-            # action_response = delete_pod_via_alert_action_service(
-            #     pod_name=pod_name,
-            #     namespace=namespace,
-            #     node_name=node_name,
-            #     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-            # )
-            # logger.info(
-            #     "Pod delete action sent (alert ID %s, pod=%s)",
-            #     alert_id,
-            #     pod_name,
-            # )
-            action_response = redeploy_pod_via_alert_action_service(
-                pod_name=pod_name,
-                namespace=namespace,
-                service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-            )
-            if action_response.status_code != HTTPStatus.OK:
-                logger.error(
-                    "Pod redeploy action failed (alert ID %s, pod=%s, response=%s)",
-                    alert_id,
-                    pod_name,
-                    action_response,
-                )
-                return False
-
-            return True
-    finally:
-        cleanup_locks()
+    return True
 
 
 def handle_post_create_alert_actions(alert_model: Alert) -> None:
@@ -421,9 +421,26 @@ def set_alert_level(alert_payload: dict, recent_count: int):
         bool: True if the alert is critical, False otherwise
     """
     is_critical = recent_count >= ALERT_CRITICAL_THRESHOLD
-    alert_payload["alert_level"] = AlertLevel.CRITICAL if is_critical else AlertLevel.WARNING
+    alert_payload["alert_level"] = (
+        AlertLevel.CRITICAL if is_critical else AlertLevel.WARNING
+    )
     return is_critical
 
+
+def run_post_create_actions(alert_model: Alert):
+    """
+    Run post-create actions for the alert model.
+    Args:
+        alert_model (Alert): The alert model to process
+    """
+    try:
+        handle_post_create_alert_actions(alert_model)
+    except AlertActionException as e:
+        logger.error(
+            "Post-create actions failed for alert ID %d: %s",
+            alert_model.id,
+            str(e),
+        )
 
 async def create_alert(
     db: AsyncSession, alert: AlertCreateRequest, metrics_details: dict = None
@@ -447,16 +464,6 @@ async def create_alert(
     try:
         await validate_alert_data(alert)
 
-        # # Persist first so concurrent requests see this row
-        # alert_model = Alert(**alert.model_dump())
-        # await persist_alert(db, alert_model)
-
-        # # Re-count including the newly persisted alert and set level
-        # recent_count = await get_recent_count(db, alert)
-        # is_critical = set_alert_level(alert_model, recent_count)
-        # await db.commit()
-        # await db.refresh(alert_model)
-
         alert_payload = alert.model_dump()
         recent_count = await get_recent_count(db, alert) + 1  # Include this alert
         is_critical = set_alert_level(alert_payload, recent_count)
@@ -465,33 +472,53 @@ async def create_alert(
 
         record_alerts_metrics(metrics_details=metrics_details, status_code=200)
 
-        if is_critical:
-            logger.warning(
-                "Alert ID %d marked as Critical (count=%d in last %d seconds)",
-                alert_model.id,
-                recent_count,
-                ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
-            )
-            try:
-                logger.info(
-                    "Executing post-create alert actions for alert ID %d",
-                    alert_model.id,
-                )
-                handle_post_create_alert_actions(alert_model)
-            except AlertActionException as act_exc:
-                post_actions_exception = act_exc
-                logger.error(
-                    "Post-create alert actions failed for alert ID %d: %s",
-                    alert_model.id,
-                    str(act_exc),
-                )
-        else:
+        if not is_critical:
             logger.info(
                 "Post-create alert action will be executed on the #%d occurrence; "
                 "this is occurrence #%d. Skipping post-create alert action.",
                 ALERT_CRITICAL_THRESHOLD,
                 recent_count,
             )
+            return AlertResponse.model_validate(alert_model)
+        logger.warning(
+            "Alert ID %d marked as Critical (count=%d in last %d seconds)",
+            alert_model.id,
+            recent_count,
+            ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS,
+        )
+        action_key = build_alert_action_key(
+            alert_payload["alert_type"],
+            alert_payload["alert_description"],
+            alert_payload["pod_name"],
+            alert_payload["node_name"],
+        )
+        if not try_acquire_alert_action(action_key):
+            logger.info(
+                "Alert action already executed or in progress; skipping (alert ID %d)",
+                alert_model.id,
+            )
+            return AlertResponse.model_validate(alert_model)
+
+        if not mark_alert_action_executing(action_key):
+            logger.info(
+                "Lost execution race for alert action; skipping (alert ID %d)",
+                alert_model.id,
+            )
+            return AlertResponse.model_validate(alert_model)
+
+        logger.info(
+            "Dispatching post-create alert actions asynchronously (alert ID %d)",
+            alert_model.id,
+        )
+
+        threading.Thread(
+            target=run_post_create_actions,
+            args=(alert_model,),
+            daemon=True,
+        ).start()
+
+        cleanup_alert_action_locks()
+        
         record_alerts_metrics(
             metrics_details=metrics_details,
             status_code=200,
