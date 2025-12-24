@@ -104,32 +104,6 @@ def mark_alert_action_executing(key: str) -> bool:
         return True
 
 
-# def get_lock(key: str, lock_dict: dict) -> threading.Lock:
-#     """Return unique lock for the given key from the provided lock dictionary."""
-#     lock_data = lock_dict.get(key)
-
-#     if lock_data:
-#         # Already executed → skip
-#         if lock_data.get("executed"):
-#             return None
-#         # Someone else is executing → skip
-#         if lock_data["lock"].locked():
-#             return None
-#         lock_data["timestamp"] = time.time()
-#         return lock_data["lock"]
-
-#     lock = threading.Lock()
-#     lock_dict[key] = {"lock": lock, "timestamp": time.time(), "executed": False}
-#     return lock
-
-
-# def update_lock(key: str, lock_dict: dict):
-#     """Mark the lock as executed in the provided lock dictionary."""
-#     lock_data = lock_dict.get(key)
-#     if lock_data:
-#         lock_data["executed"] = True
-
-
 def cleanup_locks(lock_dict: dict):
     """Cleanup expired locks from lock_dict."""
     now = time.time()
@@ -141,59 +115,11 @@ def cleanup_locks(lock_dict: dict):
             del lock_dict[key]
 
 
-# def get_pod_lock(namespace: str, pod_name: str) -> threading.Lock:
-#     """Return unique lock key for the pod."""
-#     key = f"{namespace}/{pod_name}"
-#     return get_lock(key, POD_ACTION_LOCK)
-
-
-# def cleanup_pod_locks():
-#     """Cleanup expired locks from POD_ACTION_LOCK."""
-#     logger.info("POD_ACTION_LOCK before cleanup: %s", POD_ACTION_LOCK)
-#     cleanup_locks(POD_ACTION_LOCK)
-#     logger.info("POD_ACTION_LOCK after cleanup: %s", POD_ACTION_LOCK)
-
-
-# def get_alert_action_lock(
-#     alert_type: str, alert_description: str, pod_name: str, node_name: str
-# ) -> threading.Lock:
-#     """Return unique lock for the alert action based on alert details."""
-#     key = f"{alert_type}:{alert_description}:{node_name}:{pod_name}"
-#     return get_lock(key, ALERT_ACTION_LOCK)
-
-
-# def update_alert_action_lock(
-#     alert_type: str, alert_description: str, pod_name: str, node_name: str
-# ):
-#     """Mark the alert action lock as executed based on alert details."""
-#     key = f"{alert_type}:{alert_description}:{node_name}:{pod_name}"
-#     update_lock(key, ALERT_ACTION_LOCK)
-
-
 def cleanup_alert_action_locks():
     """Cleanup expired locks from ALERT_ACTION_LOCK."""
     logger.info("ALERT_ACTION_LOCK before cleanup: %s", ALERT_ACTION_LOCK)
     cleanup_locks(ALERT_ACTION_LOCK)
     logger.info("ALERT_ACTION_LOCK after cleanup: %s", ALERT_ACTION_LOCK)
-
-
-# def should_execute_post_create_actions(action_key: str) -> bool:
-#     """Check if post-create actions should be executed for the given action key."""
-#     now = time.time()
-
-#     entry = ALERT_ACTION_EXECUTED.get(action_key)
-#     if entry and now - entry < ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS:
-#         return False
-
-#     ALERT_ACTION_EXECUTED[action_key] = now
-#     return True
-
-
-# def cleanup_executed_actions():
-#     now = time.time()
-#     for key, ts in list(ALERT_ACTION_EXECUTED.items()):
-#         if now - ts > ALERT_CRITICAL_THRESHOLD_WINDOW_SECONDS:
-#             del ALERT_ACTION_EXECUTED[key]
 
 
 def normalize_description(alert_model: Alert):
@@ -283,49 +209,6 @@ def handle_pod_redeploy(alert_model: Alert) -> bool:
     # node_name = getattr(pod.spec, "node_name", None)
     alert_id = getattr(alert_model, "id", None)
 
-    # try:
-    # pod_lock = get_pod_lock(namespace=namespace, pod_name=pod_name)
-    # if pod_lock.locked():
-    #     logger.warning(
-    #         "Pod redeploy action already in progress; skipping (alert ID %s, pod=%s)",
-    #         alert_id,
-    #         pod_name,
-    #     )
-    #     return False
-
-    # with pod_lock:
-    # action_response = scaleup_pod_via_alert_action_service(
-    #     pod_name=pod_name,
-    #     namespace=namespace,
-    #     node_name=node_name,
-    #     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-    # )
-    # logger.info(
-    #     "Pod scale-up action sent (alert ID %s, pod=%s)",
-    #     alert_id,
-    #     pod_name,
-    # )
-    # if action_response.status_code != HTTPStatus.OK:
-    #     logger.error(
-    #         "Pod scale-up action failed (alert ID %s, pod=%s, response=%s)",
-    #         alert_id,
-    #         pod_name,
-    #         action_response,
-    #     )
-    #     return False
-    # logger.info("Waiting 3 seconds before deleting pod to allow scale-up...")
-    # time.sleep(3)
-    # action_response = delete_pod_via_alert_action_service(
-    #     pod_name=pod_name,
-    #     namespace=namespace,
-    #     node_name=node_name,
-    #     service_url=ALERT_ACTION_TRIGGER_SERVICE_URL,
-    # )
-    # logger.info(
-    #     "Pod delete action sent (alert ID %s, pod=%s)",
-    #     alert_id,
-    #     pod_name,
-    # )
     action_response = redeploy_pod_via_alert_action_service(
         pod_name=pod_name,
         namespace=namespace,
@@ -341,8 +224,6 @@ def handle_pod_redeploy(alert_model: Alert) -> bool:
         return False
 
     return True
-    # finally:
-    #     cleanup_pod_locks()
 
 
 def handle_post_create_alert_actions(alert_model: Alert) -> None:
@@ -637,43 +518,7 @@ async def create_alert(
         ).start()
 
         cleanup_alert_action_locks()
-
-        # alert_action_lock = get_alert_action_lock(
-        #     alert_payload["alert_type"],
-        #     alert_payload["alert_description"],
-        #     alert_payload["pod_name"],
-        #     alert_payload["node_name"],
-        # )
-        # if not alert_action_lock:
-        #     logger.warning(
-        #         "Post-create alert action already executed or in progress; "
-        #         "skipping (alert ID %d)",
-        #         alert_model.id,
-        #     )
-        #     return AlertResponse.model_validate(alert_model)
-        # try:
-        #     logger.info(
-        #         "Executing post-create alert actions for alert ID %d",
-        #         alert_model.id,
-        #     )
-        #     with alert_action_lock:
-        #         handle_post_create_alert_actions(alert_model)
-        #         update_alert_action_lock(
-        #             alert_payload["alert_type"],
-        #             alert_payload["alert_description"],
-        #             alert_payload["pod_name"],
-        #             alert_payload["node_name"],
-        #         )
-        # except AlertActionException as act_exc:
-        #     post_actions_exception = act_exc
-        #     logger.error(
-        #         "Post-create alert actions failed for alert ID %d: %s",
-        #         alert_model.id,
-        #         str(act_exc),
-        #     )
-        # finally:
-        #     cleanup_alert_action_locks()
-
+        
         record_alerts_metrics(
             metrics_details=metrics_details,
             status_code=200,
