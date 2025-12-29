@@ -58,6 +58,7 @@ def build_alert_action_key(
     pod_name: str,
     node_name: str,
 ) -> str:
+    """Build a unique key for the alert action based on its attributes."""
     return f"{alert_type}:{alert_description}:{node_name}:{pod_name}"
 
 
@@ -518,7 +519,6 @@ async def create_alert(
         ).start()
 
         cleanup_alert_action_locks()
-        
         record_alerts_metrics(
             metrics_details=metrics_details,
             status_code=200,
