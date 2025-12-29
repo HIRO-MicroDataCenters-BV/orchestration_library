@@ -3,9 +3,9 @@ entries:
   alerts-populator:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-23T12:17:39.998305053Z"
+    created: "2025-12-29T08:31:18.011609447Z"
     description: A Helm chart for deploying Alerts Populator service
-    digest: fb3a41ac3801dbc5aff9734456846cc4248877ecd5134f653b4841e30b1201f1
+    digest: 1c464ad43bf28369ac87b4b8b7b33311fc83b2a282f9a437033c74885fb893ae
     name: alerts-populator
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/alerts-populator-1.0.0.tgz
@@ -13,7 +13,7 @@ entries:
   k8s-dashboard:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-23T12:17:40.019908736Z"
+    created: "2025-12-29T08:31:18.03284845Z"
     dependencies:
     - alias: dashboard
       condition: dashboard.enabled
@@ -21,7 +21,7 @@ entries:
       repository: https://kubernetes.github.io/dashboard/
       version: 7.13.0
     description: A Helm chart for deploying the k8s dashboard with a proxy for authentication
-    digest: 911873b68d1f2b01369d0478c642fa3a76718b5e51094d6a8cd0894f8d179018
+    digest: 32e56cfd5b3731d4c41be955c67ba8625c28fc0c2f75dbfb8b4ad56cbcb625f0
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: k8s-dashboard
     type: application
@@ -48,7 +48,7 @@ entries:
   orchestration-api:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-23T12:17:40.039945376Z"
+    created: "2025-12-29T08:31:18.052980784Z"
     dependencies:
     - alias: k8sDashboard
       condition: k8sDashboard.enabled
@@ -71,7 +71,7 @@ entries:
       repository: file://../tuning-parameters-populator
       version: 1.0.0
     description: A Helm chart for deploying the orchestration api
-    digest: 506a00dc1dd182e8d4b6025b284378c1aaa321ed70ef04aba3092a0180dbbead
+    digest: 3defc5a2887249fed605594dfb03753b49c03b8ad6935628fdf0c804adbc6f6d
     icon: https://cdn-icons-png.flaticon.com/512/17076/17076655.png
     name: orchestration-api
     type: application
@@ -103,9 +103,9 @@ entries:
   tuning-parameters-populator:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-23T12:17:40.040173946Z"
+    created: "2025-12-29T08:31:18.053199543Z"
     description: A Helm chart for deploying Tuning Parameters Populator service
-    digest: c9cbbf6f40cf8af9a7249eadbb0a12fd7778e1ee14c28e20a5b664e5f777a3a4
+    digest: 63c66b7a62004f0242d4073d5ad1bbc8ea5bb87fcd67322a3d513493aff6e03e
     name: tuning-parameters-populator
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/tuning-parameters-populator-1.0.0.tgz
@@ -113,12 +113,12 @@ entries:
   workload-timing-watcher:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-12-23T12:17:40.040346961Z"
+    created: "2025-12-29T08:31:18.053375382Z"
     description: A Helm chart for the workload timing watcher sidecar service
-    digest: 30a6c37339a39ab596b8d468ade091d38f0a0bcaa2efb1b8aae909f293c3c5b2
+    digest: 63e120f83f3263c672d77854856ddf0bc6c6c7ee72e623c9ab862e53a0f20d07
     name: workload-timing-watcher
     type: application
     urls:
     - https://HIRO-MicroDataCenters-BV.github.io/orchestration_library/workload-timing-watcher-1.0.0.tgz
     version: 1.0.0
-generated: "2025-12-23T12:17:39.997137886Z"
+generated: "2025-12-29T08:31:18.010599198Z"
