@@ -19,6 +19,7 @@ class KPIMetricsGeometricMeanBase(BaseModel):
     gm_mem_utilization: float
     gm_decision_time_in_seconds: float
 
+
 class KPIMetricsGeometricMeanItem(KPIMetricsGeometricMeanBase):
     """
     Schema for a single KPI metrics geometric mean item.
@@ -30,12 +31,32 @@ class KPIMetricsGeometricMeanItem(KPIMetricsGeometricMeanBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-class KPIMetricsGeometricMeanWithTuningParamsItem(KPIMetricsGeometricMeanBase, TuningParameterBase):
+
+class KPIMetricsGeometricMeanWithTuningParamsItem(
+    KPIMetricsGeometricMeanBase, TuningParameterBase
+):
     """
     Schema for KPI metrics geometric mean item combined with tuning parameters.
     Inherits from both KPIMetricsGeometricMeanItem and TuningParameterResponse.
     """
+
     kpi_created_at: datetime
     tuning_param_created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class KPIMetricsGeometricMeanWithTuningParamsAndPodItem(
+    KPIMetricsGeometricMeanWithTuningParamsItem
+):
+    """
+    Schema for KPI metrics geometric mean item combined with tuning parameters
+    and pod details. Inherits from KPIMetricsGeometricMeanWithTuningParamsItem
+    and adds pod details.
+    """
+
+    pod_name: str
+    is_elastic: bool
+    decision_start_time: datetime
 
     model_config = ConfigDict(from_attributes=True)
