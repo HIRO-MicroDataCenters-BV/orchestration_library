@@ -14,9 +14,11 @@ from app.db.database import get_async_db
 from app.repositories.kpi_metrics_geometric_mean import (
     fetch_latest_geometric_mean_kpis,
     get_latest_geometric_mean_kpis_with_tuning_parameters,
+    get_latest_geometric_mean_kpis_with_tuning_parameters_and_pod,
 )
 from app.schemas.kpi_metrics_geometric_mean_schema import (
     KPIMetricsGeometricMeanItem,
+    KPIMetricsGeometricMeanWithTuningParamsAndPodItem,
     KPIMetricsGeometricMeanWithTuningParamsItem,
 )
 from app.schemas.kpi_metrics_schema import (
@@ -203,5 +205,39 @@ async def get_latest_geometric_mean_kpi_metrics_for_tuning_params_route(
     return await get_latest_geometric_mean_kpis_with_tuning_parameters(
         db_session,
         limit=limit,
+        metrics_details=metrics("GET", metrics_path),
+    )
+
+
+@router.get(
+    path="/latest_geometric_mean_with_tuning_params_and_pod",
+    response_model=List[KPIMetricsGeometricMeanWithTuningParamsAndPodItem],
+)
+async def get_latest_geometric_mean_kpi_metrics_for_tuning_params_and_pod_route(
+    db_session: AsyncSession = Depends(get_async_db),
+    limit: int = 1,
+    is_elastic: bool = True,
+) -> List:
+    """
+    Retrieve the latest geometric mean KPI metrics entries for tuning parameters and pod details.
+
+    Args:
+        db_session (AsyncSession): Database session dependency.
+        limit (int): The number of latest entries to retrieve.
+        is_elastic (bool): Filter by whether the pod is elastic.
+
+    Returns:
+        List:
+            List of latest geometric mean KPI metrics entries for tuning parameters
+            and pod details.
+    """
+    metrics_path = (
+        "/kpi_metrics/latest_geometric_mean_for_tuning_params_and_pod"
+        f"?limit={limit}&is_elastic={is_elastic}"
+    )
+    return await get_latest_geometric_mean_kpis_with_tuning_parameters_and_pod(
+        db_session,
+        limit=limit,
+        is_elastic=is_elastic,
         metrics_details=metrics("GET", metrics_path),
     )
