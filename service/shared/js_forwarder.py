@@ -8,6 +8,7 @@ import logging
 import os
 import httpx
 from nats.aio.client import Client as NATS
+from nats.js.api import AckPolicy, ConsumerConfig, DeliverPolicy
 from nats.errors import ConnectionClosedError, TimeoutError, NoServersError
 
 from .http_post import post_json
@@ -157,19 +158,35 @@ class JetStreamForwarder:
             while True:
                 attempt += 1
                 try:
+                    config = ConsumerConfig(
+                        durable_name=durable,
+                        ack_policy=AckPolicy.EXPLICIT,
+                        ack_wait=self.max_ack_wait_seconds,
+                        max_ack_pending=self.max_ack_pending,
+                        max_deliver=self.max_redeliveries,
+                        deliver_policy=DeliverPolicy.NEW,
+                    )
                     sub_params = {
                         "subject": subject,
                         "stream": self.stream,
                         "durable": durable,
                         "manual_ack": True,
                         "cb": js_callback,
-                        "config": {
-                            "ack_policy": "explicit",
-                            "ack_wait": self.max_ack_wait_seconds,
-                            "max_ack_pending": self.max_ack_pending,
-                            "max_deliver": self.max_redeliveries,
-                        },
+                        "config": config,
                     }
+                    # sub_params = {
+                    #     "subject": subject,
+                    #     "stream": self.stream,
+                    #     "durable": durable,
+                    #     "manual_ack": True,
+                    #     "cb": js_callback,
+                    #     "config": {
+                    #         "ack_policy": "explicit",
+                    #         "ack_wait": self.max_ack_wait_seconds,
+                    #         "max_ack_pending": self.max_ack_pending,
+                    #         "max_deliver": self.max_redeliveries,
+                    #     },
+                    # }
                     if not created:
                         sub_params["deliver_policy"] = "new"
                         created = True

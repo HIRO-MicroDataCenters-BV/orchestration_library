@@ -154,6 +154,12 @@ def transform_hp3_predictions_params(data: str):
     payload = {}
     outputs = parsed.get("outputs", [])
     for output in outputs:
+        payload["output_1"] = output.get("o1", 0.0)
+        payload["output_2"] = output.get("o2", 0.0)
+        payload["output_3"] = output.get("o3", 0.0)
+        payload["alpha"] = 0.0
+        payload["beta"] = 0.0
+        payload["gamma"] = 0.2
         name = output.get("name", "")
         data = output.get("data", [])
         if name == "alpha_beta" and len(data) == 2:
@@ -161,7 +167,6 @@ def transform_hp3_predictions_params(data: str):
             payload["beta"] = data[1]
         elif name == "gamma" and len(data) == 1:
             payload["gamma"] = data[0]
-    # Add timestamp if available
     timestamp = parsed.get("timestamp", None)
     if timestamp:
         payload["created_at"] = timestamp
@@ -179,6 +184,8 @@ def get_alert_transformation_func(subject: str):
 def get_tuning_params_transformation_func(subject: str):
     match subject:
         case "hp3.predictions":
+            return transform_hp3_predictions_params
+        case "hp3":
             return transform_hp3_predictions_params
         case _:
             return default_transform_func
