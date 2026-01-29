@@ -128,6 +128,14 @@ def transform_hp3_predictions_params(data: str):
     """Transform raw HP3 tuning parameters JSON string into API payload list."""
     # Example of expected input json string is :
     # {
+    #     "alpha": 4.5789107559590825,
+    #     "beta": 2.715121909317845,
+    #     "timestamp": "2026-01-27T13:07:28.840008+00:00",
+    #     "iteration": 8,
+    #     "turn": true
+    # }
+    # Example of expected input json string is :
+    # {
     #   "model_name":"hp3","id":"f475dac9-20cd-4dd7-be2c-885e3c5ba864",
     #   "parameters":{"content_type":"dict"},
     #   "outputs":[{
@@ -142,31 +150,30 @@ def transform_hp3_predictions_params(data: str):
     if err:
         logger.error("Error parsing JSON(%s): %s", data, err)
         return []
-    # Old way of extracting tuning params from 'parameters' field
-    # payload = {
-    #     "output_1": parsed.get("o1", 0.0),
-    #     "output_2": parsed.get("o2", 0.0),
-    #     "output_3": parsed.get("o3", 0.0),
-    #     "alpha": parsed.get("alpha", 0.0),
-    #     "beta": parsed.get("beta", 0.0),
-    #     "gamma": parsed.get("gamma", 0.2),
-    # }
-    payload = {}
-    outputs = parsed.get("outputs", [])
-    for output in outputs:
-        payload["output_1"] = output.get("o1", 0.0)
-        payload["output_2"] = output.get("o2", 0.0)
-        payload["output_3"] = output.get("o3", 0.0)
-        payload["alpha"] = 0.0
-        payload["beta"] = 0.0
-        payload["gamma"] = 0.2
-        name = output.get("name", "")
-        data = output.get("data", [])
-        if name == "alpha_beta" and len(data) == 2:
-            payload["alpha"] = data[0]
-            payload["beta"] = data[1]
-        elif name == "gamma" and len(data) == 1:
-            payload["gamma"] = data[0]
+    payload = {
+        "output_1": parsed.get("o1", 0.0),
+        "output_2": parsed.get("o2", 0.0),
+        "output_3": parsed.get("o3", 0.0),
+        "alpha": parsed.get("alpha", 0.0),
+        "beta": parsed.get("beta", 0.0),
+        "gamma": parsed.get("gamma", 0.2),
+    }
+    # payload = {}
+    # outputs = parsed.get("outputs", [])
+    # for output in outputs:
+    #     payload["output_1"] = output.get("o1", 0.0)
+    #     payload["output_2"] = output.get("o2", 0.0)
+    #     payload["output_3"] = output.get("o3", 0.0)
+    #     payload["alpha"] = 0.0
+    #     payload["beta"] = 0.0
+    #     payload["gamma"] = 0.2
+    #     name = output.get("name", "")
+    #     data = output.get("data", [])
+    #     if name == "alpha_beta" and len(data) == 2:
+    #         payload["alpha"] = data[0]
+    #         payload["beta"] = data[1]
+    #     elif name == "gamma" and len(data) == 1:
+    #         payload["gamma"] = data[0]
     timestamp = parsed.get("timestamp", None)
     if timestamp:
         payload["created_at"] = timestamp
@@ -185,8 +192,8 @@ def get_tuning_params_transformation_func(subject: str):
     match subject:
         case "hp3.predictions":
             return transform_hp3_predictions_params
-        case "hp3":
-            return transform_hp3_predictions_params
+        # case "hp3":
+        #     return transform_hp3_predictions_params
         case _:
             return default_transform_func
 
